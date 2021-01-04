@@ -6,13 +6,13 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Yield<T> {
+public class Yield2Way<T, R> {
 		
-    private static final Logger logger = LogManager.getLogger(Yield.class);
+    private static final Logger logger = LogManager.getLogger(Yield2Way.class);
 
     private String id;
 	
-	private Object nextHandle;
+	private Object sendHandle;
 	
 	private T value;
 	
@@ -20,21 +20,23 @@ public class Yield<T> {
 	
 	private boolean terminated;
 
-	private final Consumer<Yield<T>> iterable;
+	private final Consumer<Yield2Way<T, R>> iterable;
+	
+	private R callResult;
 
-	private Yield(String id, Consumer<Yield<T>> iterable) {
+	private Yield2Way(String id, Consumer<Yield2Way<T, R>> iterable) {
 		this.id = id;
 		this.iterable = iterable;
-		this.nextHandle = new Object();
+		this.sendHandle = new Object();
 		this.closed = false;
 	}
 	
-	public static <T> Generator<T> accept(Consumer<Yield<T>> iterable) {
+	public static <T, R> Generator2Way<T, R> accept(Consumer<Yield2Way<T, R>> iterable) {
 		return accept(null, iterable);
 	}
 
-	public static <T> Generator<T> accept(String yieldId, Consumer<Yield<T>> iterable) {
-		final Yield<T> yield = new Yield<>(yieldId, iterable);
+	public static <T, R> Generator2Way<T, R> accept(String yieldId, Consumer<Yield2Way<T, R>> iterable) {
+		final Yield2Way<T, R> yield = new Yield2Way<>(yieldId, iterable);
 		synchronized(yield) {
 			Thread th = new Thread(yield::running);
 			th.setPriority(Thread.MAX_PRIORITY);
@@ -45,11 +47,7 @@ public class Yield<T> {
 				
 			}
 		}
-		return new Generator<>(yield);
-	}
-	
-	public String getId() {
-		return this.id;
+		return new Generator2Way<>(yield);
 	}
 	
 	public void interrupt() {
@@ -69,19 +67,20 @@ public class Yield<T> {
 	 * 
 	 * @return True if there is a new value.
 	 */
-	public boolean next() {
+	public boolean send(R callResult) {
 		if(this.closed) {
 			return false;
 		}
-		synchronized(this.nextHandle) {
+		synchronized(this.sendHandle) {
+			this.callResult = callResult;
 			synchronized(this) {
 				this.notifyAll();
-				logger.debug(String.format("%s> next() release call()", this.id));	
+				logger.debug(String.format("%s> send() release call()", this.id));	
 			}
 
 			try {
-				logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
-				this.nextHandle.wait();
+				logger.debug(String.format("%s> send() is blocking, waiting call() to notify", this.id));	
+				this.sendHandle.wait();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -105,25 +104,25 @@ public class Yield<T> {
 	}
 
 	/**
-	 * Submit a new value to the generator of this instance.
+	 * Submit a new value.
 	 * 
 	 * @param value The new value.
 	 */
-	public void call(T value) throws InterruptedException {
+	public R call(T value) throws InterruptedException {
 		if(this.closed) {
-			return;
+			return null;
 		}
 
 		// mode1: prepare the value first, then block this call.
-		synchronized(this.nextHandle) {
+		synchronized(this.sendHandle) {
 			this.value = value;
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify next() to get new value:%s", this.id, value));	
+			this.sendHandle.notifyAll();
+			logger.debug(String.format("%s> call(v) notify send() to get new value:%s", this.id, value));	
 		}
 		
 		synchronized(this) {
 			try {
-				logger.debug(String.format("%s> call(v) is blocking, waiting next() to release", this.id));	
+				logger.debug(String.format("%s> call(v) is blocking, waiting send() to release", this.id));	
 				this.wait();
 			} catch (Exception ex) {
 
@@ -135,11 +134,12 @@ public class Yield<T> {
 		synchronized(this.handle) {
 			this.value = value;
 			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify next() to get new value", this.id));	
+			logger.debug(String.format("%s> call(v) notify send() to get new value", this.id));	
 		}
 		*/
 
 		testTerminated();
+		return this.callResult;
 	}
 
 	/**
@@ -147,21 +147,21 @@ public class Yield<T> {
 	 * 
 	 * @param supplier The function to get the new value..
 	 */
-	public void call(Supplier<T> supplier) throws InterruptedException {
+	public R call(Supplier<T> supplier) throws InterruptedException {
 		if(this.closed) {
-			return;
+			return null;
 		}
 
 		// mode1: prepare the value first, then block this call.
-		synchronized(this.nextHandle) {
+		synchronized(this.sendHandle) {
 			this.value = supplier.get();
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify next() to get new value", this.id));	
+			this.sendHandle.notifyAll();
+			logger.debug(String.format("%s> call(s) notify send() to get new value", this.id));	
 		}
 
 		synchronized(this) {
 			try {
-				logger.debug(String.format("%s> call(s) is blocking, waiting next() to release", this.id));	
+				logger.debug(String.format("%s> call(s) is blocking, waiting send() to release", this.id));	
 				this.wait();
 			} catch (Exception ex) {
 
@@ -173,11 +173,12 @@ public class Yield<T> {
 		synchronized(this.handle) {
 			this.value = supplier.get();
 			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify next() to get new value", this.id));	
+			logger.debug(String.format("%s> call(s) notify send() to get new value", this.id));	
 		}
 		*/
 
 		testTerminated();
+		return this.callResult;
 	}
 
 	/**
@@ -190,10 +191,10 @@ public class Yield<T> {
 			return;
 		}
 
-		synchronized(this.nextHandle) {
+		synchronized(this.sendHandle) {
 			this.value = value;
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> callLast(v) notify next() to get new value", this.id));	
+			this.sendHandle.notifyAll();
+			logger.debug(String.format("%s> callLast(v) notify send() to get new value", this.id));	
 		}
 		this.closed = true;
 	}
@@ -208,10 +209,10 @@ public class Yield<T> {
 			return;
 		}
 
-		synchronized(this.nextHandle) {
+		synchronized(this.sendHandle) {
 			this.value = supplier.get();
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> callLast(s) notify next() to get new value", this.id));	
+			this.sendHandle.notifyAll();
+			logger.debug(String.format("%s> callLast(s) notify send() to get new value", this.id));	
 		}
 		this.closed = true;
 	}
@@ -228,14 +229,10 @@ public class Yield<T> {
 		this.closed = true;
 		logger.debug(String.format("%s> close()", this.id));	
 
-		synchronized(this.nextHandle) {
-			this.nextHandle.notifyAll();
+		synchronized(this.sendHandle) {
+			this.sendHandle.notifyAll();
 		}
 		this.notifyAll();
-	}
-	
-	public synchronized boolean isAlive() {
-		return !this.closed;
 	}
 	
 	public synchronized boolean isClosed() {

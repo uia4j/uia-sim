@@ -3,10 +3,10 @@ package uia.cor;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class YieldTest {
+public class Yield1WayTest {
 
 	@Test
-	public void testNextV() throws Exception {
+	public void testNextV() {
 		Generator<Integer> gen = Yield.accept(this::callFor);
 		int i = 0;
 		NextResult<Integer> result = null;
@@ -16,11 +16,12 @@ public class YieldTest {
 			i++;
 		}
 		Assert.assertEquals(10, i);
+		Assert.assertTrue(gen.isClosed());
 	}
 
 
 	@Test
-	public void testCallFor() throws Exception {
+	public void testCallFor() {
 		Generator<Integer> gen = Yield.accept(this::callFor);
 		int i = 0;
 		while(gen.next()) {
@@ -29,10 +30,11 @@ public class YieldTest {
 			i++;
 		}
 		Assert.assertEquals(10, i);
+		Assert.assertTrue(gen.isClosed());
 	}
 
 	@Test
-	public void testLazyFor() throws Exception {
+	public void testLazyFor() {
 		Generator<Integer> gen = Yield.accept(this::lazyFor);
 		int i = 0;
 		while(gen.next()) {
@@ -41,10 +43,11 @@ public class YieldTest {
 			i++;
 		}
 		Assert.assertEquals(10, i);
+		Assert.assertTrue(gen.isClosed());
 	}
 	
 	@Test
-	public void testCallWhile() throws Exception {
+	public void testCallWhile() {
 		Generator<Integer> gen = Yield.accept(this::callWhile);
 		int i = 0;
 		while(gen.next()) {
@@ -53,6 +56,7 @@ public class YieldTest {
 			i++;
 		}
 		Assert.assertEquals(10, i);
+		Assert.assertTrue(gen.isClosed());
 	}
 
 	@Test
@@ -65,22 +69,46 @@ public class YieldTest {
 			i++;
 		}
 		Assert.assertEquals(10, i);
+		Assert.assertTrue(gen.isClosed());
+	}
+
+	@Test
+	public void testTerminate() {
+		Generator<Integer> gen = Yield.accept(this::callForButTerminated);
+		int i = 0;
+		while(gen.next()) {
+			System.out.println("value=" + gen.getValue());
+			Assert.assertEquals(i, gen.getValue().intValue());
+			i++;
+			if(i > 5) {
+				gen.interrupt();
+			}
+		}
 	}
 
 	public void callFor(Yield<Integer> yield) {
-		for(int i = 0; i < 10; i++) {
-			yield.call(i);
+		try {
+			for(int i = 0; i < 10; i++) {
+				yield.call(i);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
 	public void lazyFor(Yield<Integer> yield) {
-		for(int i = 0; i < 10; i++) {
-			final int result = i;
-			yield.call(() -> result);
+		try {
+			for(int i = 0; i < 10; i++) {
+				final int result = i;
+				yield.call(() -> result);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
 	public void callWhile(Yield<Integer> yield) {
+		try {
 		int i = 0;
 		while(true) {
 			yield.call(i++);
@@ -88,16 +116,35 @@ public class YieldTest {
 				break;
 			}
 		}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void lazyWhile(Yield<Integer> yield) {
-		int i = 0;
-		while(true) {
-			final int result = i++;
-			yield.call(() -> result);
-			if(i >= 10) {
-				break;
+		try {
+			int i = 0;
+			while(true) {
+				final int result = i++;
+				yield.call(() -> result);
+				if(i >= 10) {
+					break;
+				}
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void callForButTerminated(Yield<Integer> yield) {
+		try {
+			for(int i = 0; i < 10; i++) {
+				yield.call(i);
+			}
+			Assert.assertTrue(false);
+		}
+		catch(InterruptedException ex) {
+			System.out.println(ex.getMessage());
 		}
 	}
 }

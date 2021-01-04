@@ -7,6 +7,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import uia.cor.Yield;
+import uia.sim.events.Process;
+import uia.sim.events.Timeout;
 
 public class Env {
 	
@@ -69,13 +71,30 @@ public class Env {
 		return new Event(this, name);
 	}
 
+	/**
+	 * Adds a schedule in the environment.
+	 * 
+	 * @param event The event.
+	 * @param priority The priority.
+	 */
+	public void schedule(Event event, Event.PriorityType priority) {
+		schedule(event, priority, 0);
+	}
+
+	/**
+	 * Adds a schedule in the environment.
+	 * 
+	 * @param event The event.
+	 * @param priority The priority.
+	 * @param delay The delay time.
+	 */
 	public void schedule(Event event, Event.PriorityType priority, int delay) {
 		Job job = new Job(event, priority, this.now + delay);
 		int a = jobs.size();
 		this.jobs.add(job);
 		int b = jobs.size();
 		jobs.sort(this::sortJobs);
-		logger.debug(String.format("ENV> SCH> %s, (%s->%s)", job, a, b));
+		logger.debug(String.format("ENV> SCH> %s, queue(%s->%s)", job, a, b));
 	}
 	
 	/**
@@ -87,13 +106,12 @@ public class Env {
 		return this.jobs.isEmpty() ? -1 : this.jobs.get(0).time;		
 	}
 
+	/**
+	 * Runs the environment.
+	 * 
+	 * @throws SimException
+	 */
 	public synchronized void run() throws SimException {
-		try {
-			Thread.sleep(500);
-		}
-		catch(Exception ex) {
-			
-		}
 		while(!jobs.isEmpty()) {
 			step();
 		}
@@ -109,15 +127,11 @@ public class Env {
 		if(until < this.now) {
 			throw new IllegalArgumentException(String.format("until(=%s) must be > the current simulation time.", until));
 		}
-
-		try {
-			Thread.sleep(500);
-		}
-		catch(Exception ex) {
-			
-		}
 		while(this.now < until && !jobs.isEmpty()) {
 			step();
+		}
+		while(!jobs.isEmpty()) {
+			jobs.remove(0).event.terminate();
 		}
 	}
 
@@ -127,12 +141,15 @@ public class Env {
 	 * 
 	 */
 	private void step() throws SimException {
+		// 1. get the first job.
 		Job job = this.jobs.remove(0);
+		// 2. update environment time
 		this.now = job.time;
-		logger.debug(String.format("ENV> STEP> %s> %s, callback %s", this.now, job.event, job.event.countCallables()));
+		logger.debug(String.format("ENV> STEP> %s> %s, callbacks(%s)", this.now, job.event, job.event.getCallbablesCount()));
+		// 3. callback the event.
 		job.event.callback();
-		logger.debug(String.format("ENV> STEP> %s> %s, callback done", this.now, job.event));
-		
+		logger.debug(String.format("ENV> STEP> %s> %s, callbacks done", this.now, job.event));
+		// 4. check if event is OK.
 		if(!job.event.isOk()) {
 			throw new SimException(job.event, "failed to callback");
 		}
@@ -142,6 +159,12 @@ public class Env {
 		return a.time - b.time;
 	}
 	
+	/**
+	 * The job for scheduling.
+	 * 
+	 * @author Kan
+	 *
+	 */
 	class Job implements Comparable<Job> {
 		
 		public final Event event;
@@ -150,11 +173,17 @@ public class Env {
 		
 		public final int time;
 
+		/**
+		 * Constructor.
+		 * 
+		 * @param event The event.
+		 * @param priority The priority.
+		 * @param time The time to be executed.
+		 */
 		Job(Event event, Event.PriorityType priority, int time) {
 			this.event = event;
 			this.priority = priority;
 			this.time = time;
-			
 		}
 
 		@Override
@@ -162,6 +191,7 @@ public class Env {
 			return this.time - c2.time;
 		}
 		
+		@Override
 		public String toString() {
 			return String.format("%s, time=%s", event, time);
 		}

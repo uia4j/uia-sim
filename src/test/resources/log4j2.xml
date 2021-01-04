@@ -15,7 +15,7 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-        <Logger name="uia.cor" level="error" additivity="false">
+        <Logger name="uia.cor" level="all" additivity="false">
             <AppenderRef ref="ERROR" />
         </Logger>
         <Logger name="uia.sim" level="all" additivity="false">

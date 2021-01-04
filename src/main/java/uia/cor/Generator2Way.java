@@ -1,10 +1,10 @@
 package uia.cor;
 
-public final class Generator<T> {
+public class Generator2Way<T, R> {
 
-	private final Yield<T> yield;
+	private final Yield2Way<T, R> yield;
 
-	public Generator(Yield<T> yield) {
+	public Generator2Way(Yield2Way<T, R> yield) {
 		this.yield = yield;
 	}
 	
@@ -19,7 +19,16 @@ public final class Generator<T> {
 	 * @return True if there is a new value.
 	 */
 	public synchronized boolean next() {
-		return this.yield.next();
+		return this.yield.send(null);
+	}
+	
+	/**
+	 * Checks if there is a new value or not.
+	 * 
+	 * @return True if there is a new value.
+	 */
+	public synchronized boolean next(R callResult) {
+		return this.yield.send(callResult);
 	}
 
 	public boolean isClosed() {
@@ -32,10 +41,20 @@ public final class Generator<T> {
 	 * @return True if there is a new value.
 	 */
 	public synchronized NextResult<T> nextResult() {
-		boolean hasNext = this.yield.next();
+		boolean hasNext = this.yield.send(null);
 		return new NextResult<T>(hasNext, this.yield.getValue());
 	}
 
+	
+	/**
+	 * Returns the last result.
+	 * 
+	 * @return True if there is a new value.
+	 */
+	public synchronized NextResult<T> nextResult(R callResult) {
+		boolean hasNext = this.yield.send(callResult);
+		return new NextResult<T>(hasNext, this.yield.getValue());
+	}
 
 	/**
 	 * Cancels the yield control.

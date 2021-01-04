@@ -10,4 +10,9 @@ public class SimException extends Exception {
 		super(message);
 		this.event = event;
 	}
+	
+	public SimException(Event event, Throwable th) {
+		super(th);
+		this.event = event;
+	}
 }
