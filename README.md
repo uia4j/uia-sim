@@ -11,27 +11,27 @@ The package provides __yield-like__ API.
 ```java
 public class YieldTest {
 
-	@Test
-	public void testCallFor() {
+    @Test
+    public void testCallFor() {
         // 1
         Generator<Integer> gen = Yield.accept(this::callFor); 
-        // 2, 5
-		while(gen.next()) {
-            // 4
-			System.out.println("value=" + gen.getValue());
-		}
-	}
+            // 2, 5
+            while(gen.next()) {
+                // 4
+                System.out.println("value=" + gen.getValue());
+        }
+    }
 
-	public void callFor(Yield<Integer> yield) {
-		try {
-			for(int i = 0; i < 10; i++) {
+    public void callFor(Yield<Integer> yield) {
+        try {
+            for(int i = 0; i < 10; i++) {
                 // 3
-				yield.call(i);
-			}
-		} catch (InterruptedException e) {
+                yield.call(i);
+            }
+        } catch (InterruptedException e) {
 
         }
-	}
+    }
 }
 ```
 
@@ -79,47 +79,47 @@ env.run(200)
 ### Java
 ``` Java
 public class SchoolTest {
-	
-	private Env env;
 
-	private Event classEnd;
-	
-	public SchoolTest() {
-		this.env = new Env();
-		this.classEnd = this.env.event("classEnd");
-		env.process("pupil-1", this::pupil);
-		env.process("pupil-2", this::pupil);
-		env.process("bell", this::bell);
-	}
+    private Env env;
 
-	public void bell(Yield<Event> yield) {
-		try {
-			while(yield.isAlive()) {
-				yield.call(env.timeout(45));
-				this.classEnd.succeed(null);
-				this.classEnd = this.env.event("classEnd");
-				System.out.println(String.format("\n%3d> bell is ringing...", this.env.getNow()));
-			}
-		} catch (InterruptedException e) {
-        
+    private Event classEnd;
+
+    public SchoolTest() {
+        this.env = new Env();
+        this.classEnd = this.env.event("classEnd");
+        env.process("pupil-1", this::pupil);
+        env.process("pupil-2", this::pupil);
+        env.process("bell", this::bell);
+    }
+
+    public void bell(Yield<Event> yield) {
+        try {
+            while(yield.isAlive()) {
+                yield.call(env.timeout(45));
+                this.classEnd.succeed(null);
+                this.classEnd = this.env.event("classEnd");
+                System.out.println(String.format("\n%3d> bell is ringing...", this.env.getNow()));
+            }
+        } catch (InterruptedException e) {
+
         }
-	}
-	
-	public void pupil(Yield<Event> yield) {
-		try {
-			while(yield.isAlive()) {
-				yield.call(this.classEnd);
-				System.out.print("\\o/ ");
-			}
-		} catch (InterruptedException e) {
-        
+    }
+
+    public void pupil(Yield<Event> yield) {
+        try {
+            while(yield.isAlive()) {
+                yield.call(this.classEnd);
+                System.out.print("\\o/ ");
+            }
+        } catch (InterruptedException e) {
+
         }
-	}
-	
-	@Test
-	public void test1() throws Exception {
-		this.env.run(200);
-	}
+    }
+
+    @Test
+    public void test1() throws Exception {
+        this.env.run(200);
+    }
 }
 ```
 
