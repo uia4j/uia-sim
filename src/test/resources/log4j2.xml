@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+	<Appenders>
+		<Console name="STDOUT" target="SYSTEM_OUT">
+			<ThresholdFilter level="ALL" />
+			<PatternLayout pattern="[%-5p] %-45C{3} %4L - %m%n" />
+		</Console>
+		<RollingFile name="ERROR"
+			filePattern="logs/error-%d{yyyy-MM-dd}.log">
+			<ThresholdFilter level="ERROR" />
+			<PatternLayout pattern="[%d{HH:mm:ss:SSS}] %-45C{3} %4L - %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+        <Logger name="uia.cor" level="error" additivity="false">
+            <AppenderRef ref="ERROR" />
+        </Logger>
+        <Logger name="uia.sim" level="all" additivity="false">
+            <AppenderRef ref="ERROR" />
+        </Logger>
+		<Root level="all">
+			<AppenderRef ref="STDOUT" />
+			<AppenderRef ref="ERROR" />
+		</Root>
+	</Loggers>
+</Configuration>
