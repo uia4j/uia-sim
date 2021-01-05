@@ -12,14 +12,13 @@ public class Generator2Way<T, R> {
 		this.yield.interrupt();
 		
 	}
-	
 	/**
 	 * Checks if there is a new value or not.
 	 * 
 	 * @return True if there is a new value.
 	 */
-	public synchronized boolean next() {
-		return this.yield.send(null);
+	public synchronized void send(R callResult) {
+		this.yield.send(callResult);
 	}
 	
 	/**
@@ -27,8 +26,19 @@ public class Generator2Way<T, R> {
 	 * 
 	 * @return True if there is a new value.
 	 */
+	public synchronized boolean next() {
+		return this.yield.next();
+	}
+	
+	/**
+	 * Checks if there is a new value or not.
+	 * 
+	 * @param callResult The result for previous call().
+	 * @return True if there is a new value.
+	 */
 	public synchronized boolean next(R callResult) {
-		return this.yield.send(callResult);
+		this.yield.send(callResult);
+		return this.yield.next();
 	}
 
 	public boolean isClosed() {
@@ -41,7 +51,7 @@ public class Generator2Way<T, R> {
 	 * @return True if there is a new value.
 	 */
 	public synchronized NextResult<T> nextResult() {
-		boolean hasNext = this.yield.send(null);
+		boolean hasNext = this.yield.next();
 		return new NextResult<T>(hasNext, this.yield.getValue());
 	}
 
@@ -52,7 +62,8 @@ public class Generator2Way<T, R> {
 	 * @return True if there is a new value.
 	 */
 	public synchronized NextResult<T> nextResult(R callResult) {
-		boolean hasNext = this.yield.send(callResult);
+		this.yield.send(callResult);
+		boolean hasNext = this.yield.next();
 		return new NextResult<T>(hasNext, this.yield.getValue());
 	}
 

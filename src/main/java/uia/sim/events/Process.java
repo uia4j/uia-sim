@@ -53,10 +53,10 @@ public class Process extends Event {
 		String tx = UUID.randomUUID().toString().substring(0, 6);
 		logger.debug(String.format("%s> resume(%s)", getId(), tx));
 		if(!by.isOk()) {
+			logger.debug(String.format("%s> resume(%s), interrupt", getId(), tx));
 			this.target = null;
-			this.taskGen.close();
 			setValue(null);
-			logger.debug(String.format("%s> resume(%s), terminated", getId(), tx));
+			this.taskGen.interrupt();
 			return;
 		}
 

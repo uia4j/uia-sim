@@ -31,8 +31,8 @@ public class EnvTest1 {
 			}
 		}
 		catch(InterruptedException ex) {
-			ex.printStackTrace();
-		}
+			System.out.println(ex.getMessage());
+		}	
 	}
 	
 	@Test
@@ -60,7 +60,7 @@ public class EnvTest1 {
 			}
 		}
 		catch(InterruptedException ex) {
-			ex.printStackTrace();
+			System.out.println(ex.getMessage());
 		}
 	}
 }

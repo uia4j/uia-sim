@@ -16,6 +16,7 @@ public class SchoolTest {
 		this.classEnd = this.env.event("classEnd");
 		env.process("pupil-1", this::pupil);
 		env.process("pupil-2", this::pupil);
+		env.process("pupil-3", this::pupil);
 		env.process("bell", this::bell);
 	}
 
@@ -28,7 +29,7 @@ public class SchoolTest {
 				System.out.println(String.format("\n%3d> bell is ringing...", this.env.getNow()));
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			System.out.println(yield.getId() + " interrupted");
 		}
 	}
 	
@@ -41,13 +42,13 @@ public class SchoolTest {
 				System.out.print("\\o/ ");
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			System.out.println(yield.getId() + " interrupted");
 		}
 	}
 	
 	@Test
 	public void test1() throws Exception {
-		this.env.run(200);
+		this.env.run(300);
 	}
 }
  

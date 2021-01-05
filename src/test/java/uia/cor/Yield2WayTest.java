@@ -12,8 +12,8 @@ public class Yield2WayTest {
 		int i = 0;
 		gen.next();
 		do {
-			i = gen.getValue().intValue();
-			System.out.println("value=" + gen.getValue());
+			i = gen.getValue();
+			System.out.println("value=" + i);
 		}
 		while(gen.next(i * i));
 		Assert.assertEquals(10, i);
@@ -24,12 +24,11 @@ public class Yield2WayTest {
 	public void testLazySum2() {
 		Generator2Way<Integer, Integer> gen = Yield2Way.accept(this::callSum2);
 		int i = 0;
-		gen.next();
-		do {
-			i = gen.getValue().intValue();
-			System.out.println("value=" + gen.getValue());
+		while(gen.next()) {
+			i = gen.getValue();
+			System.out.println("value=" + i);
+			gen.send(i * i);
 		}
-		while(gen.next(i * i));
 		Assert.assertEquals(10, i);
 		Assert.assertTrue(gen.isClosed());
 	}

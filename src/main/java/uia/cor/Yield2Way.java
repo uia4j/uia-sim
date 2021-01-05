@@ -64,18 +64,26 @@ public class Yield2Way<T, R> {
 	}
 
 	/**
+	 * Sets the result for call().
+	 * 
+	 * @param callResult The result for call().
+	 */
+	public synchronized void send(R callResult) {
+		this.callResult = callResult;
+	}
+
+	/**
 	 * Checks if there is a new value or not.
 	 * 
 	 * @return True if there is a new value.
 	 */
-	public boolean send(R callResult) {
+	public boolean next() {
 		if(this.closed) {
 			return false;
 		}
 		synchronized(this) {
-			this.callResult = callResult;
 			this.notifyAll();
-			logger.debug(String.format("%s> send() is blocking, waiting call() to notify", this.id));	
+			logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
 			try {
 				this.wait();
 			} catch (Exception e) {
