@@ -3,7 +3,7 @@ package uia.sim;
 import org.junit.Assert;
 import org.junit.Test;
 
-import uia.cor.Yield;
+import uia.cor.Yield2Way;
 import uia.sim.Env;
 import uia.sim.events.Process;
 
@@ -17,11 +17,11 @@ public class EnvTest1 {
 		Env env = new Env();
 		Process process = env.process("clock", yield -> clock1(env, yield));
 		Assert.assertTrue(process.isAlive());
-		env.run(26);
+		Assert.assertEquals(26, env.run(26));
 		Assert.assertFalse(process.isAlive());
 	}
 
-	public void clock1(Env env, Yield<Event> yield) {
+	public void clock1(Env env, Yield2Way<Event, Object> yield) {
 		try {
 			while(!yield.isClosed()) {
 				System.out.println(String.format("%3d, run1> in", env.getNow()));
@@ -30,7 +30,7 @@ public class EnvTest1 {
 				yield.call(env.timeout(1));
 			}
 		}
-		catch(InterruptedException ex) {
+		catch(Exception ex) {
 			System.out.println(ex.getMessage());
 		}	
 	}
@@ -50,7 +50,7 @@ public class EnvTest1 {
 		Assert.assertFalse(process2.isAlive());
 	}
 	
-	public void clock2(Env env, Yield<Event> yield) {
+	public void clock2(Env env, Yield2Way<Event, Object> yield) {
 		try {
 			while(!yield.isClosed()) {
 				System.out.println(String.format("%3d, run2> in", env.getNow()));
@@ -59,7 +59,7 @@ public class EnvTest1 {
 				yield.call(env.timeout(2));
 			}
 		}
-		catch(InterruptedException ex) {
+		catch(Exception ex) {
 			System.out.println(ex.getMessage());
 		}
 	}

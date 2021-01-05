@@ -82,12 +82,12 @@ public class Yield2WayTest {
         try {
             int i = 1;
             int sum = 0;
-            System.out.println("  sum=" + sum);
             while(i <= 10) {
                 // 1, 5
                 int v = yield.call(i++);    // waiting a result
                 sum += v;
             }
+            System.out.println("  sum=" + sum);
         } catch (InterruptedException e) {
 
         }

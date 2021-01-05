@@ -42,7 +42,7 @@ public class Yield2WayTest {
 			i = gen.getValue().intValue();
 			System.out.println("value=" + gen.getValue());
 			if(i > 5) {
-				gen.interrupt();
+				gen.interrupt(new Exception("terminate"));
 				break;
 			}
 		}
@@ -55,15 +55,15 @@ public class Yield2WayTest {
 		try {
 			int i = 1;
 			int sum = 0;
-			System.out.println("  sum=" + sum);
 			while(i <= 10) {
 				int v = yield.call(i++);
 				sum += v;
 				System.out.println("  sum=" + sum + ", v=" + v);
 			}
+			System.out.println("sum=" + sum);
 			Assert.assertEquals(11, i);
 			Assert.assertEquals(385, sum);
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.assertTrue(false);
 		}
@@ -73,16 +73,16 @@ public class Yield2WayTest {
 		try {
 			int i = 1;
 			int sum = 0;
-			System.out.println("  sum=" + sum);
 			while(i <= 10) {
 				final int result = i;
 				int v = yield.call(() -> result);
 				sum += v;
 				System.out.println("  sum=" + sum + ", v=" + v);
 			}
+			System.out.println("sum=" + sum);
 			Assert.assertEquals(11, i);
 			Assert.assertEquals(385, sum);
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.assertTrue(false);
 		}
@@ -92,7 +92,6 @@ public class Yield2WayTest {
 		int i = 0;
 		int sum = 0;
 		try {
-			System.out.println("  sum=" + sum);
 			while(i <= 10) {
 				int v = yield.call(++i);
 				sum += v;
@@ -100,7 +99,8 @@ public class Yield2WayTest {
 			}
 			Assert.assertTrue(false);
 		}
-		catch(InterruptedException ex) {
+		catch(Exception ex) {
+			System.out.println("sum=" + sum);
 			Assert.assertEquals(6, i);
 			Assert.assertEquals(55, sum);
 			System.out.println(ex.getMessage());

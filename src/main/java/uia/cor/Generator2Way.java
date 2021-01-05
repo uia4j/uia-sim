@@ -8,8 +8,8 @@ public class Generator2Way<T, R> {
 		this.yield = yield;
 	}
 	
-	public synchronized void interrupt() {
-		this.yield.interrupt();
+	public synchronized void interrupt(Exception cause) {
+		this.yield.interrupt(cause);
 		
 	}
 	/**

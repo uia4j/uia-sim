@@ -10,7 +10,6 @@ public class Initialize extends Event {
 		super(process.getEnv(), "Initialize", null);
 		this.process = process;
 		addCallable(this.process::resume);
-		setOk(true);
 		
 		env.schedule(this, PriorityType.URGENT);
 	}

@@ -2,7 +2,7 @@ package uia.sim;
 
 import org.junit.Test;
 
-import uia.cor.Yield;
+import uia.cor.Yield2Way;
 import uia.sim.Env;
 
 public class SchoolTest {
@@ -20,7 +20,7 @@ public class SchoolTest {
 		env.process("bell", this::bell);
 	}
 
-	public void bell(Yield<Event> yield) {
+	public void bell(Yield2Way<Event, Object> yield) {
 		try {
 			while(yield.isAlive()) {
 				yield.call(env.timeout(45));
@@ -28,12 +28,12 @@ public class SchoolTest {
 				this.classEnd = this.env.event("classEnd");
 				System.out.println(String.format("\n%3d> bell is ringing...", this.env.getNow()));
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			System.out.println(yield.getId() + " interrupted");
 		}
 	}
 	
-	public void pupil(Yield<Event> yield) {
+	public void pupil(Yield2Way<Event, Object> yield) {
 		try {
 			while(yield.isAlive()) {
 				// This call will make method:'resume' of the pupil process to be a callable of the classEnd event.
@@ -41,7 +41,7 @@ public class SchoolTest {
 				yield.call(this.classEnd);
 				System.out.print("\\o/ ");
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			System.out.println(yield.getId() + " interrupted");
 		}
 	}

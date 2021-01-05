@@ -16,16 +16,16 @@ public class Interruption extends Event {
 
 	private final Process process;
 	
-	public static void shceule(Process process, Throwable th) {
-		new Interruption(process, th);
+	public static Interruption schedule(Process process, Exception cause) {
+		return new Interruption(process, cause);
 	}
 	
-	private Interruption(Process process, Throwable th) {
-		super(process.getEnv(), "Interruption", new InterruptException(process, th));
+	private Interruption(Process process, Exception cause) {
+		super(process.getEnv(), "Interruption", new InterruptException(process, cause));
 		this.process = process;
 		addCallable(this::interrupt);
-		setOk(false);
-		setDefused(true);
+		ng();
+		defused();
 
 		env.schedule(this, PriorityType.URGENT);
 	}

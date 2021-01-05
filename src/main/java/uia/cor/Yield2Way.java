@@ -16,7 +16,7 @@ public class Yield2Way<T, R> {
 	
 	private boolean closed;
 	
-	private boolean interrupted;
+	private Exception interrupted;
 
 	private final Consumer<Yield2Way<T, R>> iterable;
 	
@@ -51,13 +51,13 @@ public class Yield2Way<T, R> {
 		return this.id;
 	}
 
-	public void interrupt() {
+	public void interrupt(Exception cause) {
 		if(this.closed) {
 			return;
 		}
 		synchronized(this) {
 			this.closed = true;
-			this.interrupted = true;
+			this.interrupted = cause;
 			this.notifyAll();
 			logger.debug(String.format("%s> interrupt() release call()", this.id));	
 		}
@@ -98,7 +98,7 @@ public class Yield2Way<T, R> {
 	 * 
 	 * @param value The new value.
 	 */
-	public R call(T value) throws InterruptedException {
+	public R call(T value) throws Exception {
 		if(this.closed) {
 			return null;
 		}
@@ -123,7 +123,7 @@ public class Yield2Way<T, R> {
 	 * 
 	 * @param supplier The function to get the new value..
 	 */
-	public R call(Supplier<T> supplier) throws InterruptedException {
+	public R call(Supplier<T> supplier) throws Exception {
 		if(this.closed) {
 			return null;
 		}
@@ -157,6 +157,10 @@ public class Yield2Way<T, R> {
 		this.notifyAll();
 	}
 	
+	public synchronized boolean isAlive() {
+		return !this.closed;
+	}
+	
 	public synchronized boolean isClosed() {
 		return this.closed;
 	}
@@ -187,9 +191,9 @@ public class Yield2Way<T, R> {
 		}
 	}
 	
-	private void testInterrupt() throws InterruptedException {
-		if(this.interrupted) {
-			throw new InterruptedException(this.id + " has been interrupted");
+	private void testInterrupt() throws Exception {
+		if(this.interrupted != null) {
+			throw this.interrupted;
 		}
 	}
 	
