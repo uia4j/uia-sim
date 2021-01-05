@@ -12,20 +12,17 @@ public class Yield<T> {
 
     private String id;
 	
-	private Object nextHandle;
-	
 	private T value;
 	
 	private boolean closed;
 	
-	private boolean terminated;
+	private boolean interrupted;
 
 	private final Consumer<Yield<T>> iterable;
 
 	private Yield(String id, Consumer<Yield<T>> iterable) {
 		this.id = id;
 		this.iterable = iterable;
-		this.nextHandle = new Object();
 		this.closed = false;
 	}
 	
@@ -58,9 +55,9 @@ public class Yield<T> {
 		}
 		synchronized(this) {
 			this.closed = true;
-			this.terminated = true;
+			this.interrupted = true;
 			this.notifyAll();
-			logger.debug(String.format("%s> terminate() release call()", this.id));	
+			logger.debug(String.format("%s> interrupt() release call()", this.id));	
 		}
 	}
 
@@ -73,37 +70,18 @@ public class Yield<T> {
 		if(this.closed) {
 			return false;
 		}
-		synchronized(this.nextHandle) {
-			synchronized(this) {
-				this.notifyAll();
-				logger.debug(String.format("%s> next() release call()", this.id));	
-			}
-
+		synchronized(this) {
+			this.notifyAll();
+			logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
 			try {
-				logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
-				this.nextHandle.wait();
+				this.wait();
 			} catch (Exception e) {
-				e.printStackTrace();
+
 			}
 		}
-		// mode1 
 		return !this.closed;
-		// mode2
-		//return true;
 	}
 	
-	public void pause() {
-		synchronized(this) {
-			try {
-				logger.debug(String.format("%s> pause()", this.id));	
-				this.notifyAll();
-				this.wait();
-			} catch (Exception ex) {
-
-			}
-		}
-	}
-
 	/**
 	 * Submit a new value to the generator of this instance.
 	 * 
@@ -114,14 +92,9 @@ public class Yield<T> {
 			return;
 		}
 
-		// mode1: prepare the value first, then block this call.
-		synchronized(this.nextHandle) {
-			this.value = value;
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify next() to get new value:%s", this.id, value));	
-		}
-		
 		synchronized(this) {
+			this.value = value;
+			this.notifyAll();
 			try {
 				logger.debug(String.format("%s> call(v) is blocking, waiting next() to release", this.id));	
 				this.wait();
@@ -130,16 +103,7 @@ public class Yield<T> {
 			}
 		}
 
-		// mode2: block this call, then prepare the value.
-		/**
-		synchronized(this.handle) {
-			this.value = value;
-			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify next() to get new value", this.id));	
-		}
-		*/
-
-		testTerminated();
+		testInterrupted();
 	}
 
 	/**
@@ -152,14 +116,9 @@ public class Yield<T> {
 			return;
 		}
 
-		// mode1: prepare the value first, then block this call.
-		synchronized(this.nextHandle) {
-			this.value = supplier.get();
-			this.nextHandle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify next() to get new value", this.id));	
-		}
-
 		synchronized(this) {
+			this.value = supplier.get();
+			this.notifyAll();
 			try {
 				logger.debug(String.format("%s> call(s) is blocking, waiting next() to release", this.id));	
 				this.wait();
@@ -168,16 +127,7 @@ public class Yield<T> {
 			}
 		}
 
-		// mode2: block this call, then prepare the value.
-		/**
-		synchronized(this.handle) {
-			this.value = supplier.get();
-			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify next() to get new value", this.id));	
-		}
-		*/
-
-		testTerminated();
+		testInterrupted();
 	}
 
 	/**
@@ -190,9 +140,9 @@ public class Yield<T> {
 			return;
 		}
 
-		synchronized(this.nextHandle) {
+		synchronized(this) {
 			this.value = value;
-			this.nextHandle.notifyAll();
+			this.notifyAll();
 			logger.debug(String.format("%s> callLast(v) notify next() to get new value", this.id));	
 		}
 		this.closed = true;
@@ -208,9 +158,9 @@ public class Yield<T> {
 			return;
 		}
 
-		synchronized(this.nextHandle) {
+		synchronized(this) {
 			this.value = supplier.get();
-			this.nextHandle.notifyAll();
+			this.notifyAll();
 			logger.debug(String.format("%s> callLast(s) notify next() to get new value", this.id));	
 		}
 		this.closed = true;
@@ -227,10 +177,6 @@ public class Yield<T> {
 	public synchronized void close() {
 		this.closed = true;
 		logger.debug(String.format("%s> close()", this.id));	
-
-		synchronized(this.nextHandle) {
-			this.nextHandle.notifyAll();
-		}
 		this.notifyAll();
 	}
 	
@@ -248,13 +194,19 @@ public class Yield<T> {
 				this.id = "yield-" + Thread.currentThread().getId();
 			}
 
-			// mode1: pause first.
-			pause();
-			// mode2: no necessary to pause
+			synchronized(this) {
+				try {
+					logger.debug(String.format("%s> running()", this.id));	
+					this.notifyAll();
+					this.wait();
+				} catch (Exception ex) {
+
+				}
+			}
 			this.iterable.accept(this);	// blocking
 		}
 		catch(Exception ex) {
-			ex.printStackTrace();
+			logger.error(String.format("%s> ruuning() failed", this.id), ex);	
 		}
 		finally {
 			logger.debug(String.format("%s> ruuning() done", this.id));	
@@ -262,9 +214,9 @@ public class Yield<T> {
 		}
 	}
 	
-	private void testTerminated() throws InterruptedException {
-		if(this.terminated) {
-			throw new InterruptedException(this.id + " has been terminated");
+	private void testInterrupted() throws InterruptedException {
+		if(this.interrupted) {
+			throw new InterruptedException(this.id + " has been interrupted");
 		}
 	}
 	

@@ -12,13 +12,11 @@ public class Yield2Way<T, R> {
 
     private String id;
 	
-	private Object sendHandle;
-	
 	private T value;
 	
 	private boolean closed;
 	
-	private boolean terminated;
+	private boolean interrupted;
 
 	private final Consumer<Yield2Way<T, R>> iterable;
 	
@@ -27,7 +25,6 @@ public class Yield2Way<T, R> {
 	private Yield2Way(String id, Consumer<Yield2Way<T, R>> iterable) {
 		this.id = id;
 		this.iterable = iterable;
-		this.sendHandle = new Object();
 		this.closed = false;
 	}
 	
@@ -50,15 +47,19 @@ public class Yield2Way<T, R> {
 		return new Generator2Way<>(yield);
 	}
 	
+	public String getId() {
+		return this.id;
+	}
+
 	public void interrupt() {
 		if(this.closed) {
 			return;
 		}
 		synchronized(this) {
 			this.closed = true;
-			this.terminated = true;
+			this.interrupted = true;
 			this.notifyAll();
-			logger.debug(String.format("%s> terminate() release call()", this.id));	
+			logger.debug(String.format("%s> interrupt() release call()", this.id));	
 		}
 	}
 
@@ -71,36 +72,17 @@ public class Yield2Way<T, R> {
 		if(this.closed) {
 			return false;
 		}
-		synchronized(this.sendHandle) {
-			this.callResult = callResult;
-			synchronized(this) {
-				this.notifyAll();
-				logger.debug(String.format("%s> send() release call()", this.id));	
-			}
-
-			try {
-				logger.debug(String.format("%s> send() is blocking, waiting call() to notify", this.id));	
-				this.sendHandle.wait();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		// mode1 
-		return !this.closed;
-		// mode2
-		//return true;
-	}
-	
-	public void pause() {
 		synchronized(this) {
+			this.callResult = callResult;
+			this.notifyAll();
+			logger.debug(String.format("%s> send() is blocking, waiting call() to notify", this.id));	
 			try {
-				logger.debug(String.format("%s> pause()", this.id));	
-				this.notifyAll();
 				this.wait();
-			} catch (Exception ex) {
+			} catch (Exception e) {
 
 			}
 		}
+		return !this.closed;
 	}
 
 	/**
@@ -113,14 +95,9 @@ public class Yield2Way<T, R> {
 			return null;
 		}
 
-		// mode1: prepare the value first, then block this call.
-		synchronized(this.sendHandle) {
-			this.value = value;
-			this.sendHandle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify send() to get new value:%s", this.id, value));	
-		}
-		
 		synchronized(this) {
+			this.value = value;
+			this.notifyAll();
 			try {
 				logger.debug(String.format("%s> call(v) is blocking, waiting send() to release", this.id));	
 				this.wait();
@@ -129,16 +106,7 @@ public class Yield2Way<T, R> {
 			}
 		}
 
-		// mode2: block this call, then prepare the value.
-		/**
-		synchronized(this.handle) {
-			this.value = value;
-			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(v) notify send() to get new value", this.id));	
-		}
-		*/
-
-		testTerminated();
+		testInterrupt();
 		return this.callResult;
 	}
 
@@ -152,14 +120,9 @@ public class Yield2Way<T, R> {
 			return null;
 		}
 
-		// mode1: prepare the value first, then block this call.
-		synchronized(this.sendHandle) {
-			this.value = supplier.get();
-			this.sendHandle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify send() to get new value", this.id));	
-		}
-
 		synchronized(this) {
+			this.value = supplier.get();
+			this.notifyAll();
 			try {
 				logger.debug(String.format("%s> call(s) is blocking, waiting send() to release", this.id));	
 				this.wait();
@@ -168,55 +131,10 @@ public class Yield2Way<T, R> {
 			}
 		}
 
-		// mode2: block this call, then prepare the value.
-		/**
-		synchronized(this.handle) {
-			this.value = supplier.get();
-			this.handle.notifyAll();
-			logger.debug(String.format("%s> call(s) notify send() to get new value", this.id));	
-		}
-		*/
-
-		testTerminated();
+		testInterrupt();
 		return this.callResult;
 	}
 
-	/**
-	 * Submit the last value.
-	 * 
-	 * @param value The last value.
-	 */
-	public void callLast(T value) {
-		if(this.closed) {
-			return;
-		}
-
-		synchronized(this.sendHandle) {
-			this.value = value;
-			this.sendHandle.notifyAll();
-			logger.debug(String.format("%s> callLast(v) notify send() to get new value", this.id));	
-		}
-		this.closed = true;
-	}
-
-	/**
-	 * Submit the last value.
-	 * 
-	 * @param supplier The function to get the last value..
-	 */
-	public void callLast(Supplier<T> supplier) {
-		if(this.closed) {
-			return;
-		}
-
-		synchronized(this.sendHandle) {
-			this.value = supplier.get();
-			this.sendHandle.notifyAll();
-			logger.debug(String.format("%s> callLast(s) notify send() to get new value", this.id));	
-		}
-		this.closed = true;
-	}
-	
 	/**
 	 * Returns the current value.
 	 * @return
@@ -228,10 +146,6 @@ public class Yield2Way<T, R> {
 	public synchronized void close() {
 		this.closed = true;
 		logger.debug(String.format("%s> close()", this.id));	
-
-		synchronized(this.sendHandle) {
-			this.sendHandle.notifyAll();
-		}
 		this.notifyAll();
 	}
 	
@@ -245,13 +159,19 @@ public class Yield2Way<T, R> {
 				this.id = "yield-" + Thread.currentThread().getId();
 			}
 
-			// mode1: pause first.
-			pause();
-			// mode2: no necessary to pause
+			synchronized(this) {
+				try {
+					logger.debug(String.format("%s> running()", this.id));	
+					this.notifyAll();
+					this.wait();
+				} catch (Exception ex) {
+
+				}
+			}
 			this.iterable.accept(this);	// blocking
 		}
 		catch(Exception ex) {
-			ex.printStackTrace();
+			logger.error(String.format("%s> ruuning() failed", this.id), ex);	
 		}
 		finally {
 			logger.debug(String.format("%s> ruuning() done", this.id));	
@@ -259,9 +179,9 @@ public class Yield2Way<T, R> {
 		}
 	}
 	
-	private void testTerminated() throws InterruptedException {
-		if(this.terminated) {
-			throw new InterruptedException(this.id + " has been terminated");
+	private void testInterrupt() throws InterruptedException {
+		if(this.interrupted) {
+			throw new InterruptedException(this.id + " has been interrupted");
 		}
 	}
 	

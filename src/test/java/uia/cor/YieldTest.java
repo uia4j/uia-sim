@@ -3,22 +3,7 @@ package uia.cor;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Yield1WayTest {
-
-	@Test
-	public void testNextV() {
-		Generator<Integer> gen = Yield.accept(this::callFor);
-		int i = 0;
-		NextResult<Integer> result = null;
-		while((result = gen.nextResult()).hasNext) {
-			System.out.println("value=" + result.value);
-			Assert.assertEquals(i, result.value.intValue());
-			i++;
-		}
-		Assert.assertEquals(10, i);
-		Assert.assertTrue(gen.isClosed());
-	}
-
+public class YieldTest {
 
 	@Test
 	public void testCallFor() {
@@ -74,7 +59,7 @@ public class Yield1WayTest {
 
 	@Test
 	public void testTerminate() {
-		Generator<Integer> gen = Yield.accept(this::callForButTerminated);
+		Generator<Integer> gen = Yield.accept(this::callForWithInterrupt);
 		int i = 0;
 		while(gen.next()) {
 			System.out.println("value=" + gen.getValue());
@@ -84,6 +69,8 @@ public class Yield1WayTest {
 				gen.interrupt();
 			}
 		}
+		Assert.assertEquals(6, i);
+		Assert.assertTrue(gen.isClosed());
 	}
 
 	public void callFor(Yield<Integer> yield) {
@@ -136,7 +123,7 @@ public class Yield1WayTest {
 		}
 	}
 
-	public void callForButTerminated(Yield<Integer> yield) {
+	public void callForWithInterrupt(Yield<Integer> yield) {
 		try {
 			for(int i = 0; i < 10; i++) {
 				yield.call(i);
