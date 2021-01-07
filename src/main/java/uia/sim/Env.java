@@ -1,6 +1,6 @@
 package uia.sim;
 
-import java.util.Vector;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +23,7 @@ public class Env {
 	
 	protected int initialTime;
 	
-	protected Vector<Job> jobs;
+	protected PriorityBlockingQueue<Job> jobs;
 
 	private int now;
 	
@@ -33,7 +33,7 @@ public class Env {
 	 * The constructor.
 	 */
 	public Env() {
-		this.jobs = new Vector<>();
+		this.jobs = new PriorityBlockingQueue<>();
 	}
 
 	/**
@@ -42,7 +42,7 @@ public class Env {
 	 * @param initialTime The initial time.
 	 */
 	public Env(int initialTime) {
-		this.jobs = new Vector<>();
+		this.jobs = new PriorityBlockingQueue<>();
 		this.now = Math.max(0, initialTime);
 		this.initialTime = now;
 	}
@@ -143,7 +143,7 @@ public class Env {
 	public void schedule(Event event, Event.PriorityType priority, int delay) {
 		Job job = new Job(event, priority, this.now + delay);
 		this.jobs.add(job);
-		jobs.sort(this::sortJobs);
+		// jobs.sort(this::sortJobs);
 		logger.debug(String.format("ENV>  SCH> %4s> %s, queue(%s)", job.time, job.event, jobs.size()));
 	}
 	
@@ -155,15 +155,16 @@ public class Env {
 	public synchronized int run() {
 		logger.debug("==== start ====");
 		try {
-			while(!jobs.isEmpty()) {
+			while(!this.jobs.isEmpty()) {
 				step();
 			}
 		}
 		catch(Exception ex) {
 		}
 		
-		while(!jobs.isEmpty()) {
-			jobs.remove(0).event.envDown();
+		while(!this.jobs.isEmpty()) {
+			this.jobs.poll().event.envDown();
+			// this.jobs.remove(0).event.envDown();
 		}
 		return this.now;
 	}
@@ -190,8 +191,9 @@ public class Env {
 		catch(Exception ex) {
 		}
 
-		while(!jobs.isEmpty()) {
-			jobs.remove(0).event.envDown();
+		while(!this.jobs.isEmpty()) {
+			this.jobs.poll().event.envDown();
+			// this.jobs.remove(0).event.envDown();
 		}
 		return this.now;
 	}
@@ -204,7 +206,9 @@ public class Env {
 	 */
 	protected void step() throws SimException {
 		// 1. get the first job.
-		Job job = this.jobs.remove(0);
+		Job job = this.jobs.poll();
+		System.out.println(job);
+		// Job job = this.jobs.remove(0);
 		logger.debug(String.format("ENV> STEP> dequeue(%s)", this.jobs.size()));
 		// 2. update environment time
 		this.now = job.time;
@@ -220,10 +224,6 @@ public class Env {
 	
 	private void stopSim(Event event) {
 		throw new StopSimException("stop the simulation");
-	}
-	
-	private int sortJobs(Job a, Job b) {
-		return a.compareTo(b);
 	}
 	
 	/**

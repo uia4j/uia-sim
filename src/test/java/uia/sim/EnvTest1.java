@@ -37,30 +37,20 @@ public class EnvTest1 {
 	}
 
 	public void clock1(Env env, Yield2Way<Event, Object> yield) {
-		try {
-			while(!yield.isClosed()) {
-				System.out.println(String.format("%3d, run1> in", env.getNow()));
-				yield.call(env.timeout(2));
-				System.out.println(String.format("%3d, run1> out", env.getNow()));
-				yield.call(env.timeout(1));
-			}
+		while(!yield.isClosed()) {
+			System.out.println(String.format("%3d, run1> in", env.getNow()));
+			yield.call(env.timeout(2));
+			System.out.println(String.format("%3d, run1> out", env.getNow()));
+			yield.call(env.timeout(1));
 		}
-		catch(Exception ex) {
-			System.out.println(ex.getMessage());
-		}	
 	}
 	
 	public void clock2(Env env, Yield2Way<Event, Object> yield) {
-		try {
-			while(!yield.isClosed()) {
-				System.out.println(String.format("%3d, run2> in", env.getNow()));
-				yield.call(env.timeout(5));
-				System.out.println(String.format("%3d, run2> out", env.getNow()));
-				yield.call(env.timeout(2));
-			}
-		}
-		catch(Exception ex) {
-			System.out.println(ex.getMessage());
+		while(!yield.isClosed()) {
+			System.out.println(String.format("%3d, run2> in", env.getNow()));
+			yield.call(env.timeout(5));
+			System.out.println(String.format("%3d, run2> out", env.getNow()));
+			yield.call(env.timeout(2));
 		}
 	}
 }

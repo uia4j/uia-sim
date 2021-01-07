@@ -1,10 +1,13 @@
 package uia.sim;
 
 import java.util.ArrayList;
+import java.util.Vector;
+import java.util.function.Consumer;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import uia.cor.Yield2Way;
 import uia.sim.events.Process;
 import uia.sim.events.Timeout;
 
@@ -13,23 +16,31 @@ public class TimeoutTest {
 	@Test
 	public void testDiscreteTimeStep() {
 		Env env = new Env();
-		ArrayList<Integer> logs = new ArrayList<>();
-		env.process("timeout", y -> {
-			int i = 0;
-			try {
-				while(true) {
-					y.call(env.timeout(1));
-					logs.add(i++);
+
+		Vector<Integer> logs = new Vector<>();
+		Consumer<Yield2Way<Event, Object>> runner = new Consumer<Yield2Way<Event, Object>>() {
+
+			@Override
+			public void accept(Yield2Way<Event, Object> y) {
+				int i = 1;
+				try {
+					while(true) {
+						y.call(env.timeout(i));
+						logs.add(env.getNow());
+						i++;
+					}
+				}
+				catch(Exception ex) {
+					System.out.println(ex);
 				}
 			}
-			catch(Exception ex) {
-				System.out.println(ex);
-			}
-		});
-		env.run(3);
-		System.out.println(logs);	// ?
+			
+		};
+
+		env.process("timeout", runner);
+		env.run(7);
 		Assert.assertEquals(3, logs.size());
-		Assert.assertArrayEquals(new Integer[] {0, 1, 2}, logs.toArray(new Integer[0]));
+		System.out.println(logs);
 	}
 
 	@Test

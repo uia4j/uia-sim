@@ -12,21 +12,12 @@ public class ProcessTest {
 	public void testState() {
 		final Env env = new Env();
 		final Process p1 = env.process("p1", y1 -> {
-			try {
-				y1.call(env.timeout(5));
-			} catch (Exception e) {
-
-			}
+			y1.call(env.timeout(5));
 		});
 		env.process("p2", y1 -> {
-			try {
-				Assert.assertTrue(p1.isAlive());
-				y1.call(env.timeout(10));
-				Assert.assertFalse(p1.isAlive());
-			} catch (Exception e) {
-
-			}
-			
+			Assert.assertTrue(p1.isAlive());
+			y1.call(env.timeout(10));
+			Assert.assertFalse(p1.isAlive());
 		});
 		env.run();
 	}
@@ -37,11 +28,7 @@ public class ProcessTest {
 		final Event event = new Timeout(env, 10);
 		
 		Process proc = env.process("target",y -> {
-			try {
-				y.call(event);
-			} catch (Exception e) {
-
-			}
+			y.call(event);
 		});
 		env.run();
 		Assert.assertTrue(proc.getTarget() == event);
@@ -51,20 +38,10 @@ public class ProcessTest {
 	public void testWaitForProc() {
 		final Env env = new Env();
 		env.process("waiter", y1 -> {
-			try {
-				y1.call(env.process("finisher",y2 -> {
-					try {
-						y2.call(env.timeout(10));
-					} catch (Exception e) {
-						e.printStackTrace();
-						Assert.assertTrue(false);
-					}
-				}));
-				Assert.assertEquals(10, env.getNow());
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.assertTrue(false);
-			}
+			y1.call(env.process("finisher",y2 -> {
+				y2.call(env.timeout(10));
+			}));
+			Assert.assertEquals(10, env.getNow());
 		});
 		env.run();
 	}
@@ -73,23 +50,12 @@ public class ProcessTest {
 	public void testReturnValue() {
 		final Env env = new Env();
 		env.process("bar", y1 -> {
-			try {
-				Process waiter = env.process("waiter",y2 -> {
-					try {
-						y2.call(env.timeout(10));
-						y2.close("IPA-" + env.getNow());
-					} catch (Exception e) {
-						e.printStackTrace();
-						Assert.assertTrue(false);
-					}
-				});
-				Object beer1 = y1.call(waiter);
-				Assert.assertEquals("IPA-10", beer1);
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.assertTrue(false);
-			}
+			Process waiter = env.process("waiter",y2 -> {
+				y2.call(env.timeout(10));
+				y2.close("IPA-" + env.getNow());
+			});
+			Object beer1 = y1.call(waiter);
+			Assert.assertEquals("IPA-10", beer1);
 		});
 		env.run();
 	}
@@ -100,11 +66,7 @@ public class ProcessTest {
 		final Env env = new Env();
 		final Process parent = env.process("parent", y1 -> {
 			Process child = env.process("child",y2 -> {
-				try {
-					y2.call(env.timeout(10));
-				} catch (Exception e) {
-					Assert.assertTrue(false);
-				} 
+				y2.call(env.timeout(10));
 			});
 			
 			try {
@@ -115,22 +77,14 @@ public class ProcessTest {
 				Assert.assertEquals("down", e1.getMessage());
 				Assert.assertEquals(1, env.getNow());
 				
-				try {
-					y1.call(env.timeout(20));
-					Assert.assertEquals(21, env.getNow());
-				} catch (Exception e2) {
-					Assert.assertTrue(false);
-				}
+				y1.call(env.timeout(20));
+				Assert.assertEquals(21, env.getNow());
 			}
 		});
 		
 		env.process("interuptor", y -> {
-			try {
-				y.call(env.timeout(1));
-				parent.interrupt("down");
-			} catch (Exception e) {
-
-			}
+			y.call(env.timeout(1));
+			parent.interrupt("down");
 		});
 		
 		env.run();
@@ -141,11 +95,7 @@ public class ProcessTest {
 		final Env env = new Env();
 		final Process parent = env.process("parent", y1 -> {
 			Process child = env.process("child",y2 -> {
-				try {
-					y2.call(env.timeout(10));
-				} catch (Exception e) {
-					Assert.assertTrue(false);
-				}
+				y2.call(env.timeout(10));
 			});
 			
 			try {
@@ -156,22 +106,14 @@ public class ProcessTest {
 				Assert.assertEquals("down", e1.getMessage());
 				Assert.assertEquals(1, env.getNow());
 
-				try {
-					y1.call(child);
-					Assert.assertEquals(10, env.getNow());
-				} catch (Exception e2) {
-					Assert.assertTrue(false);
-				}
+				y1.call(child);
+				Assert.assertEquals(10, env.getNow());
 			}
 		});
 		
 		env.process("interuptor", y -> {
-			try {
-				y.call(env.timeout(1));
-				parent.interrupt("down");
-			} catch (Exception e) {
-
-			}
+			y.call(env.timeout(1));
+			parent.interrupt("down");
 		});
 		
 		env.run();

@@ -32,7 +32,8 @@ public class RealtimeEnv extends Env {
 
 	@Override
 	protected void step() throws SimException {
-		Job job = this.jobs.get(0);
+		Job job = this.jobs.peek();
+		// Job job = this.jobs.get(0);
 		long triggerTime = this.startTime + (job.time - this.initialTime) * this.tickSize;
 		try {
 			Thread.sleep(Math.max(0, triggerTime - System.currentTimeMillis()));

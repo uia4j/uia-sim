@@ -110,7 +110,7 @@ public class Process extends Event {
 
 		if(by.isEnvDown()) {
 			logger.debug(String.format("%s> resume(envDown), from %s", getId(), by.toFullString()));
-			this.taskGen.close();
+			this.taskGen.interrupt("envDown");
 			return;
 		}
 

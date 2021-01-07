@@ -74,28 +74,19 @@ public class YieldTest {
 	}
 
 	public void callFor(Yield<Integer> yield) {
-		try {
-			for(int i = 0; i < 10; i++) {
-				yield.call(i);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		for(int i = 0; i < 10; i++) {
+			yield.call(i);
 		}
 	}
 
 	public void lazyFor(Yield<Integer> yield) {
-		try {
-			for(int i = 0; i < 10; i++) {
-				final int result = i;
-				yield.call(() -> result);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		for(int i = 0; i < 10; i++) {
+			final int result = i;
+			yield.call(() -> result);
 		}
 	}
 
 	public void callWhile(Yield<Integer> yield) {
-		try {
 		int i = 0;
 		while(true) {
 			yield.call(i++);
@@ -103,23 +94,16 @@ public class YieldTest {
 				break;
 			}
 		}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void lazyWhile(Yield<Integer> yield) {
-		try {
-			int i = 0;
-			while(true) {
-				final int result = i++;
-				yield.call(() -> result);
-				if(i >= 10) {
-					break;
-				}
+		int i = 0;
+		while(true) {
+			final int result = i++;
+			yield.call(() -> result);
+			if(i >= 10) {
+				break;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 

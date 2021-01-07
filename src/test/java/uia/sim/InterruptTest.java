@@ -21,13 +21,9 @@ public class InterruptTest {
 				}
 			});
 			
-			try {
-				y1.call(env.timeout(50));
-				child.interrupt("parent interrupts the child");
-				Assert.assertEquals(50, env.getNow());
-			} catch (Exception e) {
-
-			}
+			y1.call(env.timeout(50));
+			child.interrupt("parent interrupts the child");
+			Assert.assertEquals(50, env.getNow());
 		});
 		env.run();
 	}
@@ -46,28 +42,16 @@ public class InterruptTest {
 		});
 		
 		env.process("boggis", y2 -> {
-			try {
-				y2.call(env.timeout(2));
-				fox.interrupt("boggis");
-			} catch (Exception e) {
-
-			}
+			y2.call(env.timeout(2));
+			fox.interrupt("boggis");
 		});
 		env.process("bunce", y -> {
-			try {
-				y.call(env.timeout(3));
-				fox.interrupt("bunce");
-			} catch (Exception e) {
-
-			}
+			y.call(env.timeout(3));
+			fox.interrupt("bunce");
 		});
 		env.process("beans", y -> {
-			try {
-				y.call(env.timeout(5));
-				fox.interrupt("beans");
-			} catch (Exception e) {
-
-			}
+			y.call(env.timeout(5));
+			fox.interrupt("beans");
 		});
 		
 		env.run(40);
@@ -87,12 +71,7 @@ public class InterruptTest {
 				}
 			});
 			child.interrupt("initial interrput");
-			try {
-				y1.call(env.timeout(1));
-				
-			} catch (Exception e) {
-
-			}
+			y1.call(env.timeout(1));
 		});
 		env.run(40);
 	}
@@ -131,17 +110,13 @@ public class InterruptTest {
 				}
 			});
 			
-			try {
-				y1.call(env.timeout(1));
-				employee.interrupt("happy hour");
-				employee.interrupt("back to work");
-				Object value = y1.call(employee);
-				Assert.assertEquals("happy hour - no more work", value);
-				y1.call(env.timeout(2));
-				employee.interrupt("back to work, please");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			y1.call(env.timeout(1));
+			employee.interrupt("happy hour");
+			employee.interrupt("back to work");
+			Object value = y1.call(employee);
+			Assert.assertEquals("happy hour - no more work", value);
+			y1.call(env.timeout(2));
+			employee.interrupt("back to work, please");
 		});
 		env.run(40);
 	}
@@ -158,12 +133,9 @@ public class InterruptTest {
 					System.out.println(e.getMessage());
 				}
 			});
-			try {
-				y1.call(env.timeout(10));
-				child.interrupt("interrput a event");
-			} catch (Exception e) {
 
-			}
+			y1.call(env.timeout(10));
+			child.interrupt("interrput a event");
 		});
 		env.run(40);
 	}

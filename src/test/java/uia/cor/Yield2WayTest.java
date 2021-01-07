@@ -52,38 +52,28 @@ public class Yield2WayTest {
 	}
 
 	public void callSum2(Yield2Way<Integer, Integer> yield) {
-		try {
-			int i = 1;
-			int sum = 0;
-			while(i <= 10) {
-				int v = yield.call(i++);
-				sum += v;
-				System.out.println("  sum=" + sum + ", v=" + v);
-			}
-			Assert.assertEquals(11, i);
-			Assert.assertEquals(385, sum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.assertTrue(false);
+		int i = 1;
+		int sum = 0;
+		while(i <= 10) {
+			int v = yield.call(i++);
+			sum += v;
+			System.out.println("  sum=" + sum + ", v=" + v);
 		}
+		Assert.assertEquals(11, i);
+		Assert.assertEquals(385, sum);
 	}
 
 	public void lazySum2(Yield2Way<Integer, Integer> yield) {
-		try {
-			int i = 1;
-			int sum = 0;
-			while(i <= 10) {
-				final int result = i;
-				int v = yield.call(() -> result);
-				sum += v;
-				System.out.println("  sum=" + sum + ", v=" + v);
-			}
-			Assert.assertEquals(11, i);
-			Assert.assertEquals(385, sum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.assertTrue(false);
+		int i = 1;
+		int sum = 0;
+		while(i <= 10) {
+			final int result = i;
+			int v = yield.call(() -> result);
+			sum += v;
+			System.out.println("  sum=" + sum + ", v=" + v);
 		}
+		Assert.assertEquals(11, i);
+		Assert.assertEquals(385, sum);
 	}
 
 	public void callSum2WithInterrput(Yield2Way<Integer, Integer> yield) {

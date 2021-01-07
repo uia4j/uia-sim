@@ -12,24 +12,14 @@ public class EventTest {
 			final Event parent = env.event("parent");
 
 			env.process("child", y2 -> {
-				try {
-					// Yield2Way get the return value.
-					Object value = y2.call(parent);		
-					Assert.assertEquals("ohai", value);
-					Assert.assertEquals(5, env.getNow());
-				} catch (Exception e) {
-					e.printStackTrace();
-					Assert.assertTrue(false);
-				}
+				// Yield2Way get the return value.
+				Object value = y2.call(parent);		
+				Assert.assertEquals("ohai", value);
+				Assert.assertEquals(5, env.getNow());
 			});
 
-			try {
-				y1.call(env.timeout(5));
-				parent.succeed("ohai");
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.assertTrue(false);
-			}
+			y1.call(env.timeout(5));
+			parent.succeed("ohai");
 		});
 		env.run();
 	}
@@ -49,13 +39,8 @@ public class EventTest {
 				}
 			});
 
-			try {
-				y1.call(env.timeout(5));
-				parent.fail(new Exception("test failed"));
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.assertTrue(false);
-			}
+			y1.call(env.timeout(5));
+			parent.fail(new Exception("test failed"));
 		});
 		env.run();
 	}
@@ -67,13 +52,8 @@ public class EventTest {
 		event.succeed("I am stupid");
 		
 		env.process("pem", y -> {
-			try {
-				Object value = y.call(event);
-				Assert.assertEquals("I am stupid", value);
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.assertTrue(false);
-			}
+			Object value = y.call(event);
+			Assert.assertEquals("I am stupid", value);
 		});
 		env.run();
 	}

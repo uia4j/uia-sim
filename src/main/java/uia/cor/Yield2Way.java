@@ -99,13 +99,15 @@ public class Yield2Way<T, R> {
 	}
 
 	/**
+	/**
 	 * Submit a new value.
 	 * 
 	 * @param value The new value.
+	 * @throws YieldException
 	 */
-	public R call(T value) throws Exception {
+	public R call(T value) throws YieldException {
 		if(this.closed) {
-			return null;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -132,10 +134,11 @@ public class Yield2Way<T, R> {
 	 * Submit a new value.
 	 * 
 	 * @param supplier The function to get the new value..
+	 * @throws YieldException
 	 */
-	public R call(Supplier<T> supplier) throws Exception {
+	public R call(Supplier<T> supplier) throws YieldException {
 		if(this.closed) {
-			return null;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -208,11 +211,11 @@ public class Yield2Way<T, R> {
 		}
 	}
 	
-	private void testInterrupt() throws InterruptedException {
+	private void testInterrupt() throws YieldException {
 		if(this.interrupted != null) {
 			InterruptedException ex = this.interrupted;
 			this.interrupted = null;
-			throw ex;
+			throw new YieldException(ex.getMessage(), ex);
 		}
 	}
 	

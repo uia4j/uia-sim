@@ -24,27 +24,15 @@ public class ConditionTest {
 	}
 
 	public void and(Env env, Yield2Way<Event, Object> yield) {
-		try {
-			yield.call(env.timeout(10).and(env.timeout(20)));
-			System.out.println(env.getNow() + ", testAnd done");
-			Assert.assertEquals(20, env.getNow());
-		}
-		catch(Exception ex) {
-			System.out.println(ex.getMessage());
-			Assert.assertTrue(false);
-		}	
+		yield.call(env.timeout(10).and(env.timeout(20)));
+		System.out.println(env.getNow() + ", testAnd done");
+		Assert.assertEquals(20, env.getNow());
 	}
 
 	public void or(Env env, Yield2Way<Event, Object> yield) {
-		try {
-			yield.call(env.timeout(10).or(env.timeout(20)));
-			System.out.println(env.getNow() + ", testOr done");
-			Assert.assertEquals(10, env.getNow());
-		}
-		catch(Exception ex) {
-			System.out.println(ex.getMessage());
-			Assert.assertTrue(false);
-		}	
+		yield.call(env.timeout(10).or(env.timeout(20)));
+		System.out.println(env.getNow() + ", testOr done");
+		Assert.assertEquals(10, env.getNow());
 	}
 }
  

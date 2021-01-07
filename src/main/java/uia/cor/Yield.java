@@ -86,15 +86,16 @@ public class Yield<T> {
 		}
 		return !this.closed;
 	}
-	
+
 	/**
 	 * Submit a new value to the generator of this instance.
 	 * 
 	 * @param value The new value.
+	 * @throws YieldException
 	 */
-	public void call(T value) throws Exception {
+	public void call(T value) throws YieldException {
 		if(this.closed) {
-			return;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -116,9 +117,9 @@ public class Yield<T> {
 	 * 
 	 * @param supplier The function to get the new value..
 	 */
-	public void call(Supplier<T> supplier) throws Exception {
+	public void call(Supplier<T> supplier) throws YieldException {
 		if(this.closed) {
-			return;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -140,9 +141,9 @@ public class Yield<T> {
 	 * 
 	 * @param value The last value.
 	 */
-	public void callLast(T value) {
+	public void callLast(T value) throws YieldException {
 		if(this.closed) {
-			return;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -158,9 +159,9 @@ public class Yield<T> {
 	 * 
 	 * @param supplier The function to get the last value..
 	 */
-	public void callLast(Supplier<T> supplier) {
+	public void callLast(Supplier<T> supplier) throws YieldException {
 		if(this.closed) {
-			return;
+			throw new YieldException("The yield is closed");
 		}
 
 		synchronized(this) {
@@ -219,11 +220,11 @@ public class Yield<T> {
 		}
 	}
 	
-	private void testInterrupt() throws InterruptedException {
+	private void testInterrupt() throws YieldException {
 		if(this.interrupted != null) {
 			InterruptedException ex = this.interrupted;
 			this.interrupted = null;
-			throw ex;
+			throw new YieldException(ex.getMessage(), ex);
 		}
 	}
 	
