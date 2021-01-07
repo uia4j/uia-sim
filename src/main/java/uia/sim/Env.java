@@ -88,7 +88,7 @@ public class Env {
 	}
 
 	public Process process(Processable processable) {
-		return new Process(this, processable.getId(), processable::run);
+		 return processable.bind(this);
 	}
 
 	/**

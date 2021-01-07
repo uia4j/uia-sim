@@ -13,9 +13,9 @@ public class FactoryTest {
 		Operation op1 = new Operation();
 		Operation op2 = new Operation();
 		
-		Equipment eq1 = new Equipment(env, "eq1");
-		Equipment eq2 = new Equipment(env, "eq2");
-		Equipment eq3 = new Equipment(env, "eq3");
+		Equipment eq1 = new Equipment("eq1");
+		Equipment eq2 = new Equipment("eq2");
+		Equipment eq3 = new Equipment("eq3");
 
 		eq1.bind(op1);
 		eq1.bind(op2);

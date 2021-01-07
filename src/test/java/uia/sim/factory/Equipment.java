@@ -2,19 +2,14 @@ package uia.sim.factory;
 
 import java.util.Vector;
 
-import uia.cor.Yield2Way;
-import uia.sim.Env;
-import uia.sim.Event;
 import uia.sim.Processable;
 
 public class Equipment extends Processable {
-
-	private Yield2Way<Event, Object> yield;
 		
 	private final Vector<Operation> operations;
 	
-	Equipment(Env env, String id) {
-		super(env, id);
+	public Equipment(String id) {
+		super(id);
 		this.operations = new Vector<>();
 	}
 	
@@ -22,9 +17,9 @@ public class Equipment extends Processable {
 		this.operations.add(operation);
 	}
 
-	public void run(Yield2Way<Event, Object> yield) {
-		this.yield = yield;
-		while(this.yield.isAlive()) {
+	@Override
+	protected void run() {
+		while(yield().isAlive()) {
 			String productionId = null;
 			for(Operation op : this.operations) {
 				productionId = op.dequeue();
@@ -35,15 +30,11 @@ public class Equipment extends Processable {
 				}
 			}
 			if(productionId == null) {
-				yield.call(this.env.timeout(100));
+				yield(env().timeout(100));
 			}
 			else {
-				yield.call(env.process(new Job(this.env, productionId, this)));
+				yield(env().process(new Job(productionId, this)));
 			}
 		}
-	}
-	
-	public void stop() {
-		this.yield.close();
 	}
 }
