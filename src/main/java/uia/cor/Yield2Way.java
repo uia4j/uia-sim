@@ -16,7 +16,7 @@ public class Yield2Way<T, R> {
 	
 	private boolean closed;
 	
-	private InterruptedException interrupted;
+	private Exception error;
 
 	private final Consumer<Yield2Way<T, R>> iterable;
 	
@@ -60,6 +60,10 @@ public class Yield2Way<T, R> {
 		this.callResult = callResult;
 	}
 
+	public void error(Exception cause) {
+		this.error = cause;
+	}
+
 	/**
 	 * Checks if there is a new value or not.
 	 * 
@@ -72,23 +76,6 @@ public class Yield2Way<T, R> {
 		synchronized(this) {
 			this.notifyAll();
 			logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
-			try {
-				this.wait();
-			} catch (Exception e) {
-
-			}
-		}
-		return !this.closed;
-	}
-
-	public boolean interrupt(InterruptedException cause) {
-		if(this.closed) {
-			return false;
-		}
-		synchronized(this) {
-			this.interrupted = cause;
-			this.notifyAll();
-			logger.debug(String.format("%s> interrupt() release call()", this.id));	
 			try {
 				this.wait();
 			} catch (Exception e) {
@@ -121,10 +108,9 @@ public class Yield2Way<T, R> {
 			}
 		}
 
-		testInterrupt();
+		testError();
 		return this.callResult;
 	}
-	
 	
 	public R getResult() {
 		return this.callResult;
@@ -152,7 +138,7 @@ public class Yield2Way<T, R> {
 			}
 		}
 
-		testInterrupt();
+		testError();
 		return this.callResult;
 	}
 
@@ -164,16 +150,51 @@ public class Yield2Way<T, R> {
 		return this.value;
 	}
 
+	/**
+	 * Close the iteration .
+	 * 
+	 */
 	public synchronized void close() {
 		this.closed = true;
 		logger.debug(String.format("%s> close()", this.id));	
 		this.notifyAll();
 	}
 
+	/**
+	 * Close the iteration .
+	 * 
+	 * @param result The final result.
+	 */
 	public synchronized void close(R result) {
 		this.closed = true;
 		this.callResult = result;
 		logger.debug(String.format("%s> close(%s)", this.id, result));	
+		this.notifyAll();
+	}
+
+	/**
+	 * Close the iteration .
+	 * 
+	 * @param ex The cause to close the iteration.
+	 */
+	public synchronized void close(InterruptedException ex) {
+		this.closed = true;
+		this.error = ex;
+		logger.debug(String.format("%s> close()", this.id));	
+		this.notifyAll();
+	}
+
+	/**
+	 * Close the iteration .
+	 * 
+	 * @param result The final result.
+	 * @param ex The cause to close the iteration.
+	 */
+	public synchronized void close(R result, InterruptedException ex) {
+		this.closed = true;
+		this.callResult = result;
+		this.error = ex;
+		logger.debug(String.format("%s> close()", this.id));	
 		this.notifyAll();
 	}
 	
@@ -200,7 +221,7 @@ public class Yield2Way<T, R> {
 
 				}
 			}
-			this.iterable.accept(this);	// blocking
+			this.iterable.accept(this);	// block until finishing iteration.
 		}
 		catch(Exception ex) {
 			logger.error(String.format("%s> ruuning() failed", this.id), ex);	
@@ -211,10 +232,10 @@ public class Yield2Way<T, R> {
 		}
 	}
 	
-	private void testInterrupt() throws YieldException {
-		if(this.interrupted != null) {
-			InterruptedException ex = this.interrupted;
-			this.interrupted = null;
+	private void testError() throws YieldException {
+		if(this.error != null) {
+			Exception ex = this.error;
+			this.error = null;
 			throw new YieldException(ex.getMessage(), ex);
 		}
 	}

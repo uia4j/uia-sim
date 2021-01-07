@@ -34,6 +34,6 @@ public class FactoryTest {
 		env.process(eq2);
 		env.process(eq3);
 		
-		env.run();
+		env.run(5000);
 	}
 }

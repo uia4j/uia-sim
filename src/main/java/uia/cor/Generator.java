@@ -8,20 +8,53 @@ public final class Generator<T> {
 		this.yield = yield;
 	}
 	
-	public synchronized boolean interrupt(String message) {
-		return interrupt(new InterruptedException(message));
+	/**
+	 * Interrupts current and go to next iteration.
+	 * 
+	 * @param cause The cause.
+	 * @return True if there is a next iteration.
+	 */
+	public synchronized void error(String message) {
+		error(new YieldException(message));
 	}
 	
-	public synchronized boolean interrupt(InterruptedException cause) {
-		return this.yield.interrupt(cause);
+	/**
+	 * Interrupts current and go to next iteration.
+	 * 
+	 * @param cause The cause.
+	 * @return True if there is a next iteration.
+	 */
+	public synchronized void error(Exception cause) {
+		this.yield.error(cause);
 	}
 	
+	/**
+	 * Stops the iteration.
+	 * 
+	 * @param cause The cause.
+	 */
+	public synchronized void stop(InterruptedException cause) {
+		this.yield.close(cause);
+	}
+
 	/**
 	 * Checks if there is a new value or not.
 	 * 
 	 * @return True if there is a new value.
 	 */
 	public synchronized boolean next() {
+		return this.yield.next();
+	}
+
+	/**
+	 * Checks if there is a new value or not.<br>
+	 * The method calls 2 methods: error(value), next().
+	 * 
+	 * @param cause The cause.
+	 * @return True if there is a new value.
+	 */
+	public synchronized boolean errorNext(Exception cause) {
+		this.yield.error(cause);
 		return this.yield.next();
 	}
 
@@ -44,7 +77,7 @@ public final class Generator<T> {
 	 * Cancels the yield control.
 	 * 
 	 */
-	public synchronized void close() {
+	public synchronized void stop() {
 		this.yield.close();
 	}
 	

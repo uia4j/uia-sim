@@ -58,15 +58,15 @@ public class YieldTest {
 	}
 
 	@Test
-	public void testInterrupt() {
-		Generator<Integer> gen = Yield.accept(this::callForWithInterrupt);
+	public void testError() {
+		Generator<Integer> gen = Yield.accept(this::callForWithError);
 		int i = 0;
 		while(gen.next()) {
 			System.out.println("value=" + gen.getValue());
 			Assert.assertEquals(i, gen.getValue().intValue());
 			i++;
 			if(i > 5) {
-				gen.interrupt("i>5");
+				gen.error("i>5");
 			}
 		}
 		Assert.assertEquals(6, i);
@@ -107,7 +107,7 @@ public class YieldTest {
 		}
 	}
 
-	public void callForWithInterrupt(Yield<Integer> yield) {
+	public void callForWithError(Yield<Integer> yield) {
 		try {
 			for(int i = 0; i < 10; i++) {
 				yield.call(i);

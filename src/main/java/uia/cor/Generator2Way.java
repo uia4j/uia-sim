@@ -8,19 +8,14 @@ public class Generator2Way<T, R> {
 		this.yield = yield;
 	}
 	
-	public synchronized boolean interrupt(String message) {
-		return interrupt(new InterruptedException(message));
+	public synchronized void error(String message) {
+		error(new YieldException(message));
 	}
 	
-	public synchronized boolean interrupt(InterruptedException cause) {
-		return this.yield.interrupt(cause);
+	public synchronized void error(Exception cause) {
+		this.yield.error(cause);
 	}
 	
-	/**
-	 * Checks if there is a new value or not.
-	 * 
-	 * @return True if there is a new value.
-	 */
 	public synchronized void send(R callResult) {
 		this.yield.send(callResult);
 	}
@@ -28,23 +23,36 @@ public class Generator2Way<T, R> {
 	/**
 	 * Checks if there is a new value or not.
 	 * 
-	 * @return True if there is a new value.
+	 * @return True if there is a next iteration.
 	 */
 	public synchronized boolean next() {
 		return this.yield.next();
 	}
 	
 	/**
-	 * Checks if there is a new value or not.
+	 * Checks if there is a new value or not.<br>
+	 * The method calls 2 methods: send(value), next().
 	 * 
 	 * @param callResult The result for previous call().
-	 * @return True if there is a new value.
+	 * @return True if there is a next iteration.
 	 */
 	public synchronized boolean next(R callResult) {
 		this.yield.send(callResult);
 		return this.yield.next();
 	}
-	
+		
+	/**
+	 * Checks if there is a new value or not.<br>
+	 * The method calls 2 methods: error(value), next().
+	 * 
+	 * @param cause The cause.
+	 * @return True if there is a next iteration.
+	 */
+	public synchronized boolean errorNext(Exception cause) {
+		this.yield.error(cause);
+		return this.yield.next();
+	}
+
 	public R getResult() {
 		return this.yield.getResult();
 	}
@@ -76,11 +84,30 @@ public class Generator2Way<T, R> {
 	}
 
 	/**
-	 * Cancels the yield control.
+	 * Stops the yield control.
 	 * 
 	 */
 	public synchronized void close() {
 		this.yield.close();
+	}
+
+	/**
+	 * Stops the iteration.
+	 * 
+	 * @param cause The cause.
+	 */
+	public synchronized void close(InterruptedException cause) {
+		this.yield.close(cause);
+	}
+
+	/**
+	 * Stops the iteration.
+	 * 
+	 * @param value The final value.
+	 * @param cause The cause.
+	 */
+	public synchronized void close(R value, InterruptedException cause) {
+		this.yield.close(value, cause);
 	}
 	
 	/**

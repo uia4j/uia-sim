@@ -1,4 +1,4 @@
-UIA-SIM, DESimJava
+UIA-SIM, DESim4J
 ===
 
 UIA-SIM is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __process-based discrete event simulation__ framework.
@@ -19,10 +19,11 @@ Generator gen = Yield.accept(yield -> ::function);
 
 * Generator
   * ___gen___.next() - notify ___::function___ to prepare next value.
+  * ___gen___.errorNext() - notify ___::function___ to prepare next value.
   * ___gen___.getValue() - Get the value from `yield.setValue(Object)`
-  * ___gen___.interrupt(ex) - interrupt current and go next iteration.
-  * ___gen___.close() - stop ___yield___ iterable.
+  * ___gen___.error(ex) - send back an exception.
   * ___gen___.send(Object) - send back a value to ___yield___.
+  * ___gen___.close() - stop ___yield___ iterable.
 
 
 
@@ -54,7 +55,7 @@ public class YieldTest {
 }
 ```
 
-1. `Generator<Integer> gen = Yield.accept(this::callFor)` - Create a `Yield` object and pass to `callFor` method. Return a `Generator`.
+1. `Generator<Integer> gen = Yield.accept(this::callFor)` - Create a `Yield` object and pass to `callFor` method. Return paired `Generator`.
 2. `gen.next()` - Ask if there is a new value or not.
 3. `yield.call(i)` - Pass a new value to the generator and block until invoking `gen.next()` again.
 4. `gen.getValue()` - Get the new value passed by `yield.call(i)`.
@@ -105,7 +106,7 @@ public class Yield2WayTest {
 ## package uia.sim
 The package is core framework of __process-based discrete event simulation__.
 
-Because all design based on SimPy, I try to write some Java test cases to compare with Python version.
+Below is a Java test case compares with Python version.
 
 ### Python
 

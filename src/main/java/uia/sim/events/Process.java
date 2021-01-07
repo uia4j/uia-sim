@@ -10,6 +10,7 @@ import uia.cor.Generator2Way;
 import uia.cor.Yield2Way;
 import uia.sim.Env;
 import uia.sim.Event;
+import uia.sim.SimException;
 
 public class Process extends Event {
 	
@@ -54,7 +55,6 @@ public class Process extends Event {
 		logger.debug(String.format("%s> interrupt", getId()));
 		Interruption.schedule(this, cause);
 	}
-	
 
 	/**
 	 * Interrupts this process.<br>
@@ -83,18 +83,24 @@ public class Process extends Event {
 		return this.target;
 	}
 
-	
+	/**
+	 * Binds the event with this process.
+	 * 
+	 * @param event The event.
+	 * @return Successful or not.
+	 */
 	public boolean bind(Event event) {
 		return event.addCallable(this.resumeCallable);
 	}
 
+	/**
+	 * Unbinds the event with this process.
+	 * 
+	 * @param event The event.
+	 * @return Successful or not.
+	 */
 	public boolean unbind(Event event) {
 		return event.removeCallable(this.resumeCallable);
-	}
-
-	@Override
-	public String toString() {
-		return "Proc(" + getId() + ")";
 	}
 
 	/**
@@ -110,7 +116,7 @@ public class Process extends Event {
 
 		if(by.isEnvDown()) {
 			logger.debug(String.format("%s> resume(envDown), from %s", getId(), by.toFullString()));
-			this.taskGen.interrupt("envDown");
+			this.taskGen.close(new InterruptedException("envDown"));
 			return;
 		}
 
@@ -126,14 +132,14 @@ public class Process extends Event {
 				event.defused();
 				// 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
 				if(event.getValue() == null) {
-					next = this.taskGen.interrupt(new InterruptedException(this.id + " interrupted"));
+					next = this.taskGen.errorNext(new SimException(this, this.id + " interrupted"));
 				}
 				else if(event.getValue() instanceof Exception) {
 					Exception ex = (Exception)event.getValue();
-					next = this.taskGen.interrupt(new InterruptedException(ex.getMessage()));
+					next = this.taskGen.errorNext(new SimException(this, ex.getMessage()));
 				}
 				else {
-					next = this.taskGen.interrupt(new InterruptedException(event.getValue().toString()));
+					next = this.taskGen.errorNext(new SimException(this, event.getValue().toString()));
 				}
 			}
 			else {
@@ -164,5 +170,10 @@ public class Process extends Event {
 		else {
 			logger.debug(String.format("%s> resume(%s), done", getId(), tx));
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Proc(" + getId() + ")";
 	}
 }

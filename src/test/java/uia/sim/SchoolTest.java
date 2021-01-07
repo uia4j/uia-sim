@@ -24,7 +24,7 @@ public class SchoolTest {
 	}
 
 	public void bell(Yield2Way<Event, Object> yield) {
-		while(yield.isAlive()) {
+		while(true) {
 			this.classBegin.succeed(null);
 			this.classBegin = this.env.event("classBegin");	// update event
 			System.out.println(String.format("\n%3d> begin", this.env.getNow()));
@@ -39,7 +39,7 @@ public class SchoolTest {
 	}
 	
 	public void pupil(Yield2Way<Event, Object> yield) {
-		while(yield.isAlive()) {
+		while(true) {
 			yield.call(this.classBegin);
 			System.out.print("|O| ");
 			// This call will make method:'resume' of the pupil process to be a callable of the classEnd event.

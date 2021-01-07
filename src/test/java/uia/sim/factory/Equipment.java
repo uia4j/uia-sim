@@ -25,24 +25,20 @@ public class Equipment extends Processable {
 	public void run(Yield2Way<Event, Object> yield) {
 		this.yield = yield;
 		while(this.yield.isAlive()) {
-			try {
-				String productionId = null;
-				for(Operation op : this.operations) {
-					productionId = op.dequeue();
-					if(productionId != null) {
-						this.operations.remove(op);
-						this.operations.add(op);
-						break;
-					}
+			String productionId = null;
+			for(Operation op : this.operations) {
+				productionId = op.dequeue();
+				if(productionId != null) {
+					this.operations.remove(op);
+					this.operations.add(op);
+					break;
 				}
-				if(productionId == null) {
-					yield.call(this.env.timeout(100));
-				}
-				else {
-					yield.call(env.process(new Job(this.env, productionId, this)));
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			}
+			if(productionId == null) {
+				yield.call(this.env.timeout(100));
+			}
+			else {
+				yield.call(env.process(new Job(this.env, productionId, this)));
 			}
 		}
 	}

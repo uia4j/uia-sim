@@ -16,7 +16,7 @@ public class Yield<T> {
 	
 	private boolean closed;
 	
-	private InterruptedException interrupted;
+	private Exception error;
 
 	private final Consumer<Yield<T>> iterable;
 
@@ -26,10 +26,23 @@ public class Yield<T> {
 		this.closed = false;
 	}
 	
+	/**
+	 * Creates a Yield-Generator pair.
+	 * 
+	 * @param iterable The iterable program. 
+	 * @return The generator.
+	 */
 	public static <T> Generator<T> accept(Consumer<Yield<T>> iterable) {
 		return accept(null, iterable);
 	}
 
+	/**
+	 * Creates a Yield-Generator pair.
+	 * 
+	 * @param yieldId The yield id.
+	 * @param iterable The iterable program. 
+	 * @return The generator.
+	 */
 	public static <T> Generator<T> accept(String yieldId, Consumer<Yield<T>> iterable) {
 		final Yield<T> yield = new Yield<>(yieldId, iterable);
 		synchronized(yield) {
@@ -45,8 +58,23 @@ public class Yield<T> {
 		return new Generator<>(yield);
 	}
 	
+	/**
+	 * Returns the id.
+	 * 
+	 * @return The id.
+	 */
 	public String getId() {
 		return this.id;
+	}
+
+	/**
+	 * Reports a error.
+	 * 
+	 * @param cause The cause of the error.
+	 * @return True if there is a new value.
+	 */
+	public void error(Exception cause) {
+		this.error = cause;
 	}
 
 	/**
@@ -70,28 +98,11 @@ public class Yield<T> {
 		return !this.closed;
 	}
 
-	public boolean interrupt(InterruptedException cause) {
-		if(this.closed) {
-			return false;
-		}
-		synchronized(this) {
-			this.interrupted = cause;
-			this.notifyAll();
-			logger.debug(String.format("%s> interrupt() release call()", this.id));	
-			try {
-				this.wait();
-			} catch (Exception e) {
-
-			}
-		}
-		return !this.closed;
-	}
-
 	/**
-	 * Submit a new value to the generator of this instance.
+	 * Submit a new value to the paired generator.
 	 * 
 	 * @param value The new value.
-	 * @throws YieldException
+	 * @throws YieldException Something wrong.
 	 */
 	public void call(T value) throws YieldException {
 		if(this.closed) {
@@ -109,13 +120,14 @@ public class Yield<T> {
 			}
 		}
 
-		testInterrupt();
+		testError();
 	}
 
 	/**
-	 * Submit a new value.
+	 * Submit a new value to the paired generator.
 	 * 
 	 * @param supplier The function to get the new value..
+	 * @throws YieldException Something wrong.
 	 */
 	public void call(Supplier<T> supplier) throws YieldException {
 		if(this.closed) {
@@ -133,13 +145,14 @@ public class Yield<T> {
 			}
 		}
 
-		testInterrupt();
+		testError();
 	}
 
 	/**
-	 * Submit the last value.
+	 * Submit the last value to the paired generator.
 	 * 
 	 * @param value The last value.
+	 * @throws YieldException Something wrong.
 	 */
 	public void callLast(T value) throws YieldException {
 		if(this.closed) {
@@ -155,9 +168,10 @@ public class Yield<T> {
 	}
 
 	/**
-	 * Submit the last value.
+	 * Submit the last value to the paired generator.
 	 * 
 	 * @param supplier The function to get the last value..
+	 * @throws YieldException Something wrong.
 	 */
 	public void callLast(Supplier<T> supplier) throws YieldException {
 		if(this.closed) {
@@ -174,15 +188,27 @@ public class Yield<T> {
 	
 	/**
 	 * Returns the current value.
-	 * @return
+	 * 
+	 * @return The current value.
 	 */
 	public synchronized T getValue() {
 		return this.value;
 	}
 
+	/**
+	 * Close the iteration .
+	 * 
+	 */
 	public synchronized void close() {
 		this.closed = true;
 		logger.debug(String.format("%s> close()", this.id));	
+		this.notifyAll();
+	}
+
+  	public synchronized void close(InterruptedException cause) {
+		this.closed = true;
+		this.error = cause;
+		logger.debug(String.format("%s> close(%s)", this.id, cause.getMessage()));	
 		this.notifyAll();
 	}
 	
@@ -220,10 +246,10 @@ public class Yield<T> {
 		}
 	}
 	
-	private void testInterrupt() throws YieldException {
-		if(this.interrupted != null) {
-			InterruptedException ex = this.interrupted;
-			this.interrupted = null;
+	private void testError() throws YieldException {
+		if(this.error != null) {
+			Exception ex = this.error;
+			this.error = null;
 			throw new YieldException(ex.getMessage(), ex);
 		}
 	}

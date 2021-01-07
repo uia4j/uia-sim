@@ -158,8 +158,10 @@ public class Env {
 			while(!this.jobs.isEmpty()) {
 				step();
 			}
+			logger.debug("==== end ====");
 		}
-		catch(Exception ex) {
+		catch(Throwable ex) {
+			logger.debug("==== end with exception ====");
 		}
 		
 		while(!this.jobs.isEmpty()) {
@@ -187,8 +189,10 @@ public class Env {
 			while(this.now < until && !jobs.isEmpty()) {
 				step();
 			}
+			logger.debug("==== end ====");
 		}
-		catch(Exception ex) {
+		catch(Throwable ex) {
+			logger.debug("==== end with exception ====");
 		}
 
 		while(!this.jobs.isEmpty()) {
@@ -207,7 +211,6 @@ public class Env {
 	protected void step() throws SimException {
 		// 1. get the first job.
 		Job job = this.jobs.poll();
-		System.out.println(job);
 		// Job job = this.jobs.remove(0);
 		logger.debug(String.format("ENV> STEP> dequeue(%s)", this.jobs.size()));
 		// 2. update environment time
