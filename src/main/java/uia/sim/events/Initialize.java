@@ -9,13 +9,14 @@ public class Initialize extends Event {
 	public Initialize(Process process) {
 		super(process.getEnv(), "Initialize", null);
 		this.process = process;
-		addCallable(this.process::resume);
+		this.process.bind(this);
+		// addCallable(this.process::resume);
 		
 		env.schedule(this, PriorityType.URGENT);
 	}
 	
 	@Override
 	public String toString() {
-		return "Initialize:" + this.process.getId();
+		return "Init(" + this.process.getId() +")";
 	}
 }

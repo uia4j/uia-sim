@@ -20,10 +20,12 @@ import uia.sim.events.Timeout;
 public class Env {
 	
     private static final Logger logger = LogManager.getLogger(Env.class);
+	
+	protected int initialTime;
+	
+	protected Vector<Job> jobs;
 
 	private int now;
-	
-	private Vector<Job> jobs;
 	
 	private Process activeProcess;
 	
@@ -42,6 +44,7 @@ public class Env {
 	public Env(int initialTime) {
 		this.jobs = new Vector<>();
 		this.now = Math.max(0, initialTime);
+		this.initialTime = now;
 	}
 
 	/**
@@ -62,13 +65,30 @@ public class Env {
 	}
 
 	/**
-	 * Creates a new process event.
+	 * Creates a new process event.<br>
+	 * 
+	 * <p>
+	 * The process will pass a <b>yield</b> object to the <b>taskRunner</b>. 
+	 * When <b>taskRunner</b> invokes yeild.call(<b>anotherEvent</b>), yield will notify the process 
+	 * to attach <u>method:resume</u> to the callables of the <b>anotherEvent</b>.
+	 * </p> 
+	 * 
+	 * <p>
+	 * When the environment steps to the <b>anotherEvent</b>, the <u>method:resume</u> of callable will be invoked.
+	 * </p>
+	 * 
+	 * <p>
+	 * Note: <b>anotherEvent</b> must be scheduled into the environment, otherwise callables will never be invoked.
 	 * 
 	 * @param taskRunner A runner of the process tasks.
 	 * @return A new process event. 
 	 */
 	public Process process(String name, Consumer<Yield2Way<Event, Object>> taskRunner) {
 		return new Process(this, name, taskRunner);
+	}
+
+	public Process process(Processable processable) {
+		return new Process(this, processable.getId(), processable::run);
 	}
 
 	/**
@@ -122,37 +142,28 @@ public class Env {
 	 */
 	public void schedule(Event event, Event.PriorityType priority, int delay) {
 		Job job = new Job(event, priority, this.now + delay);
-		int a = jobs.size();
 		this.jobs.add(job);
-		int b = jobs.size();
 		jobs.sort(this::sortJobs);
-		logger.debug(String.format("ENV> SCH> %s, queue(%s->%s)", job, a, b));
+		logger.debug(String.format("ENV>  SCH> %4s> %s, queue(%s)", job.time, job.event, jobs.size()));
 	}
 	
-	/**
-	 * Returns the time next scheduled event executes.
-	 * 
-	 * @return The time.
-	 */
-	public long peek() {
-		return this.jobs.isEmpty() ? -1 : this.jobs.get(0).time;		
-	}
-
 	/**
 	 * Runs the environment.
 	 * 
 	 * @return Stop time.
 	 */
 	public synchronized int run() {
+		logger.debug("==== start ====");
 		try {
 			while(!jobs.isEmpty()) {
 				step();
 			}
 		}
 		catch(Exception ex) {
-			while(!jobs.isEmpty()) {
-				jobs.remove(0).event.terminate();
-			}
+		}
+		
+		while(!jobs.isEmpty()) {
+			jobs.remove(0).event.envDown();
 		}
 		return this.now;
 	}
@@ -164,6 +175,7 @@ public class Env {
 	 * @return Stop time.
 	 */
 	public synchronized int run(final int until) {
+		logger.debug("==== start ====");
 		if(until < this.now) {
 			throw new IllegalArgumentException(String.format("until(=%s) must be > the current simulation time.", until));
 		}
@@ -176,9 +188,10 @@ public class Env {
 			}
 		}
 		catch(Exception ex) {
-			while(!jobs.isEmpty()) {
-				jobs.remove(0).event.terminate();
-			}
+		}
+
+		while(!jobs.isEmpty()) {
+			jobs.remove(0).event.envDown();
 		}
 		return this.now;
 	}
@@ -189,27 +202,28 @@ public class Env {
 	 * @throws SimException 
 	 * 
 	 */
-	private void step() throws SimException {
+	protected void step() throws SimException {
 		// 1. get the first job.
 		Job job = this.jobs.remove(0);
+		logger.debug(String.format("ENV> STEP> dequeue(%s)", this.jobs.size()));
 		// 2. update environment time
 		this.now = job.time;
-		logger.debug(String.format("ENV> STEP> %s> %s, callbacks(%s)", this.now, job.event, job.event.getNumberOfCallbables()));
+		logger.debug(String.format("ENV> STEP> %4s> %s, callbacks(%s)", this.now, job.event, job.event.getNumberOfCallbables()));
 		// 3. callback the event.
 		job.event.callback();
-		logger.debug(String.format("ENV> STEP> %s> %s, callbacks done", this.now, job.event));
+		logger.debug(String.format("ENV> STEP> %4s> %s, callbacks done", this.now, job.event));
 		// 4. check if event is OK.
 		if(!job.event.isOk() && !job.event.isDefused()) {
-			throw new SimException(job.event, "failed to callback");
+			throw new SimException(job.event, job.event + " is NG and not defused");
 		}
 	}
 	
 	private void stopSim(Event event) {
-		throw new RuntimeException("stop the simulation");
+		throw new StopSimException("stop the simulation");
 	}
 	
 	private int sortJobs(Job a, Job b) {
-		return a.time - b.time;
+		return a.compareTo(b);
 	}
 	
 	/**
@@ -241,7 +255,8 @@ public class Env {
 
 		@Override
 		public int compareTo(Job c2) {
-			return this.time - c2.time;
+			int c = this.time - c2.time;
+			return c == 0 ? this.priority.level - c2.priority.level : c;
 		}
 		
 		@Override

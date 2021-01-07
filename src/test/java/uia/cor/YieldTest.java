@@ -58,7 +58,7 @@ public class YieldTest {
 	}
 
 	@Test
-	public void testTerminate() {
+	public void testInterrupt() {
 		Generator<Integer> gen = Yield.accept(this::callForWithInterrupt);
 		int i = 0;
 		while(gen.next()) {
@@ -66,7 +66,7 @@ public class YieldTest {
 			Assert.assertEquals(i, gen.getValue().intValue());
 			i++;
 			if(i > 5) {
-				gen.interrupt();
+				gen.interrupt("i>5");
 			}
 		}
 		Assert.assertEquals(6, i);
@@ -78,7 +78,7 @@ public class YieldTest {
 			for(int i = 0; i < 10; i++) {
 				yield.call(i);
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -89,7 +89,7 @@ public class YieldTest {
 				final int result = i;
 				yield.call(() -> result);
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -103,7 +103,7 @@ public class YieldTest {
 				break;
 			}
 		}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -118,7 +118,7 @@ public class YieldTest {
 					break;
 				}
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -129,9 +129,8 @@ public class YieldTest {
 				yield.call(i);
 			}
 			Assert.assertTrue(false);
-		}
-		catch(InterruptedException ex) {
-			System.out.println(ex.getMessage());
+		} catch (Exception e) {
+			Assert.assertEquals("i>5", e.getMessage());
 		}
 	}
 }

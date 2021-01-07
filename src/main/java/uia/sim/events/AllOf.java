@@ -24,6 +24,11 @@ public class AllOf extends Condition {
 	}
 
 	@Override
+	public String toString() {
+		return "AllOf(" + getId() + ")";
+	}
+
+	@Override
 	protected boolean evaluate(List<Event> events, int okEvents) {
 		return events.size() == okEvents;
 	}

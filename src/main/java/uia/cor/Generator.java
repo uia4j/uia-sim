@@ -8,9 +8,12 @@ public final class Generator<T> {
 		this.yield = yield;
 	}
 	
-	public synchronized void interrupt() {
-		this.yield.interrupt();
-		
+	public synchronized boolean interrupt(String message) {
+		return interrupt(new InterruptedException(message));
+	}
+	
+	public synchronized boolean interrupt(InterruptedException cause) {
+		return this.yield.interrupt(cause);
 	}
 	
 	/**

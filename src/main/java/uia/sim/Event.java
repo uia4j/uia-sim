@@ -12,15 +12,25 @@ import uia.sim.events.AnyOf;
 
 public class Event {
 	
-	public static final Object PENDING = new Object();
-	
     private static final Logger logger = LogManager.getLogger(Event.class);
+	
+	private static final Object PENDING = new Object();
 	
 	public enum PriorityType {
 		
-		URGENT,
+		URGENT(0),
 		
-		NORMAL
+		HIGH(1),
+
+		NORMAL(2),
+		
+		LOW(3);
+		
+		public final int level;
+		
+		PriorityType(int level) {
+			this.level = level;
+		}
 	}
 	
 	protected final Env env;
@@ -28,6 +38,8 @@ public class Event {
 	protected final String id;
 	
 	private Object value;
+	
+	private boolean envDown;
 	
 	private boolean ok;
 	
@@ -58,6 +70,7 @@ public class Event {
 		this.env = env;
 		this.id = id;
 		this.value = value;
+		this.envDown = false;
 		this.ok = true;
 		this.processed = false;
 		this.defused = false;
@@ -141,6 +154,16 @@ public class Event {
 		return new AnyOf(env, Arrays.asList(this, other));
 	}
 
+	public boolean isEnvDown() {
+		return envDown;
+	}
+
+	public void envDown() {
+		this.ok = false;
+		this.envDown = true;
+		callback();
+	}
+
 	/**
 	 * Tests if the event has been triggered and it's callables are about to be invoked.
 	 * 
@@ -208,7 +231,7 @@ public class Event {
 	public synchronized void trigger(Event event) {
 		logger.debug(String.format("%s> triggered by %s", getId(), event.getId()));
 		this.ok = event.isOk();
-		this.value = event.getValue();
+		this.value = event.value;
 		// schedule
 		this.env.schedule(this, PriorityType.NORMAL);
 	}
@@ -221,7 +244,7 @@ public class Event {
 	 */
 	public synchronized void succeed(Object value) {
 		logger.debug(String.format("%s> succeed", getId()));
-		if(this.value != PENDING) {
+		if(isTriggered()) {
 			throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
 		}
 
@@ -238,8 +261,8 @@ public class Event {
 	 * @param cause The failed cause.
 	 */
 	public synchronized void fail(Exception cause) {
-		logger.debug(String.format("%s> fail", getId()));
-		if(this.value != PENDING) {
+		logger.debug(String.format("%s> fail, %s", getId(), cause.getMessage()));
+		if(isTriggered()) {
 			throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
 		}
 		
@@ -250,35 +273,24 @@ public class Event {
 	}
 
 	/**
-	 * Terminates the event.
-	 *  
-	 */
-	public synchronized void terminate() {
-		ng();
-		while(!callables.isEmpty()) {
-			callables.remove(0).accept(this);
-		}
-	}
-
-	/**
 	 * Executes all instances of callable.
 	 * 
 	 */
 	public synchronized void callback() {
 		try {
-			while(!callables.isEmpty()) {
-				callables.remove(0).accept(this);
+			while(!this.callables.isEmpty()) {
+				this.callables.remove(0).accept(this);
 			}
 		}
 		finally {
-			this.callables.clear();
 			this.processed = true;
+			this.callables.clear();
 		}
 	}
 
 	@Override
 	public String toString() {
-		return getId();
+		return "E(" + getId() + ")";
 	}
 
 	public String toFullString() {

@@ -13,7 +13,8 @@ public class EventTest {
 
 			env.process("child", y2 -> {
 				try {
-					Object value = y2.call(parent);
+					// Yield2Way get the return value.
+					Object value = y2.call(parent);		
 					Assert.assertEquals("ohai", value);
 					Assert.assertEquals(5, env.getNow());
 				} catch (Exception e) {

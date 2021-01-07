@@ -20,20 +20,6 @@ public class EnvTest1 {
 		Assert.assertEquals(26, env.run(26));
 		Assert.assertFalse(process.isAlive());
 	}
-
-	public void clock1(Env env, Yield2Way<Event, Object> yield) {
-		try {
-			while(!yield.isClosed()) {
-				System.out.println(String.format("%3d, run1> in", env.getNow()));
-				yield.call(env.timeout(2));
-				System.out.println(String.format("%3d, run1> out", env.getNow()));
-				yield.call(env.timeout(1));
-			}
-		}
-		catch(Exception ex) {
-			System.out.println(ex.getMessage());
-		}	
-	}
 	
 	@Test
 	public void test2() throws Exception {
@@ -48,6 +34,20 @@ public class EnvTest1 {
 		env.run(30);
 		Assert.assertFalse(process1.isAlive());
 		Assert.assertFalse(process2.isAlive());
+	}
+
+	public void clock1(Env env, Yield2Way<Event, Object> yield) {
+		try {
+			while(!yield.isClosed()) {
+				System.out.println(String.format("%3d, run1> in", env.getNow()));
+				yield.call(env.timeout(2));
+				System.out.println(String.format("%3d, run1> out", env.getNow()));
+				yield.call(env.timeout(1));
+			}
+		}
+		catch(Exception ex) {
+			System.out.println(ex.getMessage());
+		}	
 	}
 	
 	public void clock2(Env env, Yield2Way<Event, Object> yield) {

@@ -8,10 +8,14 @@ public class Generator2Way<T, R> {
 		this.yield = yield;
 	}
 	
-	public synchronized void interrupt(Exception cause) {
-		this.yield.interrupt(cause);
-		
+	public synchronized boolean interrupt(String message) {
+		return interrupt(new InterruptedException(message));
 	}
+	
+	public synchronized boolean interrupt(InterruptedException cause) {
+		return this.yield.interrupt(cause);
+	}
+	
 	/**
 	 * Checks if there is a new value or not.
 	 * 
@@ -39,6 +43,10 @@ public class Generator2Way<T, R> {
 	public synchronized boolean next(R callResult) {
 		this.yield.send(callResult);
 		return this.yield.next();
+	}
+	
+	public R getResult() {
+		return this.yield.getResult();
 	}
 
 	public boolean isClosed() {

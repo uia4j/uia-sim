@@ -74,7 +74,7 @@ public abstract class Condition extends Event {
 	}
 
 	private void check(Event event) {
-		if(getValue() != Event.PENDING) {
+		if(isTriggered()) {
 			return;
 		}
 		

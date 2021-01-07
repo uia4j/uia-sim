@@ -31,6 +31,6 @@ public class Timeout extends Event {
 
 	@Override
 	public String toString() {
-		return "Timeout:" + this.delay;
+		return "Timeout(" + this.delay + ")";
 	}
 }

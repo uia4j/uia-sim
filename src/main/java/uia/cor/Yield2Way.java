@@ -16,7 +16,7 @@ public class Yield2Way<T, R> {
 	
 	private boolean closed;
 	
-	private Exception interrupted;
+	private InterruptedException interrupted;
 
 	private final Consumer<Yield2Way<T, R>> iterable;
 	
@@ -51,18 +51,6 @@ public class Yield2Way<T, R> {
 		return this.id;
 	}
 
-	public void interrupt(Exception cause) {
-		if(this.closed) {
-			return;
-		}
-		synchronized(this) {
-			this.closed = true;
-			this.interrupted = cause;
-			this.notifyAll();
-			logger.debug(String.format("%s> interrupt() release call()", this.id));	
-		}
-	}
-
 	/**
 	 * Sets the result for call().
 	 * 
@@ -84,6 +72,23 @@ public class Yield2Way<T, R> {
 		synchronized(this) {
 			this.notifyAll();
 			logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));	
+			try {
+				this.wait();
+			} catch (Exception e) {
+
+			}
+		}
+		return !this.closed;
+	}
+
+	public boolean interrupt(InterruptedException cause) {
+		if(this.closed) {
+			return false;
+		}
+		synchronized(this) {
+			this.interrupted = cause;
+			this.notifyAll();
+			logger.debug(String.format("%s> interrupt() release call()", this.id));	
 			try {
 				this.wait();
 			} catch (Exception e) {
@@ -115,6 +120,11 @@ public class Yield2Way<T, R> {
 		}
 
 		testInterrupt();
+		return this.callResult;
+	}
+	
+	
+	public R getResult() {
 		return this.callResult;
 	}
 
@@ -156,6 +166,13 @@ public class Yield2Way<T, R> {
 		logger.debug(String.format("%s> close()", this.id));	
 		this.notifyAll();
 	}
+
+	public synchronized void close(R result) {
+		this.closed = true;
+		this.callResult = result;
+		logger.debug(String.format("%s> close(%s)", this.id, result));	
+		this.notifyAll();
+	}
 	
 	public synchronized boolean isAlive() {
 		return !this.closed;
@@ -191,9 +208,11 @@ public class Yield2Way<T, R> {
 		}
 	}
 	
-	private void testInterrupt() throws Exception {
+	private void testInterrupt() throws InterruptedException {
 		if(this.interrupted != null) {
-			throw this.interrupted;
+			InterruptedException ex = this.interrupted;
+			this.interrupted = null;
+			throw ex;
 		}
 	}
 	

@@ -16,7 +16,7 @@ public class Yield<T> {
 	
 	private boolean closed;
 	
-	private boolean interrupted;
+	private InterruptedException interrupted;
 
 	private final Consumer<Yield<T>> iterable;
 
@@ -48,18 +48,6 @@ public class Yield<T> {
 	public String getId() {
 		return this.id;
 	}
-	
-	public void interrupt() {
-		if(this.closed) {
-			return;
-		}
-		synchronized(this) {
-			this.closed = true;
-			this.interrupted = true;
-			this.notifyAll();
-			logger.debug(String.format("%s> interrupt() release call()", this.id));	
-		}
-	}
 
 	/**
 	 * Checks if there is a new value or not.
@@ -81,13 +69,30 @@ public class Yield<T> {
 		}
 		return !this.closed;
 	}
+
+	public boolean interrupt(InterruptedException cause) {
+		if(this.closed) {
+			return false;
+		}
+		synchronized(this) {
+			this.interrupted = cause;
+			this.notifyAll();
+			logger.debug(String.format("%s> interrupt() release call()", this.id));	
+			try {
+				this.wait();
+			} catch (Exception e) {
+
+			}
+		}
+		return !this.closed;
+	}
 	
 	/**
 	 * Submit a new value to the generator of this instance.
 	 * 
 	 * @param value The new value.
 	 */
-	public void call(T value) throws InterruptedException {
+	public void call(T value) throws Exception {
 		if(this.closed) {
 			return;
 		}
@@ -103,7 +108,7 @@ public class Yield<T> {
 			}
 		}
 
-		testInterrupted();
+		testInterrupt();
 	}
 
 	/**
@@ -111,7 +116,7 @@ public class Yield<T> {
 	 * 
 	 * @param supplier The function to get the new value..
 	 */
-	public void call(Supplier<T> supplier) throws InterruptedException {
+	public void call(Supplier<T> supplier) throws Exception {
 		if(this.closed) {
 			return;
 		}
@@ -127,7 +132,7 @@ public class Yield<T> {
 			}
 		}
 
-		testInterrupted();
+		testInterrupt();
 	}
 
 	/**
@@ -214,9 +219,11 @@ public class Yield<T> {
 		}
 	}
 	
-	private void testInterrupted() throws InterruptedException {
-		if(this.interrupted) {
-			throw new InterruptedException(this.id + " has been interrupted");
+	private void testInterrupt() throws InterruptedException {
+		if(this.interrupted != null) {
+			InterruptedException ex = this.interrupted;
+			this.interrupted = null;
+			throw ex;
 		}
 	}
 	

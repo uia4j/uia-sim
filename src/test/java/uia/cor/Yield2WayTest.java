@@ -34,7 +34,7 @@ public class Yield2WayTest {
 	}
 
 	@Test
-	public void testTerminate() {
+	public void testInterrupt() {
 		Generator2Way<Integer, Integer> gen = Yield2Way.accept(this::callSum2WithInterrput);
 		int i = 0;
 		gen.next();
@@ -42,7 +42,7 @@ public class Yield2WayTest {
 			i = gen.getValue().intValue();
 			System.out.println("value=" + gen.getValue());
 			if(i > 5) {
-				gen.interrupt(new Exception("terminate"));
+				gen.interrupt("i>5");
 				break;
 			}
 		}
@@ -60,7 +60,6 @@ public class Yield2WayTest {
 				sum += v;
 				System.out.println("  sum=" + sum + ", v=" + v);
 			}
-			System.out.println("sum=" + sum);
 			Assert.assertEquals(11, i);
 			Assert.assertEquals(385, sum);
 		} catch (Exception e) {
@@ -79,7 +78,6 @@ public class Yield2WayTest {
 				sum += v;
 				System.out.println("  sum=" + sum + ", v=" + v);
 			}
-			System.out.println("sum=" + sum);
 			Assert.assertEquals(11, i);
 			Assert.assertEquals(385, sum);
 		} catch (Exception e) {
@@ -100,10 +98,9 @@ public class Yield2WayTest {
 			Assert.assertTrue(false);
 		}
 		catch(Exception ex) {
-			System.out.println("sum=" + sum);
 			Assert.assertEquals(6, i);
 			Assert.assertEquals(55, sum);
-			System.out.println(ex.getMessage());
+			Assert.assertEquals("i>5", ex.getMessage());
 		}
 	}
 }
