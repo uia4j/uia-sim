@@ -106,6 +106,11 @@ public class Yield2WayTest {
 ## package uia.sim
 The package is core framework of __process-based discrete event simulation__.
 
+Some documents
+
+* [Core Design](COE_SIM.md)
+* [Examples](CORE_SIM_EXAMPLES.md)
+
 Below is a Java test case compares with Python version.
 
 ### Python
@@ -188,4 +193,6 @@ The framework is still building and testing. The next tasks are
 [SimPy Home](https://simpy.readthedocs.io/en/latest/)
 
 [SimPy GitLab](https://gitlab.com/team-simpy/simpy)
+
+[Discrete-Event Simulation Wiki](https://en.wikipedia.org/wiki/Discrete-event_simulation)
 
