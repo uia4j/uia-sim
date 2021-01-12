@@ -5,6 +5,12 @@ import java.util.List;
 import uia.sim.Env;
 import uia.sim.Event;
 
+/**
+ * The abstract condition event.
+ * 
+ * @author Kan
+ *
+ */
 public abstract class Condition extends Event {
 
 	protected final List<Event> events;
@@ -15,10 +21,11 @@ public abstract class Condition extends Event {
 	 * The constructor.
 	 * 
 	 * @param env The environment.
-	 * @param events The events.
+	 * @param id The event id.
+	 * @param events The events used to check pass or not.
 	 */
-	protected Condition(Env env, List<Event> events) {
-		super(env, "Condition");
+	protected Condition(Env env, String id, List<Event> events) {
+		super(env, id);
 		this.events = events;
 		
 		// Immediately succeed if no events are provided.
@@ -91,6 +98,13 @@ public abstract class Condition extends Event {
 		}
 	}
 	
+	/**
+	 * Evaluates if events met the criteria.
+	 * 
+	 * @param events The events used to evaluate.
+	 * @param count the pass count.
+	 * @return Pass or not.
+	 */
 	protected abstract boolean evaluate(List<Event> events, int count);
 
 }

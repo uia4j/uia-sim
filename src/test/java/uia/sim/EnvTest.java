@@ -7,10 +7,62 @@ import uia.cor.Yield2Way;
 import uia.sim.Env;
 import uia.sim.events.Process;
 
-public class EnvTest1 {
+public class EnvTest {
 	
 	@Test
-	public void test1() throws Exception {
+	public void testHello() {
+		Env env = new Env();
+		env.process(new Hello("Jack"));
+		env.run();
+	}
+	
+	@Test
+	public void testListener() {
+		final Env env = new Env();
+		env.setListener(new EnvListenerAdapter());
+		env.process("main", y -> {
+			int i = 1;
+			while(true) {
+				y.call(env.timeout("" + i++, 3));
+			}
+		});
+		env.run(20);
+	}
+
+	
+	@Test
+	public void testListenerWithFailed() {
+		final Env env = new Env();
+		env.setListener(new EnvListenerAdapter());
+		env.process("pg1", y1 -> {
+			
+			final Process sub = env.process("pg2" , y2 -> {
+				try {
+					y2.call(env.timeout("pg2-1", 7));
+					y2.call(env.timeout("pg2-2", 7));
+					Assert.assertTrue(false);
+				}
+				catch(Exception ex) {
+					Assert.assertEquals("pg1-3", ex.getMessage());
+					
+				}
+				y2.call(env.timeout("pg2-3", 2));
+			});
+			
+			int i = 1;
+			while(true) {
+				y1.call(env.timeout("pg1-" + i, 3));
+				if(i == 3) {
+					sub.interrupt("pg1-" + i);
+				}
+				i++;
+			}
+		});
+		env.run(30);
+	}
+
+	@Test
+	public void test1Process() throws Exception {
 		System.out.println("now, name> event");
 		System.out.println("----------------");
 
@@ -22,7 +74,7 @@ public class EnvTest1 {
 	}
 	
 	@Test
-	public void test2() throws Exception {
+	public void test2Processes() throws Exception {
 		System.out.println("now, name> event");
 		System.out.println("----------------");
 
@@ -52,6 +104,18 @@ public class EnvTest1 {
 			System.out.println(String.format("%3d, run2> out", env.getNow()));
 			yield.call(env.timeout(2));
 		}
+	}
+	
+	public class Hello extends Processable {
+		
+		public Hello(String name) {
+			super(name);
+		}
+
+	    public void run() {
+	        yield(env().timeout(10));
+	        System.out.println(now() + "> Hello " + getId());
+	    }
 	}
 }
  

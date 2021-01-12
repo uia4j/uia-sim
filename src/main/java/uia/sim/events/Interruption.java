@@ -4,8 +4,7 @@ import uia.sim.Event;
 import uia.sim.SimException;
 
 /**
- * Immediately schedules an InterruptException with the given Throwable to be thrown into the process.
-
+ * Immediately schedules an Interruption event with the given cause to be thrown into the process.<br>
  * 
  * This event is automatically triggered when it is created.
  *
@@ -16,10 +15,24 @@ public class Interruption extends Event {
 
 	private final Process process;
 	
+	/**
+	 * <b>Schedules</b> a interruption event into environment.
+	 * 
+	 * @param process The process should be interrupted.
+	 * @param cause The cause.
+	 * @return The interrupt event.
+	 */
 	public static Interruption schedule(Process process, Exception cause) {
 		return schedule(process, new SimException(process, cause));
 	}
 
+	/**
+	 * <b>Schedules</b> a interruption event into environment.
+	 * 
+	 * @param process The process should be interrupted.
+	 * @param cause The cause.
+	 * @return The interrupt event.
+	 */
 	public static Interruption schedule(Process process, String cause) {
 		if(process.getEnv().getActiveProcess() == process) {
             throw new RuntimeException("The process is not allowed to interrupt itself.");

@@ -1,35 +1,74 @@
 package uia.cor;
 
+/**
+ * The generator pairs with Yield.
+ * 
+ * @author Kan
+ *
+ * @param <T> The data type exchanges to the generator.
+ */
 public final class Generator<T> {
 
 	private final Yield<T> yield;
 
+	/**
+	 * The constructor.
+	 * 
+	 * @param yield The yield object.
+	 */
 	public Generator(Yield<T> yield) {
 		this.yield = yield;
 	}
 	
 	/**
-	 * Interrupts current and go to next iteration.
+	 * Reports error to the iteration.
 	 * 
-	 * @param cause The cause.
-	 * @return True if there is a next iteration.
+	 * @param message The error message.
 	 */
 	public synchronized void error(String message) {
 		error(new YieldException(message));
 	}
 	
 	/**
-	 * Interrupts current and go to next iteration.
+	 * Reports error to the iteration.
 	 * 
 	 * @param cause The cause.
-	 * @return True if there is a next iteration.
 	 */
 	public synchronized void error(Exception cause) {
 		this.yield.error(cause);
 	}
-	
+
 	/**
-	 * Stops the iteration.
+	 * Checks if there is a next iteration or not.<br>
+	 * 
+	 * @return True if there is a next iteration.
+	 */
+	public synchronized boolean next() {
+		return this.yield.next();
+	}
+
+	/**
+	 * Checks if there is a next iteration or not.<br>
+	 * The method calls 2 methods: error(value), next().
+	 * 
+	 * @param cause The cause.
+	 * @return True if there is a next iteration.
+	 */
+	public synchronized boolean errorNext(Exception cause) {
+		this.yield.error(cause);
+		return this.yield.next();
+	}
+
+	/**
+	 * Closes the iteration.
+	 * 
+	 */
+	public synchronized void stop() {
+		this.yield.close();
+	}
+
+	/**
+	 * Closes the iteration.
 	 * 
 	 * @param cause The cause.
 	 */
@@ -38,51 +77,26 @@ public final class Generator<T> {
 	}
 
 	/**
-	 * Checks if there is a new value or not.
+	 * Tests if the iteration is closed.
 	 * 
-	 * @return True if there is a new value.
+	 * @return True if the iteration is closed.
 	 */
-	public synchronized boolean next() {
-		return this.yield.next();
-	}
-
-	/**
-	 * Checks if there is a new value or not.<br>
-	 * The method calls 2 methods: error(value), next().
-	 * 
-	 * @param cause The cause.
-	 * @return True if there is a new value.
-	 */
-	public synchronized boolean errorNext(Exception cause) {
-		this.yield.error(cause);
-		return this.yield.next();
-	}
-
 	public boolean isClosed() {
 		return this.yield.isClosed();
 	}
 	
 	/**
-	 * Returns the last result.
+	 * Returns the last result and tests if there is a next iteration or not.
 	 * 
-	 * @return True if there is a new value.
+	 * @return The next information.
 	 */
 	public synchronized NextResult<T> nextResult() {
 		boolean hasNext = this.yield.next();
 		return new NextResult<T>(hasNext, this.yield.getValue());
 	}
-
-
-	/**
-	 * Cancels the yield control.
-	 * 
-	 */
-	public synchronized void stop() {
-		this.yield.close();
-	}
 	
 	/**
-	 * Returns the current value.
+	 * Returns the current value of the iteration.
 	 * 
 	 * @return The current value.
 	 */

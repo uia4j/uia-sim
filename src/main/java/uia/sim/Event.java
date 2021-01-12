@@ -9,13 +9,26 @@ import org.apache.logging.log4j.Logger;
 
 import uia.sim.events.AllOf;
 import uia.sim.events.AnyOf;
+import uia.sim.events.Condition;
 
+/**
+ * The base event.
+ * 
+ * @author Kan
+ *
+ */
 public class Event {
 	
     private static final Logger logger = LogManager.getLogger(Event.class);
 	
 	private static final Object PENDING = new Object();
-	
+
+	/**
+	 * The priority type.
+	 * 
+	 * @author Kan
+	 *
+	 */
 	public enum PriorityType {
 		
 		URGENT(0),
@@ -37,6 +50,8 @@ public class Event {
 	
 	protected final String id;
 	
+	protected final int seqNo;
+	
 	private Object value;
 	
 	private boolean envDown;
@@ -53,7 +68,7 @@ public class Event {
 	 * The constructor.
 	 * 
 	 * @param env The environment.
-	 * @param id The id.
+	 * @param id The event id.
 	 */
 	public Event(Env env, String id) {
 		this(env, id, PENDING);
@@ -63,12 +78,13 @@ public class Event {
 	 * The constructor.
 	 * 
 	 * @param env The environment.
-	 * @param id The id.
+	 * @param id The event id.
 	 * @param value The value of the event.
 	 */
 	public Event(Env env, String id, Object value) {
 		this.env = env;
 		this.id = id;
+		this.seqNo = env.genSeq();
 		this.value = value;
 		this.envDown = false;
 		this.ok = true;
@@ -87,14 +103,19 @@ public class Event {
 	}
 	
 	/**
-	 * Returns the id.
+	 * Returns the event id.
 	 * 
-	 * @return The id.
+	 * @return The event id.
 	 */
 	public String getId() {
 		return this.id;
 	}
 	
+	/**
+	 * Returns the value of the event.
+	 * 
+	 * @return The value.
+	 */
 	public Object getValue() {
 		//if(this.value == PENDING) {
 		//	throw new IllegalStateException("Value of event:" + this.id + " is not yet available");
@@ -102,13 +123,19 @@ public class Event {
 		return this.value;
 	}
 
+	/**
+	 * Sets the value to the event.
+	 * 
+	 * @param value The value.
+	 */
 	public void setValue(Object value) {
 		this.value = value;
 	}
 
 	/**
 	 * Returns the number of callable instances.
-	 * @return
+	 * 
+	 * @return The number of callable instances.
 	 */
 	public int getNumberOfCallbables() {
 		return this.callables.size();
@@ -121,6 +148,9 @@ public class Event {
 	 * @return Successful added or not.
 	 */
 	public boolean addCallable(Consumer<Event> callable) {
+		if(this.callables.contains(callable)) {
+			return false;
+		}
 		return this.callables.add(callable);
 	}
 	
@@ -137,27 +167,38 @@ public class Event {
 	/**
 	 * AND with other event.
 	 * 
+	 * @param id The condition event id.
 	 * @param other The other event.
 	 * @return A new condition event.
 	 */
-	public Event and(Event other) {
-		return new AllOf(env, Arrays.asList(this, other));
+	public Condition and(String id, Event other) {
+		return new AllOf(env, id, Arrays.asList(this, other));
 	}
 	
 	/**
 	 * OR with other event.
 	 * 
+	 * @param id The condition event id.
 	 * @param other The other event.
 	 * @return A new condition event.
 	 */
-	public Event or(Event other) {
-		return new AnyOf(env, Arrays.asList(this, other));
+	public Condition or(String id, Event other) {
+		return new AnyOf(env, id, Arrays.asList(this, other));
 	}
 
+	/**
+	 * Tests if the environment is down or not.
+	 * 
+	 * @return The if the environment is down.
+	 */
 	public boolean isEnvDown() {
 		return envDown;
 	}
 
+	/**
+	 * Notifies the environment is down.
+	 * 
+	 */
 	public void envDown() {
 		this.ok = false;
 		this.envDown = true;
@@ -210,12 +251,16 @@ public class Event {
 		return this.defused;
 	}
 
+	/** 
+	 * NG the event.
+	 * 
+	 */
 	public void ng() {
 		this.ok = false;
 	}
 
 	/**
-	 * Defuses the event/
+	 * Defuses the event.
 	 * 
 	 */
 	public void defused() {
@@ -229,7 +274,7 @@ public class Event {
 	 * @param event The specific event. 
 	 */
 	public synchronized void trigger(Event event) {
-		logger.debug(String.format("%s> triggered by %s", getId(), event.getId()));
+		logger.debug(String.format("%4d> %s> triggered(%s) by %s", this.env.getNow(), getId(), this.seqNo, event.getId()));
 		this.ok = event.isOk();
 		this.value = event.value;
 		// schedule
@@ -243,7 +288,19 @@ public class Event {
 	 * @param value The value of the event.
 	 */
 	public synchronized void succeed(Object value) {
-		logger.debug(String.format("%s> succeed", getId()));
+		succeed(value, PriorityType.NORMAL);
+	}
+	
+	
+	/**
+	 * Marks it as successful and 
+	 * <b>schedule</b> it for processing by the environment.
+	 * 
+	 * @param value The value of the event.
+	 * @param priority The priority.
+	 */
+	public synchronized void succeed(Object value, PriorityType priority) {
+		logger.debug(String.format("%4d> %s> succeed(%s)", this.env.getNow(), getId(), this.seqNo));
 		if(isTriggered()) {
 			throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
 		}
@@ -251,9 +308,9 @@ public class Event {
 		this.ok = true;
 		this.value = value;
 		// schedule
-		this.env.schedule(this, PriorityType.NORMAL);
+		this.env.schedule(this, priority);
 	}
-	
+
 	/**
 	 * Marks the event as failed with a cause and 
 	 * <b>schedule</b> it for processing by the environment.
@@ -261,7 +318,7 @@ public class Event {
 	 * @param cause The failed cause.
 	 */
 	public synchronized void fail(Exception cause) {
-		logger.debug(String.format("%s> fail, %s", getId(), cause.getMessage()));
+		logger.debug(String.format("%4d> %s> fail(%s), %s", this.env.getNow(), getId(), this.seqNo, cause.getMessage()));
 		if(isTriggered()) {
 			throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
 		}
@@ -283,19 +340,41 @@ public class Event {
 			}
 		}
 		finally {
+			logger.info(String.format("%4d> %s> done(%s)", this.env.getNow(), this, this.seqNo));
 			this.processed = true;
 			this.callables.clear();
 		}
 	}
+	
+	/**
+	 * Creates a readonly version event.
+	 * 
+	 * @return A readonly event.
+	 */
+	public final Event forLog() {
+		Event event = new Event(null, toString());
+		event.ok = this.ok;
+		event.processed = this.processed;
+		event.defused = this.defused;
+		event.value = this.value;
+		event.envDown = this.envDown;
+		return event;
+	}
 
 	@Override
 	public String toString() {
-		return "E(" + getId() + ")";
+		return getId();
 	}
 
+	/**
+	 * Returns detail information of this event.
+	 * 
+	 * @return The information.
+	 */
 	public String toFullString() {
-		return String.format("%s(ok=%s,triggered=%s,proccessed=%s)", 
+		return String.format("%s(key=%s,ok=%s,triggered=%s,proccessed=%s),", 
 				getId(),
+				this.seqNo,
 				this.isOk(),
 				this.isTriggered(),
 				this.isProcessed());

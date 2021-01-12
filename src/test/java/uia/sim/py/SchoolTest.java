@@ -1,9 +1,10 @@
-package uia.sim;
+package uia.sim.py;
 
 import org.junit.Test;
 
 import uia.cor.Yield2Way;
 import uia.sim.Env;
+import uia.sim.Event;
 
 public class SchoolTest {
 	
@@ -30,6 +31,7 @@ public class SchoolTest {
 			System.out.println(String.format("\n%3d> begin", this.env.getNow()));
 
 			yield.call(env.timeout(45));
+			
 			this.classEnd.succeed(null);
 			this.classEnd = this.env.event("classEnd");		// update event
 			System.out.println(String.format("\n%3d> end", this.env.getNow()));
@@ -42,8 +44,6 @@ public class SchoolTest {
 		while(true) {
 			yield.call(this.classBegin);
 			System.out.print("|O| ");
-			// This call will make method:'resume' of the pupil process to be a callable of the classEnd event.
-			// when classEnd is time up, pupil.resume will be invoked.
 			yield.call(this.classEnd);
 			System.out.print("\\o/ ");
 		}
@@ -51,7 +51,9 @@ public class SchoolTest {
 	
 	@Test
 	public void test1() throws Exception {
-		this.env.run(300);
+		System.out.println("== go to school ==");
+		this.env.run(480);
+		System.out.println("\n\n== go home ==");
 	}
 }
  

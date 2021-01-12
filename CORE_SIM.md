@@ -35,8 +35,6 @@ public class MyJob extends Processable {
 
 ## Process 事件
 
-> event.callable -> process.resume()
-
 Process 內的 `resume()` 方法為此事件處理的核心：
 
 * `yield` 一個 Event 給 Process 後，Process 會將自己的 `resume()` 掛載到此 Event 的 callable 清單中。
@@ -45,6 +43,7 @@ Process 內的 `resume()` 方法為此事件處理的核心：
 
 * 該 Event 被 Env 調用，Env 透過 callable 執行 Process 的 `resume()`，此時阻塞 (blocking) 的流程被釋放繼續進行。
 
+> event.callable -> process.resume()
 
 以下面的流程為例：
 
@@ -75,7 +74,7 @@ env.run();
    
    1.2 阻塞 (blocking) 「步驟一」。
 
-2. Env 依序處理到 `Timeout(100)`，呼叫掛載的 callable (於 1.1 掛載)。
+2. Env 處理到 Event 佇列中的 `Timeout`，呼叫掛載的 callable (於 1.1 掛載)。
    
 3. Process 的 `resume()` 被調用。
 
@@ -92,7 +91,7 @@ env.run();
 5. Process 無 Event 需要再處理，將自己排入 Env 的 Event 佇列中，等待完成 (succeed)。
 
 
-上述流程為整個 Framework 最重要的部分，所以的操作變化都不脫離上述模式。
+上述流程為整個 Framework 最重要的部分，從簡單到複雜的模擬情境，都不脫離上述模式。
 
 
 ## Process Integration
@@ -137,7 +136,7 @@ env.process(new MainStep());
 env.run();
 ```
 
-1. 「步驟一」建立一個 timeout(100) 事件，Env 於 now = 100 時釋放此阻塞 (blocking)。
+1. 「步驟一」建立一個 timeout(100) 事件並阻塞 (blocking)，Env 於 now = 100 時釋放。
 
 2. 「步驟二」建立一個 SubStep，加入一個 `timeout(100)`，Env 排定執行時間為 __300__ (100 + 200)。
 
@@ -148,7 +147,7 @@ env.run();
    3.2 阻塞 (blocking) 「步驟三」。
 
 
-4. 「步驟四」於 now = 300 釋放後，並將 SubStep 註冊至 Event 佇列中，等待完成 (succeed)。
+4. 「步驟四」於 now = 300 被釋放，並將 SubStep 排入 Event 佇列中，等待完成 (succeed)。
 
 5. Env 取得 SubStep， 呼叫掛載的 callable (於 3.1 掛載)。
 
@@ -156,4 +155,4 @@ env.run();
 
    6.1 釋放「步驟三」。
 
-   6.2 將自己排入 Env 的 Event 佇列中，等待完成 (succeed)。
+   6.2 將 __MainStep__ 排入 Env 的 Event 佇列中，等待完成 (succeed)。

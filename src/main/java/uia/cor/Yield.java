@@ -6,6 +6,13 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * The Yield control object.
+ * 
+ * @author Kan
+ *
+ * @param <T> The data type exchanges to the generator.
+ */
 public class Yield<T> {
 		
     private static final Logger logger = LogManager.getLogger(Yield.class);
@@ -29,6 +36,7 @@ public class Yield<T> {
 	/**
 	 * Creates a Yield-Generator pair.
 	 * 
+	 * @param <T> The data type exchanges to the generator.
 	 * @param iterable The iterable program. 
 	 * @return The generator.
 	 */
@@ -39,6 +47,7 @@ public class Yield<T> {
 	/**
 	 * Creates a Yield-Generator pair.
 	 * 
+	 * @param <T> The data type exchanges to the generator.
 	 * @param yieldId The yield id.
 	 * @param iterable The iterable program. 
 	 * @return The generator.
@@ -59,6 +68,29 @@ public class Yield<T> {
 	}
 	
 	/**
+	 * Creates a Yield-Generator pair.
+	 * 
+	 * @param <T> The data type exchanges to the generator.
+	 * @param yieldable The iterable program. 
+	 * @return The generator.
+	 */
+	public static <T> Generator<T> accept(Yieldable<T> yieldable) {
+		return accept(null, yieldable::bind);
+	}
+	
+	/**
+	 * Creates a Yield-Generator pair.
+	 * 
+	 * @param <T> The data type exchanges to the generator.
+	 * @param yieldId The yield id.
+	 * @param yieldable The iterable program. 
+	 * @return The generator.
+	 */
+	public static <T> Generator<T> accept(String yieldId, Yieldable<T> yieldable) {
+		return accept(yieldId, yieldable::bind);
+	}
+
+	/**
 	 * Returns the id.
 	 * 
 	 * @return The id.
@@ -71,16 +103,15 @@ public class Yield<T> {
 	 * Reports a error.
 	 * 
 	 * @param cause The cause of the error.
-	 * @return True if there is a new value.
 	 */
 	public void error(Exception cause) {
 		this.error = cause;
 	}
 
 	/**
-	 * Checks if there is a new value or not.
+	 * Checks if there is a next iteration.
 	 * 
-	 * @return True if there is a new value.
+	 * @return True if there is a next iteration.
 	 */
 	public boolean next() {
 		if(this.closed) {
@@ -99,7 +130,7 @@ public class Yield<T> {
 	}
 
 	/**
-	 * Submit a new value to the paired generator.
+	 * Submits a new value to the paired generator.
 	 * 
 	 * @param value The new value.
 	 * @throws YieldException Something wrong.
@@ -196,7 +227,7 @@ public class Yield<T> {
 	}
 
 	/**
-	 * Close the iteration .
+	 * Closes the iteration .
 	 * 
 	 */
 	public synchronized void close() {
@@ -205,6 +236,11 @@ public class Yield<T> {
 		this.notifyAll();
 	}
 
+	/**
+	 * Closes the iteration .
+	 * 
+	 * @param cause The cause to close the iteration.
+	 */
   	public synchronized void close(InterruptedException cause) {
 		this.closed = true;
 		this.error = cause;
@@ -212,10 +248,20 @@ public class Yield<T> {
 		this.notifyAll();
 	}
 	
+  	/**
+  	 * Tests if the iteration is alive or not.
+  	 * 
+  	 * @return True if the iteration is alive.
+  	 */
 	public synchronized boolean isAlive() {
 		return !this.closed;
 	}
 	
+  	/**
+  	 * Tests if the iteration is closed or not.
+  	 * 
+  	 * @return True if the iteration is closed.
+  	 */
 	public synchronized boolean isClosed() {
 		return this.closed;
 	}

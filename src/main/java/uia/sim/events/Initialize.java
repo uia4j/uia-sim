@@ -2,16 +2,22 @@ package uia.sim.events;
 
 import uia.sim.Event;
 
-public class Initialize extends Event {
+/**
+ * Immediately schedules an Initialize event to startup the process.<br>
+ * 
+ * This event is automatically triggered when it is created.
+ *
+ * @author Kan
+ *
+ */
+public final class Initialize extends Event {
 
 	private final Process process;
 	
-	public Initialize(Process process) {
+	protected Initialize(Process process) {
 		super(process.getEnv(), "Initialize", null);
 		this.process = process;
 		this.process.bind(this);
-		// addCallable(this.process::resume);
-		
 		env.schedule(this, PriorityType.URGENT);
 	}
 	

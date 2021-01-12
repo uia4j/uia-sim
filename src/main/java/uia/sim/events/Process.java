@@ -8,10 +8,20 @@ import org.apache.logging.log4j.Logger;
 
 import uia.cor.Generator2Way;
 import uia.cor.Yield2Way;
+import uia.cor.Yieldable2Way;
 import uia.sim.Env;
 import uia.sim.Event;
 import uia.sim.SimException;
 
+/**
+ * Process controller.<br>
+ * <p>
+ * The process uses a generator to work together with iteration program.
+ * </p>
+ * 
+ * @author Kan
+ *
+ */
 public class Process extends Event {
 	
     private static final Logger logger = LogManager.getLogger(Process.class);
@@ -39,7 +49,28 @@ public class Process extends Event {
 				Process.this.resume(event);
 			}
 		};
-		this.target = new Initialize(this);
+		this.target = new Initialize(this);	// used to startup the resume()
+	}
+
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param env The environment.
+	 * @param eventId The event id.
+	 * @param taskRunner The task to be executed.
+	 */
+	public Process(Env env, String eventId, Yieldable2Way<Event, Object> taskRunner) {
+		super(env, eventId);
+		this.taskGen = Yield2Way.accept(eventId, taskRunner);
+		this.resumeCallable = new Consumer<Event>() {
+
+			@Override
+			public void accept(Event event) {
+				Process.this.resume(event);
+			}
+		};
+		this.target = new Initialize(this);	// used to startup the resume()
 	}
 
 	/**
@@ -70,6 +101,11 @@ public class Process extends Event {
 		Interruption.schedule(this, cause);
 	}
 
+	/**
+	 * Tests if the process is running(tasks iterating) or not.
+	 * 
+	 * @return True is the process is running.
+	 */
 	public boolean isAlive() {
 		return !this.taskGen.isClosed();
 	}
@@ -84,52 +120,61 @@ public class Process extends Event {
 	}
 
 	/**
-	 * Binds the event with this process.
+	 * Adds resume() of this process to the callable of the specific event.
 	 * 
 	 * @param event The event.
 	 * @return Successful or not.
 	 */
 	public boolean bind(Event event) {
+		if(event == null) {
+			return false;
+		}
 		return event.addCallable(this.resumeCallable);
 	}
 
 	/**
-	 * Unbinds the event with this process.
+	 * Removes resume() of this process from the callable of the specific event.
 	 * 
 	 * @param event The event.
 	 * @return Successful or not.
 	 */
 	public boolean unbind(Event event) {
+		if(event == null) {
+			return false;
+		}
 		return event.removeCallable(this.resumeCallable);
 	}
 
 	/**
-	 * Resumes to execute the task (the most important part of this framework).
+	 * Resumes to execute the next ONE event which the state is waiting to process.<br>
+	 * 
+	 * This is the  most important part of this framework).
 	 * 
 	 * @param by The event resumes the process.
 	 */
 	public synchronized void resume(Event by) {
 		if(this.taskGen.isClosed()) {
-			logger.debug(String.format("%s> resume(closed), from %s", getId(), by.toFullString()));
+			logger.debug(String.format("%4d> %s> resume(closed), by %s", this.env.getNow(), getId(), by.toFullString()));
 			return;
 		}
 
 		if(by.isEnvDown()) {
-			logger.debug(String.format("%s> resume(envDown), from %s", getId(), by.toFullString()));
+			logger.debug(String.format("%4d> %s> resume(envDown), by %s", this.env.getNow(), getId(), by.toFullString()));
 			this.taskGen.close(new InterruptedException("envDown"));
 			return;
 		}
 
 		final String tx = UUID.randomUUID().toString().substring(0, 6);
-		logger.debug(String.format("%s> resume(%s), from %s", getId(), tx, by.toFullString()));
+		logger.debug(String.format("%4d> %s> resume(%s), by %s", this.env.getNow(), getId(), tx, by.toFullString()));
 
 		this.env.setActiveProcess(this);
 		Event event = by;
 		boolean next = true;
 		while(next) {
 			if(!event.isOk()) {
-				logger.debug(String.format("%s> resume(%s), %s NG", getId(), tx, event));
 				event.defused();
+				env.raiseProcessFailed(env.getNow(), getId(), event);
+
 				// 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
 				if(event.getValue() == null) {
 					next = this.taskGen.errorNext(new SimException(this, this.id + " interrupted"));
@@ -143,19 +188,23 @@ public class Process extends Event {
 				}
 			}
 			else {
+				env.raiseProcessDone(env.getNow(), getId(), event);
+				
 				// 回傳  event.value 給前一次的 yield，並檢查是否有新的 yield。
 				next = this.taskGen.next(event.getValue());
 			}
 			if(next) {
 				event = this.taskGen.getValue();
-				logger.debug(String.format("%s> resume(%s), next %s", getId(), tx, event.toFullString()));
-	
 				// 檢查 event 是否未處理
 				if(!event.isProcessed()) {
 					// 關鍵：將此 process 的 resume 流程掛載至 event 上。
 					event.addCallable(this.resumeCallable);
 					// 中斷，等下一次 resume。
+					logger.debug(String.format("%4d> %s> resume(%s), %s, blocking", this.env.getNow(), getId(), tx, event));
 					break;
+				}
+				else {
+					logger.debug(String.format("%4d> %s> resume(%s), %s, processed", this.env.getNow(), getId(), tx, event));
 				}
 			}
 		}
@@ -163,12 +212,8 @@ public class Process extends Event {
 		this.env.setActiveProcess(null);
 		
 		if(!next) {
-			this.env.schedule(this, PriorityType.NORMAL);
 			succeed(this.taskGen.getResult());
-			logger.debug(String.format("%s> resume(%s), closed", getId(), tx));
-		}
-		else {
-			logger.debug(String.format("%s> resume(%s), done", getId(), tx));
+			logger.info(String.format("%4d> %s> closed", this.env.getNow(), getId(), tx));
 		}
 	}
 
