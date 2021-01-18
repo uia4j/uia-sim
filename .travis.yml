@@ -1,0 +1,13 @@
+---
+language: java
+
+sudo: false
+
+script:
+  - mvn test -B
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
+jdk:
+  - openjdk8
