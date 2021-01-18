@@ -1,6 +1,8 @@
 UIA-SIM for Java, DESim4J
 ===
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1831b58c8f3244108866628ab9625828)](https://app.codacy.com/gh/uia4j/uia-sim?utm_source=github.com&utm_medium=referral&utm_content=uia4j/uia-sim&utm_campaign=Badge_Grade)
+
 DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __process-based discrete event simulation__ framework.
 
 DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
