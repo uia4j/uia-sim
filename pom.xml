@@ -30,4 +30,21 @@
 		<name>uia4j</name>
 		<url>https://github.com/uia4j</url>
 	</organization>
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+		<plugins>
+			<plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>cobertura-maven-plugin</artifactId>
+			    <version>2.7</version>
+			    <configuration>
+			        <formats>
+			            <format>html</format>
+			            <format>xml</format>
+			        </formats>
+			        <check />
+			    </configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
