@@ -2,7 +2,7 @@ Core Design Concept
 ===
 
 ## 核心觀念
-DESimJava 的設計參考 SimPy，核心為 Env 和 Event。
+DESim4J 的設計參考 SimPy，核心為 Env 和 Event。
 
 * Env 內的 PriorityQueue 對所有的 Event 進行排序管理。
   

@@ -1,10 +1,12 @@
-UIA-SIM, DESim4J
+UIA-SIM for Java, DESim4J
 ===
 
-UIA-SIM is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __process-based discrete event simulation__ framework.
+DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __process-based discrete event simulation__ framework.
 
-UIA-SIM aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
+DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
 
+
+[API](https://uia4j.github.io/uia-sim/index.html)
 
 ## package uia.cor
 The package provides __yield-like__ API. The main concept is
@@ -27,7 +29,7 @@ Generator gen = Yield.accept(yield -> ::function);
 
 
 
-Below is a simple workflow of Yield-Generator
+Below is a simple workflow of Yield-Generator:
 
 ```java
 public class YieldTest {
