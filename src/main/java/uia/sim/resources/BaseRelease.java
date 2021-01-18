@@ -1,7 +1,6 @@
 package uia.sim.resources;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 import uia.sim.Event;
 import uia.sim.events.Process;
@@ -29,11 +28,9 @@ public abstract class BaseRelease<T extends BaseResource<T>> extends Event imple
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         exit();
-        if (!isTriggered()) {
-            this.resource.removeRelease(this);
-        }
+        this.resource.removeRelease(this);
     }
 
     /**

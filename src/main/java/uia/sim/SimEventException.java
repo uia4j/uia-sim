@@ -11,8 +11,8 @@ public class SimEventException extends RuntimeException {
         this.event = event;
     }
 
-    public SimEventException(Event event, Throwable th) {
-        super(th);
+    public SimEventException(Event event, String message, Throwable th) {
+        super(message, th);
         this.event = event;
     }
 }

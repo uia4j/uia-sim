@@ -18,7 +18,7 @@ import uia.sim.SimEventException;
  * <p>
  * The process uses a generator to work together with iteration program.
  * </p>
- * 
+ *
  * @author Kan
  *
  */
@@ -34,7 +34,7 @@ public class Process extends Event {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param eventId The event id.
      * @param taskRunner The task to be executed.
@@ -54,7 +54,7 @@ public class Process extends Event {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param eventId The event id.
      * @param taskRunner The task to be executed.
@@ -74,11 +74,11 @@ public class Process extends Event {
 
     /**
      * Interrupts this process.<br>
-     * 
+     *
      * <p>
      * It will schedule a Interruption event for the process into the environment
      * </p>
-     * 
+     *
      * @param cause The cause to interrupt this process.
      */
     public void interrupt(Exception cause) {
@@ -88,11 +88,11 @@ public class Process extends Event {
 
     /**
      * Interrupts this process.<br>
-     * 
+     *
      * <p>
      * It will schedule a Interruption event for the process into the environment
      * </p>
-     * 
+     *
      * @param cause The cause to interrupt this process.
      */
     public void interrupt(String cause) {
@@ -102,7 +102,7 @@ public class Process extends Event {
 
     /**
      * Tests if the process is running(tasks iterating) or not.
-     * 
+     *
      * @return True is the process is running.
      */
     public boolean isAlive() {
@@ -111,7 +111,7 @@ public class Process extends Event {
 
     /**
      * Returns The event that the process is currently waiting for.
-     * 
+     *
      * @return The event.
      */
     public Event getTarget() {
@@ -120,7 +120,7 @@ public class Process extends Event {
 
     /**
      * Adds resume() of this process to the callable of the specific event.
-     * 
+     *
      * @param event The event.
      * @return Successful or not.
      */
@@ -133,7 +133,7 @@ public class Process extends Event {
 
     /**
      * Removes resume() of this process from the callable of the specific event.
-     * 
+     *
      * @param event The event.
      * @return Successful or not.
      */
@@ -146,9 +146,9 @@ public class Process extends Event {
 
     /**
      * Resumes to execute the next ONE event which the state is 'waiting'.<br>
-     * 
+     *
      * This is the  most important part of this framework).
-     * 
+     *
      * @param by The event resumes the process.
      */
     public synchronized void resume(Event by) {
@@ -159,7 +159,7 @@ public class Process extends Event {
 
         if (by.isEnvDown()) {
             logger.debug(String.format("%4d> %s> resume(envDown), by %s", this.env.getNow(), getId(), by.toFullString()));
-            this.taskGen.close(new InterruptedException("envDown"));
+            this.taskGen.stop(new InterruptedException("envDown"));
             return;
         }
 
@@ -172,7 +172,7 @@ public class Process extends Event {
         while (next) {
             if (!event.isOk()) {
                 event.defused();
-                env.raiseProcessFailed(env.getNow(), getId(), event);
+                this.env.raiseProcessFailed(this.env.getNow(), getId(), event);
 
                 // 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
                 if (event.getValue() == null) {
@@ -180,14 +180,14 @@ public class Process extends Event {
                 }
                 else if (event.getValue() instanceof Exception) {
                     Exception ex = (Exception) event.getValue();
-                    next = this.taskGen.errorNext(new SimEventException(this, ex.getMessage()));
+                    next = this.taskGen.errorNext(new SimEventException(this, ex.getMessage(), ex));
                 }
                 else {
                     next = this.taskGen.errorNext(new SimEventException(this, event.getValue().toString()));
                 }
             }
             else {
-                env.raiseProcessDone(env.getNow(), getId(), event);
+                this.env.raiseProcessDone(this.env.getNow(), getId(), event);
 
                 // 回傳  event.value 給前一次的 yield，並檢查是否有新的 yield。
                 next = this.taskGen.next(event.getValue());

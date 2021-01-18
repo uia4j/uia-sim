@@ -6,7 +6,7 @@ import org.junit.Test;
 public class Yield2WayTest {
 
     @Test
-    public void testCallSum2() {
+    public void test1() {
         Generator2Way<Integer, Integer> gen = Yield2Way.accept("y2", this::callSum2);
         int i = 0;
         gen.next();
@@ -17,6 +17,25 @@ public class Yield2WayTest {
         while (gen.next(i * i));
         Assert.assertEquals(10, i);
         Assert.assertEquals(385, (int) gen.getResult());
+        Assert.assertTrue(gen.isClosed());
+    }
+
+    @Test
+    public void test2() {
+        Generator2Way<Integer, Integer> gen = Yield2Way.accept("y2", this::callSum2);
+        int i = 0;
+        gen.next();
+        do {
+            i = gen.getValue();
+            System.out.println("value=" + i);
+            if (i == 5) {
+                gen.stop(i * i);
+                break;
+            }
+        }
+        while (gen.next(i * i));
+        Assert.assertEquals(5, i);
+        Assert.assertEquals(55, (int) gen.getResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -100,14 +119,19 @@ public class Yield2WayTest {
         Assert.assertEquals("y2", yield.toString());
         int i = 1;
         int sum = 0;
-        while (i <= 10) {
-            int v = yield.call(i++);
-            sum += v;
-            System.out.println("  sum=" + sum + ", v=" + v);
+        try {
+            while (i <= 10) {
+                int v = yield.call(i++);
+                sum += v;
+                System.out.println("  sum=" + sum + ", v=" + v);
+            }
+            Assert.assertEquals(11, i);
+            Assert.assertEquals(385, sum);
+            yield.close(sum);
         }
-        yield.close(sum);
-        Assert.assertEquals(11, i);
-        Assert.assertEquals(385, sum);
+        catch (Exception ex) {
+            yield.close(sum);
+        }
     }
 
     public void callSum2FromNag(Yield2Way<Integer, Integer> yield) {

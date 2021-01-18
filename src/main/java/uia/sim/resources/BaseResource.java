@@ -179,6 +179,7 @@ public abstract class BaseResource<T extends BaseResource<T>> {
                 if (this.releaseQueue.remove(idx) != release) {
                     throw new SimException("release queue invariant violated");
                 }
+                release.close();
             }
 
             if (!proceed) {

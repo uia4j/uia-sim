@@ -2,7 +2,7 @@ package uia.sim;
 
 /**
  * The realtime environment.
- * 
+ *
  * @author Kan
  *
  */
@@ -14,12 +14,12 @@ public class RealtimeEnv extends Env {
      * The constructor.
      */
     public RealtimeEnv() {
-        this.tickSize = 1000;
+        this(20);
     }
 
     /**
      * The constructor.
-     * 
+     *
      * @param tickSize The microseconds of a tick. The minimum is 20ms.
      */
     public RealtimeEnv(int tickSize) {

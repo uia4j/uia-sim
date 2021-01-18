@@ -75,16 +75,6 @@ public abstract class Processable {
     }
 
     /**
-     * Stop the process.
-     *
-     */
-    public final void stop() {
-        if (this.yield != null) {
-            this.yield.close();
-        }
-    }
-
-    /**
      * Bind the process with specific environment.<br>
      * Only allowed to bind once, or throw a runtime exception.
      *

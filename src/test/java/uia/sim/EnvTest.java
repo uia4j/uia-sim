@@ -24,6 +24,21 @@ public class EnvTest {
     }
 
     @Test
+    public void testBindTwice() {
+        Hello h = new Hello("Jack");
+        Env env1 = new Env();
+        Env env2 = new Env();
+        env1.process(h);
+        try {
+            env2.process(h);
+            Assert.assertTrue(false);
+        }
+        catch (Exception ex) {
+            Assert.assertTrue(true);
+        }
+    }
+
+    @Test
     public void testListener() throws InterruptedException {
         final Env env = new Env();
         env.setListener(new EnvListenerAdapter());
@@ -139,9 +154,9 @@ public class EnvTest {
         @Override
         public void run() {
             yield(env().timeout(10));
-            System.out.println(now() + "> Hello " + getId());
+            System.out.println(this + " Hello");
             yield().call(env().timeout(10));
-            System.out.println(now() + "> Hi " + getId());
+            System.out.println(this + " Hi");
         }
     }
 
@@ -162,9 +177,9 @@ public class EnvTest {
         @Override
         protected void run() {
             yield(this.env.timeout(10));
-            System.out.println(this.env.getNow() + "> Bye");
+            Assert.assertEquals(10, this.env.getNow());
             yield().call(this.env.timeout(10));
-            System.out.println(this.env.getNow() + "> See you");
+            Assert.assertEquals(20, this.env.getNow());
         }
     }
 }

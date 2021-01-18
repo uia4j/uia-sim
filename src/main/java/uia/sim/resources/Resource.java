@@ -50,7 +50,7 @@ public class Resource extends BaseResource<Resource> {
     public boolean doRequest(BaseRequest<Resource> request) {
         if (this.requests.size() < this.capacity) {
             this.requests.add((Request) request);
-            request.succeed(null);  // resume the process to work.
+            request.succeed(null);      // resume the process to work.
             return true;
         }
         else {

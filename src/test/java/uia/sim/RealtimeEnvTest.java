@@ -13,7 +13,7 @@ public class RealtimeEnvTest {
     private Event classEnd;
 
     public RealtimeEnvTest() {
-        this.env = new RealtimeEnv(10);
+        this.env = new RealtimeEnv();
         this.classBegin = this.env.event("classBegin");
         this.classEnd = this.env.event("classEnd");
         this.env.process("pupil-1", this::pupil);

@@ -119,6 +119,9 @@ public class Yield2Way<T, R> {
      * @param callResult The result for call().
      */
     public synchronized void send(R callResult) {
+        if (this.closed) {
+            return;
+        }
         this.callResult = callResult;
     }
 
@@ -128,18 +131,23 @@ public class Yield2Way<T, R> {
      * @param cause The cause of the error.
      */
     public void error(Exception cause) {
+        if (this.closed) {
+            return;
+        }
         this.error = cause;
     }
 
     /**
      * Checks if there is a next iteration.
      *
+     * @param stopIteration Forces to stop the iteration.
      * @return True if there is a next iteration.
      */
-    public boolean next() {
+    public boolean next(boolean stopIteration) {
         if (this.closed) {
             return false;
         }
+        this.closed = stopIteration;
         synchronized (this) {
             this.notifyAll();
             logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));
@@ -256,20 +264,6 @@ public class Yield2Way<T, R> {
      */
     public synchronized void close(InterruptedException cause) {
         this.closed = true;
-        this.error = cause;
-        logger.debug(String.format("%s> close()", this.id));
-        this.notifyAll();
-    }
-
-    /**
-     * Closes the iteration .
-     *
-     * @param result The final result.
-     * @param cause The cause to close the iteration.
-     */
-    public synchronized void close(R result, InterruptedException cause) {
-        this.closed = true;
-        this.callResult = result;
         this.error = cause;
         logger.debug(String.format("%s> close()", this.id));
         this.notifyAll();

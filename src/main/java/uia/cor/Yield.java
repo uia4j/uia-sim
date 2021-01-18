@@ -106,18 +106,23 @@ public class Yield<T> {
      * @param cause The cause of the error.
      */
     public void error(Exception cause) {
+        if (this.closed) {
+            return;
+        }
         this.error = cause;
     }
 
     /**
      * Checks if there is a next iteration.
      *
+     * @param stopIteration Forces to stop the iteration.
      * @return True if there is a next iteration.
      */
-    public boolean next() {
+    public boolean next(boolean stopIteration) {
         if (this.closed) {
             return false;
         }
+        this.closed = stopIteration;
         synchronized (this) {
             this.notifyAll();
             logger.debug(String.format("%s> next() is blocking, waiting call() to notify", this.id));

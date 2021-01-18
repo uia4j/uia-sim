@@ -54,7 +54,7 @@ public class Generator2Way<T, R> {
      * @return True if there is a next iteration.
      */
     public synchronized boolean next() {
-        return this.yield.next();
+        return this.yield.next(false);
     }
 
     /**
@@ -66,7 +66,7 @@ public class Generator2Way<T, R> {
      */
     public synchronized boolean next(R callResult) {
         this.yield.send(callResult);
-        return this.yield.next();
+        return this.yield.next(false);
     }
 
     /**
@@ -78,7 +78,7 @@ public class Generator2Way<T, R> {
      */
     public synchronized boolean errorNext(Exception cause) {
         this.yield.error(cause);
-        return this.yield.next();
+        return this.yield.next(false);
     }
 
     /**
@@ -91,30 +91,31 @@ public class Generator2Way<T, R> {
     }
 
     /**
-     * Closes the iteration.
+     * Stops the iteration successfully.
      *
      */
-    public synchronized void close() {
-        this.yield.close();
+    public synchronized void stop() {
+        this.yield.next(true);
     }
 
     /**
-     * Closes the iteration.
+     * Stops the iteration with a value successfully.
      *
-     * @param cause The cause.
+     * @param callResult The result for previous call().
      */
-    public synchronized void close(InterruptedException cause) {
-        this.yield.close(cause);
+    public synchronized void stop(R callResult) {
+        this.yield.send(callResult);
+        this.yield.next(true);
     }
 
     /**
-     * Closes the iteration.
+     * Stops the iteration with a cause.
      *
-     * @param value The final value.
      * @param cause The cause.
      */
-    public synchronized void close(R value, InterruptedException cause) {
-        this.yield.close(value, cause);
+    public synchronized void stop(Exception cause) {
+        this.yield.error(cause);
+        this.yield.next(true);
     }
 
     /**
@@ -132,7 +133,7 @@ public class Generator2Way<T, R> {
      * @return The next information.
      */
     public synchronized NextResult<T> nextResult() {
-        boolean hasNext = this.yield.next();
+        boolean hasNext = this.yield.next(false);
         return new NextResult<T>(hasNext, this.yield.getValue());
     }
 
@@ -144,7 +145,7 @@ public class Generator2Way<T, R> {
      */
     public synchronized NextResult<T> nextResult(R callResult) {
         this.yield.send(callResult);
-        boolean hasNext = this.yield.next();
+        boolean hasNext = this.yield.next(false);
         return new NextResult<T>(hasNext, this.yield.getValue());
     }
 

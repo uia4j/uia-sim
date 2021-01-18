@@ -23,7 +23,7 @@ public class Interruption extends Event {
      * @return The interrupt event.
      */
     public static Interruption schedule(Process process, Exception cause) {
-        return schedule(process, new SimEventException(process, cause));
+        return schedule(process, new SimEventException(process, "interruption", cause));
     }
 
     /**
