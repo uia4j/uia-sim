@@ -29,10 +29,11 @@ public class InterruptTest {
         env.run();
     }
 
+    @Test
     public void testConcurrentInterrputs() {
         final Env env = new Env();
         final Process fox = env.process("fox", y1 -> {
-            while (true) {
+            while (env.getNow() < 40) {
                 try {
                     y1.call(env.timeout(10));
                 }
@@ -53,6 +54,10 @@ public class InterruptTest {
         env.process("beans", y -> {
             y.call(env.timeout(5));
             fox.interrupt("beans");
+        });
+        env.process("bunce", y -> {
+            y.call(env.timeout(10));
+            fox.interrupt("bunce");
         });
 
         env.run(40);

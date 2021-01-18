@@ -1,5 +1,6 @@
 package uia.sim.resources;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import uia.sim.Env;
@@ -37,13 +38,16 @@ public class ResourceTest {
         protected void run() {
             try {
                 yield(env().timeout(this.driving));
-                try (Request req = res.request(getId() + "_charge")) {
+                System.out.println(getId() + " stop   at " + now());
+                try (Request req = this.res.request(getId() + "_charge")) {
                     yield(req);
+                    System.out.println(getId() + " charge at " + now());
                     yield(env().timeout(40));
+                    System.out.println(getId() + " leave  at " + now());
                 }
             }
             catch (Exception ex) {
-                ex.printStackTrace();
+                Assert.assertTrue(false);
             }
         }
 
