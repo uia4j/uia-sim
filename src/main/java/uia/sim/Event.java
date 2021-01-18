@@ -13,7 +13,7 @@ import uia.sim.events.Condition;
 
 /**
  * The base event.
- * 
+ *
  * @author Kan
  *
  */
@@ -25,7 +25,7 @@ public class Event {
 
     /**
      * The priority type.
-     * 
+     *
      * @author Kan
      *
      */
@@ -66,7 +66,7 @@ public class Event {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      */
@@ -76,7 +76,7 @@ public class Event {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      * @param value The value of the event.
@@ -95,7 +95,7 @@ public class Event {
 
     /**
      * Returns the environment of the event.
-     * 
+     *
      * @return The environment.
      */
     public Env getEnv() {
@@ -104,7 +104,7 @@ public class Event {
 
     /**
      * Returns the event id.
-     * 
+     *
      * @return The event id.
      */
     public String getId() {
@@ -113,7 +113,7 @@ public class Event {
 
     /**
      * Returns the value of the event.
-     * 
+     *
      * @return The value.
      */
     public Object getValue() {
@@ -125,7 +125,7 @@ public class Event {
 
     /**
      * Sets the value to the event.
-     * 
+     *
      * @param value The value.
      */
     public void setValue(Object value) {
@@ -134,7 +134,7 @@ public class Event {
 
     /**
      * Returns the number of callable instances.
-     * 
+     *
      * @return The number of callable instances.
      */
     public int getNumberOfCallbables() {
@@ -143,7 +143,7 @@ public class Event {
 
     /**
      * Adds a callable instance which will be executed at the scheduled time.
-     * 
+     *
      * @param callable A callable instance.
      * @return Successful added or not.
      */
@@ -156,7 +156,7 @@ public class Event {
 
     /**
      * Removes a callable instance.
-     * 
+     *
      * @param callable A callable instance.
      * @return Successful removed or not.
      */
@@ -166,38 +166,38 @@ public class Event {
 
     /**
      * AND with other event.
-     * 
+     *
      * @param id The condition event id.
      * @param other The other event.
      * @return A new condition event.
      */
     public Condition and(String id, Event other) {
-        return new AllOf(env, id, Arrays.asList(this, other));
+        return new AllOf(this.env, id, Arrays.asList(this, other));
     }
 
     /**
      * OR with other event.
-     * 
+     *
      * @param id The condition event id.
      * @param other The other event.
      * @return A new condition event.
      */
     public Condition or(String id, Event other) {
-        return new AnyOf(env, id, Arrays.asList(this, other));
+        return new AnyOf(this.env, id, Arrays.asList(this, other));
     }
 
     /**
      * Tests if the environment is down or not.
-     * 
+     *
      * @return The if the environment is down.
      */
     public boolean isEnvDown() {
-        return envDown;
+        return this.envDown;
     }
 
     /**
      * Notifies the environment is down.
-     * 
+     *
      */
     public void envDown() {
         this.ok = false;
@@ -207,7 +207,7 @@ public class Event {
 
     /**
      * Tests if the event has been triggered and it's callables are about to be invoked.
-     * 
+     *
      * @return Triggered or not.
      */
     public boolean isTriggered() {
@@ -216,7 +216,7 @@ public class Event {
 
     /**
      * Tests if the event has been processed.
-     * 
+     *
      * @return Processed or not.
      */
     public boolean isProcessed() {
@@ -225,7 +225,7 @@ public class Event {
 
     /**
      * Tests if the event has been triggered successfully.
-     * 
+     *
      * @return OK or not.
      */
     public boolean isOk() {
@@ -235,25 +235,25 @@ public class Event {
     /**
      * Tests if failed event's exception has been defused or not.<br>
      *
-     * When an event fails (i.e. calling method`fail()), the failed event's value 
+     * When an event fails (i.e. calling method`fail()), the failed event's value
      * is an exception that will be re-raised when the
      * environment processes the event (i.e. in environment method::step()`).
-     * 
-     * It is also possible for the failed event's exception to be defused by 
-     * setting defused property to true from an event callback. 
-     * 
-     * Doing so prevents the event's exception from being re-raised when the event is 
+     *
+     * It is also possible for the failed event's exception to be defused by
+     * setting defused property to true from an event callback.
+     *
+     * Doing so prevents the event's exception from being re-raised when the event is
      * processed by the environment.
-     * 
+     *
      * @return True when failed event's exception has been defused.
      */
     public boolean isDefused() {
         return this.defused;
     }
 
-    /** 
+    /**
      * NG the event.
-     * 
+     *
      */
     public void ng() {
         this.ok = false;
@@ -261,17 +261,17 @@ public class Event {
 
     /**
      * Defuses the event.
-     * 
+     *
      */
     public void defused() {
         this.defused = true;
     }
 
     /**
-     * Updates the event with the state and value of the provided event and 
+     * Updates the event with the state and value of the provided event and
      * <b>schedule</b> it for processing by the environment.
-    .	 * 
-     * @param event The specific event. 
+    .	 *
+     * @param event The specific event.
      */
     public synchronized void trigger(Event event) {
         logger.debug(String.format("%4d> %s> triggered(%s) by %s", this.env.getNow(), getId(), this.seqNo, event.getId()));
@@ -282,9 +282,9 @@ public class Event {
     }
 
     /**
-     * Marks it as successful and 
+     * Marks it as successful and
      * <b>schedule</b> it for processing by the environment.
-     * 
+     *
      * @param value The value of the event.
      */
     public synchronized void succeed(Object value) {
@@ -292,16 +292,16 @@ public class Event {
     }
 
     /**
-     * Marks it as successful and 
+     * Marks it as successful and
      * <b>schedule</b> it for processing by the environment.
-     * 
+     *
      * @param value The value of the event.
      * @param priority The priority.
      */
     public synchronized void succeed(Object value, PriorityType priority) {
         logger.debug(String.format("%4d> %s> succeed(%s)", this.env.getNow(), getId(), this.seqNo));
         if (isTriggered()) {
-            throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
+            throw new SimEventException(this, "The event:" + this.id + " has alreday been triggered");
         }
 
         this.ok = true;
@@ -311,15 +311,15 @@ public class Event {
     }
 
     /**
-     * Marks the event as failed with a cause and 
+     * Marks the event as failed with a cause and
      * <b>schedule</b> it for processing by the environment.
-     * 
+     *
      * @param cause The failed cause.
      */
     public synchronized void fail(Exception cause) {
         logger.debug(String.format("%4d> %s> fail(%s), %s", this.env.getNow(), getId(), this.seqNo, cause.getMessage()));
         if (isTriggered()) {
-            throw new RuntimeException("The event:" + this.id + " has alreday been triggered");
+            throw new SimEventException(this, "The event:" + this.id + " has alreday been triggered");
         }
 
         this.ok = false;
@@ -330,7 +330,7 @@ public class Event {
 
     /**
      * Executes all instances of callable.
-     * 
+     *
      */
     public synchronized void callback() {
         try {
@@ -347,7 +347,7 @@ public class Event {
 
     /**
      * Creates a readonly version event.
-     * 
+     *
      * @return A readonly event.
      */
     public final Event forLog() {
@@ -367,7 +367,7 @@ public class Event {
 
     /**
      * Returns detail information of this event.
-     * 
+     *
      * @return The information.
      */
     public String toFullString() {

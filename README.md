@@ -1,12 +1,14 @@
 UIA-SIM for Java, DESim4J
 ===
 
+[![Build Status](https://travis-ci.com/uia4j/uia-sim.svg?branch=master)](https://travis-ci.org/uia4j/uia-sim)
+[![codecov](https://codecov.io/gh/uia4j/uia-sim/branch/master/graph/badge.svg)](https://codecov.io/gh/uia4j/uia-sim)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/74b965d571784007ac63f5cdb7656c40)](https://www.codacy.com/gh/uia4j/uia-sim/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=uia4j/uia-sim&amp;utm_campaign=Badge_Grade)
+[![License](https://img.shields.io/github/license/uia4j/uia-sim.svg)](LICENSE)
+
 DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __process-based discrete event simulation__ framework.
 
 DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
-
-
-[API](https://uia4j.github.io/uia-sim/index.html)
 
 ## package uia.cor
 The package provides __yield-like__ API. The main concept is
@@ -191,6 +193,8 @@ The framework is still building and testing. The next tasks are
 
 
 # Reference
+
+[API](https://uia4j.github.io/uia-sim/index.html)
 
 [SimPy Home](https://simpy.readthedocs.io/en/latest/)
 

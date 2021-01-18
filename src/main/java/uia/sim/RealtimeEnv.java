@@ -27,7 +27,7 @@ public class RealtimeEnv extends Env {
     }
 
     @Override
-    protected void step() throws SimException {
+    protected void step() throws SimEventException {
         Job job = this.jobs.peek();
         int ms = job.time - getNow();
         if (ms > 0) {

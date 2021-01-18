@@ -5,19 +5,17 @@ import uia.sim.Event;
 
 /**
  * The event gets triggered after a *delay* has passed.<br>
- * 
+ *
  * This event is automatically triggered when it is created.
- * 
+ *
  * @author Kan
  *
  */
 public class Timeout extends Event {
 
-    private final int delay;
-
     /**
      * The constructor <b>schedule</b> itself for processing by the environment automatically.
-     * 
+     *
      * @param env The environment.
      * @param delay The delay time.
      */
@@ -27,7 +25,7 @@ public class Timeout extends Event {
 
     /**
      * The constructor <b>schedule</b> itself for processing by the environment automatically.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      * @param delay The delay time.
@@ -38,7 +36,7 @@ public class Timeout extends Event {
 
     /**
      * The constructor <b>schedule</b> itself for processing by the environment automatically.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      * @param delay The delay time.
@@ -46,8 +44,7 @@ public class Timeout extends Event {
      */
     public Timeout(Env env, String id, int delay, Object value) {
         super(env, id, value);
-        this.delay = delay;
-        env.schedule(this, PriorityType.NORMAL, this.delay);
+        env.schedule(this, PriorityType.NORMAL, delay);
     }
 
     @Override

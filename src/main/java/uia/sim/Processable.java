@@ -91,9 +91,9 @@ public abstract class Processable {
      * @param env The environment.
      * @return A new process.
      */
-    final Process bind(Env env) {
+    public final Process bind(Env env) {
         if (this.env != null) {
-            throw new RuntimeException("has binded already");
+            throw new SimException(this.getId() + " has binded already");
         }
 
         this.env = env;

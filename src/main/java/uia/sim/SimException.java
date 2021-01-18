@@ -1,18 +1,10 @@
 package uia.sim;
 
-public class SimException extends Exception {
+public class SimException extends RuntimeException {
 
-    private static final long serialVersionUID = 6332759220723531098L;
+    private static final long serialVersionUID = -646650791563422611L;
 
-    public final Event event;
-
-    public SimException(Event event, String message) {
+    public SimException(String message) {
         super(message);
-        this.event = event;
-    }
-
-    public SimException(Event event, Throwable th) {
-        super(th);
-        this.event = event;
     }
 }

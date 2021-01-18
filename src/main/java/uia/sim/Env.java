@@ -381,10 +381,10 @@ public class Env {
     /**
      * Processes the next event.
      * 
-     * @throws SimException 
+     * @throws SimEventException 
      * 
      */
-    protected void step() throws SimException {
+    protected void step() throws SimEventException {
         // 1. get the first job.
         Job job = this.jobs.poll();
 
@@ -397,7 +397,7 @@ public class Env {
 
         // 4. check if event is OK.
         if (!job.event.isOk() && !job.event.isDefused()) {
-            throw new SimException(job.event, job.event + " is NG and not defused");
+            throw new SimEventException(job.event, job.event + " is NG and not defused");
         }
     }
 
@@ -413,7 +413,7 @@ public class Env {
     }
 
     private void stopSim(Event event) {
-        throw new StopSimException("stop the simulation");
+        throw new SimException("stop the simulation");
     }
 
     /**

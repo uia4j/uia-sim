@@ -11,7 +11,7 @@ import uia.cor.Yield2Way;
 import uia.cor.Yieldable2Way;
 import uia.sim.Env;
 import uia.sim.Event;
-import uia.sim.SimException;
+import uia.sim.SimEventException;
 
 /**
  * Process controller.<br>
@@ -176,14 +176,14 @@ public class Process extends Event {
 
                 // 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
                 if (event.getValue() == null) {
-                    next = this.taskGen.errorNext(new SimException(this, this.id + " interrupted"));
+                    next = this.taskGen.errorNext(new SimEventException(this, this.id + " interrupted"));
                 }
                 else if (event.getValue() instanceof Exception) {
                     Exception ex = (Exception) event.getValue();
-                    next = this.taskGen.errorNext(new SimException(this, ex.getMessage()));
+                    next = this.taskGen.errorNext(new SimEventException(this, ex.getMessage()));
                 }
                 else {
-                    next = this.taskGen.errorNext(new SimException(this, event.getValue().toString()));
+                    next = this.taskGen.errorNext(new SimEventException(this, event.getValue().toString()));
                 }
             }
             else {

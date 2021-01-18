@@ -1,11 +1,11 @@
 package uia.sim.events;
 
 import uia.sim.Event;
-import uia.sim.SimException;
+import uia.sim.SimEventException;
 
 /**
  * Immediately schedules an Interruption event with the given cause to be thrown into the process.<br>
- * 
+ *
  * This event is automatically triggered when it is created.
  *
  * @author Kan
@@ -17,30 +17,30 @@ public class Interruption extends Event {
 
     /**
      * <b>Schedules</b> a interruption event into environment.
-     * 
+     *
      * @param process The process should be interrupted.
      * @param cause The cause.
      * @return The interrupt event.
      */
     public static Interruption schedule(Process process, Exception cause) {
-        return schedule(process, new SimException(process, cause));
+        return schedule(process, new SimEventException(process, cause));
     }
 
     /**
      * <b>Schedules</b> a interruption event into environment.
-     * 
+     *
      * @param process The process should be interrupted.
      * @param cause The cause.
      * @return The interrupt event.
      */
     public static Interruption schedule(Process process, String cause) {
         if (process.getEnv().getActiveProcess() == process) {
-            throw new RuntimeException("The process is not allowed to interrupt itself.");
+            throw new SimEventException(process, "The process is not allowed to interrupt itself.");
         }
         if (process.isTriggered()) {
-            throw new RuntimeException(process + " has terminated and cannot be interrupted.");
+            throw new SimEventException(process, "The process has terminated and cannot be interrupted.");
         }
-        return new Interruption(process, new SimException(process, cause));
+        return new Interruption(process, new SimEventException(process, cause));
     }
 
     private Interruption(Process process, Exception cause) {
@@ -51,7 +51,7 @@ public class Interruption extends Event {
         defused();
 
         // schedule a event to interrupt the process.
-        env.schedule(this, PriorityType.URGENT);
+        this.env.schedule(this, PriorityType.URGENT);
     }
 
     private void interrupt(Event event) {

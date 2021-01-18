@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import uia.sim.Env;
 import uia.sim.Event;
+import uia.sim.SimException;
 
 /**
  * The abstract resource.
@@ -140,7 +141,7 @@ public abstract class BaseResource<T extends BaseResource<T>> {
             else {
                 // 將已經觸發完成的 request 移出佇列。
                 if (this.requestQueue.remove(idx) != request) {
-                    throw new RuntimeException("Put queue invariant violated");
+                    throw new SimException("request queue invariant violated");
                 }
             }
 
@@ -176,7 +177,7 @@ public abstract class BaseResource<T extends BaseResource<T>> {
             else {
                 // 將已經觸發完成的 release 移出佇列。
                 if (this.releaseQueue.remove(idx) != release) {
-                    throw new RuntimeException("Get queue invariant violated");
+                    throw new SimException("release queue invariant violated");
                 }
             }
 

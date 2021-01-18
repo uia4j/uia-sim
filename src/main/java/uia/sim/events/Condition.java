@@ -7,7 +7,7 @@ import uia.sim.Event;
 
 /**
  * The abstract condition event.
- * 
+ *
  * @author Kan
  *
  */
@@ -19,7 +19,7 @@ public abstract class Condition extends Event {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      * @param events The events used to check pass or not.
@@ -34,7 +34,7 @@ public abstract class Condition extends Event {
             return;
         }
 
-        // Check if the condition is met for each processed event. 
+        // Check if the condition is met for each processed event.
         // Attach method::check() as a callback otherwise.
         for (Event event : events) {
             if (event.isProcessed()) {
@@ -60,7 +60,7 @@ public abstract class Condition extends Event {
     }
 
     private void populateValue(ConditionValue cv) {
-        for (Event event : events) {
+        for (Event event : this.events) {
             event.removeCallable(this::check);
             if (event instanceof Condition) {
                 ((Condition) event).populateValue(cv);
@@ -72,7 +72,7 @@ public abstract class Condition extends Event {
     }
 
     private void removeCheck() {
-        for (Event event : events) {
+        for (Event event : this.events) {
             event.removeCallable(this::check);
             if (event instanceof Condition) {
                 ((Condition) event).removeCheck();
@@ -91,16 +91,16 @@ public abstract class Condition extends Event {
             event.defused();
             // event.fail(event.getValue());
         }
-        else if (evaluate(this.events, checkCount)) {
+        else if (evaluate(this.events, this.checkCount)) {
             // The condition has been met. The buildValue() callable will
             // populate the ConditionValue once this condition is processed.
-            succeed(null);;
+            succeed(null);
         }
     }
 
     /**
      * Evaluates if events met the criteria.
-     * 
+     *
      * @param events The events used to evaluate.
      * @param count the pass count.
      * @return Pass or not.
