@@ -29,7 +29,6 @@ public class InterruptTest {
         env.run();
     }
 
-    @Test
     public void testConcurrentInterrputs() {
         final Env env = new Env();
         final Process fox = env.process("fox", y1 -> {

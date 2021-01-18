@@ -6,7 +6,12 @@ import uia.sim.events.Process;
 /**
  * The abstract processable class.<br>
  * It provides some help methods for inherited classes to clearly develop object-oriented style programs.
- * 
+ *
+ * <p>
+ * The environment instance is only available after binding,
+ * override the <b>postBind</b> method to configure the environment instead of in <b>constructor</b>.
+ * </p>
+ *
  * <p>
  * The example below inherits from the Processable and implement run().<br>
  * <ul>
@@ -17,24 +22,24 @@ import uia.sim.events.Process;
 
  * <pre>{@code
  * public Hello extends Processable {
- * 
+ *
  *     public Hello() {
  *         super("DESimJava");
  *     }
- *     
+ *
  *     public void run() {
  *         yield(env().timeout(10));
  *         System.out.println(now() + ", Hello " + getId());
  *     }
  * }
- * 
+ *
  * Env env = new Env();
  * env.process(new Hello());
  * env.run();
- * 
+ *
  * }</pre>
- * 
- * Above example will output: 
+ *
+ * Above example will output:
  * <pre>
  * 10, Hello DESimJava
  * </pre>
@@ -53,7 +58,7 @@ public abstract class Processable {
 
     /**
      * The constructor.
-     * 
+     *
      * @param id The process id.
      */
     protected Processable(String id) {
@@ -62,7 +67,7 @@ public abstract class Processable {
 
     /**
      * Returns the process id.
-     * 
+     *
      * @return The process id.
      */
     public String getId() {
@@ -71,7 +76,7 @@ public abstract class Processable {
 
     /**
      * Stop the process.
-     * 
+     *
      */
     public final void stop() {
         if (this.yield != null) {
@@ -82,7 +87,7 @@ public abstract class Processable {
     /**
      * Bind the process with specific environment.<br>
      * Only allowed to bind once, or throw a runtime exception.
-     * 
+     *
      * @param env The environment.
      * @return A new process.
      */
@@ -92,14 +97,14 @@ public abstract class Processable {
         }
 
         this.env = env;
-        this.process = env.process(id, this::readyToGo);
-        doBind();
+        this.process = env.process(this.id, this::readyToGo);
+        postBind();
         return this.process;
     }
 
     /**
      * Returns current time of the environment.
-     * 
+     *
      * @return The time.
      */
     protected int now() {
@@ -108,7 +113,7 @@ public abstract class Processable {
 
     /**
      * Returns the environment.
-     * 
+     *
      * @return The environment.
      */
     protected final Env env() {
@@ -117,7 +122,7 @@ public abstract class Processable {
 
     /**
      * Returns the process.
-     * 
+     *
      * @return The process.
      */
     protected final Process proc() {
@@ -126,7 +131,7 @@ public abstract class Processable {
 
     /**
      * Returns the yield control object.
-     * 
+     *
      * @return The yield.
      */
     protected final Yield2Way<Event, Object> yield() {
@@ -135,20 +140,24 @@ public abstract class Processable {
 
     /**
      * Yields a event to the generator and get the result.
-     * 
+     *
      * @param event The event sent to the generator.
      * @return The result sent back from the generator.
      */
     protected final Object yield(Event event) {
-        return yield.call(event);
-    }
-
-    protected void doBind() {
+        return this.yield.call(event);
     }
 
     /**
-     * Runs the process.
-     * 
+     * Invoked after binding. Override the method to configure the environment instead of in constructor.
+     *
+     */
+    protected void postBind() {
+    }
+
+    /**
+     * Runs this process.
+     *
      */
     protected abstract void run();
 

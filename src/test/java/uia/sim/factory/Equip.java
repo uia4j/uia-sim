@@ -49,7 +49,7 @@ public class Equip extends Processable {
     }
 
     @Override
-    protected void doBind() {
+    protected void postBind() {
         this.observable = new Observable<Operation>(env(), getId() + "_op_obvr");
     }
 }

@@ -19,7 +19,7 @@
             <AppenderRef ref="ERROR" />
         </Logger>
         <Logger name="uia.sim" level="info" additivity="false">
-            <AppenderRef ref="STDOUT" />
+            <AppenderRef ref="ERROR" />
         </Logger>
 		<Root level="all">
 			<AppenderRef ref="STDOUT" />
