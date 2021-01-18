@@ -12,17 +12,17 @@ import uia.sim.Event;
  */
 public final class Initialize extends Event {
 
-	private final Process process;
-	
-	protected Initialize(Process process) {
-		super(process.getEnv(), "Initialize", null);
-		this.process = process;
-		this.process.bind(this);
-		env.schedule(this, PriorityType.URGENT);
-	}
-	
-	@Override
-	public String toString() {
-		return "Init(" + this.process.getId() +")";
-	}
+    private final Process process;
+
+    protected Initialize(Process process) {
+        super(process.getEnv(), "Initialize", null);
+        this.process = process;
+        this.process.bind(this);
+        env.schedule(this, PriorityType.URGENT);
+    }
+
+    @Override
+    public String toString() {
+        return "Init(" + this.process.getId() + ")";
+    }
 }

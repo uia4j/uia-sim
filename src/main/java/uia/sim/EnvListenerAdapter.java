@@ -12,14 +12,14 @@ package uia.sim;
  */
 public class EnvListenerAdapter implements EnvListener {
 
-	@Override
-	public void stepDone(int time, String processId, Event event) {
-		System.out.println(String.format("%4d> %s> %s done", time, processId, event));
-	}
+    @Override
+    public void stepDone(int time, String processId, Event event) {
+        System.out.println(String.format("%4d> %s> %s done", time, processId, event));
+    }
 
-	@Override
-	public void stepFailed(int time, String processId, Event event) {
-		System.out.println(String.format("%4d> %s> %s failed", time, processId, event));
-	}
+    @Override
+    public void stepFailed(int time, String processId, Event event) {
+        System.out.println(String.format("%4d> %s> %s failed", time, processId, event));
+    }
 
 }

@@ -13,61 +13,60 @@ import uia.sim.SimException;
  */
 public class Interruption extends Event {
 
-	private final Process process;
-	
-	/**
-	 * <b>Schedules</b> a interruption event into environment.
-	 * 
-	 * @param process The process should be interrupted.
-	 * @param cause The cause.
-	 * @return The interrupt event.
-	 */
-	public static Interruption schedule(Process process, Exception cause) {
-		return schedule(process, new SimException(process, cause));
-	}
+    private final Process process;
 
-	/**
-	 * <b>Schedules</b> a interruption event into environment.
-	 * 
-	 * @param process The process should be interrupted.
-	 * @param cause The cause.
-	 * @return The interrupt event.
-	 */
-	public static Interruption schedule(Process process, String cause) {
-		if(process.getEnv().getActiveProcess() == process) {
+    /**
+     * <b>Schedules</b> a interruption event into environment.
+     * 
+     * @param process The process should be interrupted.
+     * @param cause The cause.
+     * @return The interrupt event.
+     */
+    public static Interruption schedule(Process process, Exception cause) {
+        return schedule(process, new SimException(process, cause));
+    }
+
+    /**
+     * <b>Schedules</b> a interruption event into environment.
+     * 
+     * @param process The process should be interrupted.
+     * @param cause The cause.
+     * @return The interrupt event.
+     */
+    public static Interruption schedule(Process process, String cause) {
+        if (process.getEnv().getActiveProcess() == process) {
             throw new RuntimeException("The process is not allowed to interrupt itself.");
-		}
-		if(process.isTriggered()) {
-			throw new RuntimeException(process + " has terminated and cannot be interrupted.");
-		}
-		return new Interruption(process, new SimException(process, cause));
-	}
-	
-	private Interruption(Process process, Exception cause) {
-		super(process.getEnv(), "Interruption", cause);
-		this.process = process;
-		addCallable(this::interrupt);
-		ng();
-		defused();
+        }
+        if (process.isTriggered()) {
+            throw new RuntimeException(process + " has terminated and cannot be interrupted.");
+        }
+        return new Interruption(process, new SimException(process, cause));
+    }
 
-		// schedule a event to interrupt the process.
-		env.schedule(this, PriorityType.URGENT);
-	}
-	
-	private void interrupt(Event event) {
-		if(this.process.isTriggered()) {
-			return;
-		}
+    private Interruption(Process process, Exception cause) {
+        super(process.getEnv(), "Interruption", cause);
+        this.process = process;
+        addCallable(this::interrupt);
+        ng();
+        defused();
 
-		Event target = this.process.getTarget();
-		this.process.unbind(target);
-		this.process.resume(this);
-	}
-	
-	@Override
-	public String toString() {
-		return "INT(" + this.process.getId() +")";
-	}
-	
-	
+        // schedule a event to interrupt the process.
+        env.schedule(this, PriorityType.URGENT);
+    }
+
+    private void interrupt(Event event) {
+        if (this.process.isTriggered()) {
+            return;
+        }
+
+        Event target = this.process.getTarget();
+        this.process.unbind(target);
+        this.process.resume(this);
+    }
+
+    @Override
+    public String toString() {
+        return "INT(" + this.process.getId() + ")";
+    }
+
 }

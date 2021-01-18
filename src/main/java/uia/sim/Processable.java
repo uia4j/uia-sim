@@ -1,8 +1,6 @@
 package uia.sim;
 
 import uia.cor.Yield2Way;
-import uia.sim.Env;
-import uia.sim.Event;
 import uia.sim.events.Process;
 
 /**
@@ -44,125 +42,123 @@ import uia.sim.events.Process;
  *
  */
 public abstract class Processable {
-	
-	private final String id;
 
-	private Env env;
+    private final String id;
 
-	private Process process;
+    private Env env;
 
-	private Yield2Way<Event, Object> yield;
+    private Process process;
 
-	/**
-	 * The constructor.
-	 * 
-	 * @param id The process id.
-	 */
-	protected Processable(String id) {
-		this.id = id;
-	}
-	
-	/**
-	 * Returns the process id.
-	 * 
-	 * @return The process id.
-	 */
-	public String getId() {
-		return this.id;
-	}
-	
-	/**
-	 * Stop the process.
-	 * 
-	 */
-	public final void stop() {
-		if(this.yield != null) {
-			this.yield.close();
-		}
-	}
+    private Yield2Way<Event, Object> yield;
 
-	/**
-	 * Bind the process with specific environment.<br>
-	 * Only allowed to bind once, or throw a runtime exception.
-	 * 
-	 * @param env The environment.
-	 * @return A new process.
-	 */
-	final Process bind(Env env) {
-		if(this.env != null) {
-			throw new RuntimeException("has binded already");
-		}
-		
-		this.env = env;
-		this.process = env.process(id, this::readyToGo);
-		doBind();
-		return this.process;
-	}
-	
-	
-	
-	/**
-	 * Returns current time of the environment.
-	 * 
-	 * @return The time.
-	 */
-	protected int now() {
-		return this.env.getNow();
-	}
-	
-	/**
-	 * Returns the environment.
-	 * 
-	 * @return The environment.
-	 */
-	protected final Env env() {
-		return this.env;
-	}
+    /**
+     * The constructor.
+     * 
+     * @param id The process id.
+     */
+    protected Processable(String id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the process.
-	 * 
-	 * @return The process.
-	 */
-	protected final Process proc() {
-		return this.process;
-	}
+    /**
+     * Returns the process id.
+     * 
+     * @return The process id.
+     */
+    public String getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the yield control object.
-	 * 
-	 * @return The yield.
-	 */
-	protected final Yield2Way<Event, Object> yield() {
-		return this.yield;
-	}
-	
-	/**
-	 * Yields a event to the generator and get the result.
-	 * 
-	 * @param event The event sent to the generator.
-	 * @return The result sent back from the generator.
-	 */
-	protected final Object yield(Event event) {
-		return yield.call(event);
-	}
-	
-	protected void doBind() {
-	}
-	
-	/**
-	 * Runs the process.
-	 * 
-	 */
-	protected abstract void run();
+    /**
+     * Stop the process.
+     * 
+     */
+    public final void stop() {
+        if (this.yield != null) {
+            this.yield.close();
+        }
+    }
 
-	@Override
-	public String toString() {
-		return this.process.toString();
-	}
-	
-	private void readyToGo(Yield2Way<Event, Object> yield) {
-		this.yield = yield;
-		run();
-	}
+    /**
+     * Bind the process with specific environment.<br>
+     * Only allowed to bind once, or throw a runtime exception.
+     * 
+     * @param env The environment.
+     * @return A new process.
+     */
+    final Process bind(Env env) {
+        if (this.env != null) {
+            throw new RuntimeException("has binded already");
+        }
+
+        this.env = env;
+        this.process = env.process(id, this::readyToGo);
+        doBind();
+        return this.process;
+    }
+
+    /**
+     * Returns current time of the environment.
+     * 
+     * @return The time.
+     */
+    protected int now() {
+        return this.env.getNow();
+    }
+
+    /**
+     * Returns the environment.
+     * 
+     * @return The environment.
+     */
+    protected final Env env() {
+        return this.env;
+    }
+
+    /**
+     * Returns the process.
+     * 
+     * @return The process.
+     */
+    protected final Process proc() {
+        return this.process;
+    }
+
+    /**
+     * Returns the yield control object.
+     * 
+     * @return The yield.
+     */
+    protected final Yield2Way<Event, Object> yield() {
+        return this.yield;
+    }
+
+    /**
+     * Yields a event to the generator and get the result.
+     * 
+     * @param event The event sent to the generator.
+     * @return The result sent back from the generator.
+     */
+    protected final Object yield(Event event) {
+        return yield.call(event);
+    }
+
+    protected void doBind() {
+    }
+
+    /**
+     * Runs the process.
+     * 
+     */
+    protected abstract void run();
+
+    @Override
+    public String toString() {
+        return this.process.toString();
+    }
+
+    private void readyToGo(Yield2Way<Event, Object> yield) {
+        this.yield = yield;
+        run();
+    }
 }

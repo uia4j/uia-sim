@@ -7,19 +7,18 @@ import uia.sim.Event;
 
 public class ConditionValue {
 
-	private List<Event> events;
-	
-	public ConditionValue() {
-		this.events = new ArrayList<>();
-	}
+    private List<Event> events;
 
-	public List<Event> getEvents() {
-		return events;
-	}
+    public ConditionValue() {
+        this.events = new ArrayList<>();
+    }
 
-	public void setEvents(List<Event> events) {
-		this.events = events;
-	}
-	
-	
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
+
 }

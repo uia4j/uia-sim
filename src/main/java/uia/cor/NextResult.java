@@ -9,18 +9,18 @@ package uia.cor;
  */
 public final class NextResult<T> {
 
-	/**
-	 * If there is a next iteration.
-	 */
-	public final boolean hasNext;
-	
-	/**
-	 * The value.
-	 */
-	public final T value;
-	
-	protected NextResult(boolean hasNext, T value) {
-		this.hasNext = hasNext;
-		this.value = value;
-	}
+    /**
+     * If there is a next iteration.
+     */
+    public final boolean hasNext;
+
+    /**
+     * The value.
+     */
+    public final T value;
+
+    protected NextResult(boolean hasNext, T value) {
+        this.hasNext = hasNext;
+        this.value = value;
+    }
 }
