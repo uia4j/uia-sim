@@ -1,15 +1,13 @@
 Core Design Concept
 ===
 
-## 核心觀念
+## Core Concept
 DESim4J 的設計參考 SimPy，核心為 Env 和 Event。
 
 * Env 內的 PriorityQueue 對所有的 Event 進行排序管理。
-  
 * 啟動模擬後，Env 會依序取得 Event，並執行 Event 內的 callable(s)。
 
-## Timeout 事件
-
+## Timeout Event
 當建立 Timeout 事件時，Timeout 會自動將自己註冊到 Env 的 Event 佇列中，排定被觸發的時間為 `env.now() + delayTime`。
 
 ```java
@@ -32,15 +30,11 @@ public class MyJob extends Processable {
 }
 ```
 
-
-## Process 事件
-
+## Process Event
 Process 內的 `resume()` 方法為此事件處理的核心：
 
 * `yield` 一個 Event 給 Process 後，Process 會將自己的 `resume()` 掛載到此 Event 的 callable 清單中。
-
 * 流程被阻塞 (blocking)，等待釋放。
-
 * 該 Event 被 Env 調用，Env 透過 callable 執行 Process 的 `resume()`，此時阻塞 (blocking) 的流程被釋放繼續進行。
 
 > event.callable -> process.resume()
@@ -90,16 +84,12 @@ env.run();
 
 5. Process 無 Event 需要再處理，將自己排入 Env 的 Event 佇列中，等待完成 (succeed)。
 
-
 上述流程為整個 Framework 最重要的部分，從簡單到複雜的模擬情境，都不脫離上述模式。
 
-
 ## Process Integration
-
 下面的範例把前面範例的 `timeout(200)` 移到 SubStep 中，並與 MainStep 連動。關鍵在「步驟三」建立兩者間的關聯：
 
 > subStep.callable -> mainStep.resume()
-
 
 ```java
 // process implementation
@@ -145,7 +135,6 @@ env.run();
    3.1 __MainStep__ 的 Process 將 `resume()` 掛載至 SubStep 的 callable 清單中。
    
    3.2 阻塞 (blocking) 「步驟三」。
-
 
 4. 「步驟四」於 now = 300 被釋放，並將 SubStep 排入 Event 佇列中，等待完成 (succeed)。
 

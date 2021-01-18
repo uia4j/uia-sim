@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * The Yield control object.
- * 
+ *
  * @author Kan
  *
  * @param <T> The data type exchanges to the generator.
@@ -32,8 +32,8 @@ public class Yield2Way<T, R> {
 
     /**
      * Creates a Yield-Generator pair.
-     * 
-     * @param iterable The iterable program. 
+     *
+     * @param iterable The iterable program.
      * @return The generator.
      */
     private Yield2Way(String id, Consumer<Yield2Way<T, R>> iterable) {
@@ -44,10 +44,10 @@ public class Yield2Way<T, R> {
 
     /**
      * Creates a Yield-Generator pair.
-     * 
+     *
      * @param <T> The data type exchanges to the generator.
      * @param <R> The data type the generator sends back.
-     * @param iterable The iterable program. 
+     * @param iterable The iterable program.
      * @return The generator.
      */
     public static <T, R> Generator2Way<T, R> accept(Consumer<Yield2Way<T, R>> iterable) {
@@ -56,11 +56,11 @@ public class Yield2Way<T, R> {
 
     /**
      * Creates a Yield-Generator pair.
-     * 
+     *
      * @param <T> The data type exchanges to the generator.
      * @param <R> The data type the generator sends back.
      * @param yieldId The yield id.
-     * @param iterable The iterable program. 
+     * @param iterable The iterable program.
      * @return The generator.
      */
     public static <T, R> Generator2Way<T, R> accept(String yieldId, Consumer<Yield2Way<T, R>> iterable) {
@@ -81,23 +81,23 @@ public class Yield2Way<T, R> {
 
     /**
      * Creates a Yield-Generator pair.
-     * 
+     *
      * @param <T> The data type exchanges to the generator.
      * @param <R> The data type the generator sends back.
-     * @param yieldable The iterable program. 
+     * @param yieldable The iterable program.
      * @return The generator.
      */
     public static <T, R> Generator2Way<T, R> accept(Yieldable2Way<T, R> yieldable) {
-        return accept(null, yieldable::bind);
+        return accept(null, yieldable);
     }
 
     /**
      * Creates a Yield-Generator pair.
-     * 
+     *
      * @param <T> The data type exchanges to the generator.
      * @param <R> The data type the generator sends back.
      * @param yieldId The yield id.
-     * @param yieldable The iterable program. 
+     * @param yieldable The iterable program.
      * @return The generator.
      */
     public static <T, R> Generator2Way<T, R> accept(String yieldId, Yieldable2Way<T, R> yieldable) {
@@ -106,7 +106,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Returns the id.
-     * 
+     *
      * @return The id.
      */
     public String getId() {
@@ -115,7 +115,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Sets the result for call().
-     * 
+     *
      * @param callResult The result for call().
      */
     public synchronized void send(R callResult) {
@@ -124,7 +124,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Reports a error.
-     * 
+     *
      * @param cause The cause of the error.
      */
     public void error(Exception cause) {
@@ -133,7 +133,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Checks if there is a next iteration.
-     * 
+     *
      * @return True if there is a next iteration.
      */
     public boolean next() {
@@ -155,7 +155,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Submits a new value to the paired generator.
-     * 
+     *
      * @param value The new value.
      * @return The result sent back from the generator.
      * @throws YieldException Something wrong.
@@ -183,7 +183,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Submits a new value to the paired generator.
-     * 
+     *
      * @param supplier The function to get the new value..
      * @return The result sent back from the generator.
      * @throws YieldException Something wrong.
@@ -211,7 +211,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Returns the final result of the iteration.
-     * 
+     *
      * @return The result.
      */
     public R getResult() {
@@ -220,7 +220,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Returns the current value.
-     * 
+     *
      * @return The current value.
      */
     public synchronized T getValue() {
@@ -229,7 +229,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Closes the iteration .
-     * 
+     *
      */
     public synchronized void close() {
         this.closed = true;
@@ -239,7 +239,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Closes the iteration .
-     * 
+     *
      * @param result The final result.
      */
     public synchronized void close(R result) {
@@ -251,7 +251,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Closes the iteration .
-     * 
+     *
      * @param cause The cause to close the iteration.
      */
     public synchronized void close(InterruptedException cause) {
@@ -263,7 +263,7 @@ public class Yield2Way<T, R> {
 
     /**
      * Closes the iteration .
-     * 
+     *
      * @param result The final result.
      * @param cause The cause to close the iteration.
      */
@@ -277,16 +277,16 @@ public class Yield2Way<T, R> {
 
     /**
      * Tests if the iteration is alive or not.
-     * 
+     *
      * @return True if the iteration is alive.
      */
     public synchronized boolean isAlive() {
-        return !this.closed;
+        return !isClosed();
     }
 
     /**
      * Tests if the iteration is closed or not.
-     * 
+     *
      * @return True if the iteration is closed.
      */
     public synchronized boolean isClosed() {
@@ -330,7 +330,7 @@ public class Yield2Way<T, R> {
 
     @Override
     public String toString() {
-        return this.id;
+        return getId();
     }
 
 }

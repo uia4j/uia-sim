@@ -10,6 +10,7 @@ public class InterruptTest {
     @Test
     public void testInterrput() {
         final Env env = new Env();
+        env.setListener(new EnvListenerAdapter());
         env.process("parent", y1 -> {
             Process child = env.process("child", y2 -> {
                 try {
@@ -66,6 +67,7 @@ public class InterruptTest {
     @Test
     public void testInitInterrput() {
         final Env env = new Env();
+        env.setListener(new EnvListenerAdapter());
         env.process("parent", y1 -> {
             Process child = env.process("child", y2 -> {
                 try {

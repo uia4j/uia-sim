@@ -20,7 +20,7 @@ import uia.sim.events.Timeout;
 
 /**
  * The simulation environment.<br>
- * 
+ *
  * <p>
  * The simplest example:
  * </p>
@@ -29,10 +29,10 @@ import uia.sim.events.Timeout;
  * env.process("Hello", y -> {
  *     y.call(env.timeout("10"));
  *     System.out.println(env.getNow() + ", Hello DESimJava");
- * }); 
+ * });
  * env.run();
  * }</pre>
- * Above example will output: 
+ * Above example will output:
  * <pre>
  * 10, Hello DESimJava
  * </pre>
@@ -74,28 +74,28 @@ public class Env {
 
     /**
      * The constructor.
-     * 
+     *
      * @param initialTime The initial time.
      */
     public Env(int initialTime) {
         this.jobs = new PriorityBlockingQueue<>();
         this.executor = Executors.newFixedThreadPool(1);
         this.now = Math.max(0, initialTime);
-        this.initialTime = now;
+        this.initialTime = this.now;
     }
 
     /**
      * Returns the listener.
-     * 
+     *
      * @return The environment listener.
      */
     public EnvListener getListener() {
-        return listener;
+        return this.listener;
     }
 
     /**
      * Sets the listener.
-     * 
+     *
      * @param listener The environment listener.
      */
     public void setListener(EnvListener listener) {
@@ -104,7 +104,7 @@ public class Env {
 
     /**
      * Returns the current time of the environment..
-     * 
+     *
      * @return The time.
      */
     public int getNow() {
@@ -113,7 +113,7 @@ public class Env {
 
     /**
      * Returns the active process event.
-     * 
+     *
      * @return The active process event.
      */
     public Process getActiveProcess() {
@@ -122,7 +122,7 @@ public class Env {
 
     /**
      * Sets the active process event.
-     * 
+     *
      * @param activeProcess The active process event.
      */
     public void setActiveProcess(Process activeProcess) {
@@ -131,23 +131,23 @@ public class Env {
 
     /**
      * Creates a new process event.<br>
-     * 
+     *
      * <p>
-     * The process will pass a <b>yield</b> object to the <b>taskRunner</b>. 
-     * When <b>taskRunner</b> invokes yeild.call(<b>anotherEvent</b>), the yield object will notify the process 
+     * The process will pass a <b>yield</b> object to the <b>taskRunner</b>.
+     * When <b>taskRunner</b> invokes yeild.call(<b>anotherEvent</b>), the yield object will notify the process
      * to attach <u>method:resume</u> to the callables of the <b>anotherEvent</b>.
-     * </p> 
-     * 
+     * </p>
+     *
      * <p>
      * When the environment steps to the <b>anotherEvent</b>, the <u>method:resume</u> of callable will be invoked.
      * </p>
-     * 
+     *
      * <p>
      * Note: <b>anotherEvent</b> must be scheduled into the environment, otherwise callables will never be invoked.
-     * 
+     *
      * @param id The process id.
      * @param taskRunner A runner of the process tasks.
-     * @return A new process event. 
+     * @return A new process event.
      */
     public Process process(String id, Consumer<Yield2Way<Event, Object>> taskRunner) {
         return new Process(this, id, taskRunner);
@@ -155,10 +155,10 @@ public class Env {
 
     /**
      * Creates a new process event.<br>
-     * 
+     *
      * @param id The process id.
      * @param taskRunner A runner of the process tasks.
-     * @return A new process event. 
+     * @return A new process event.
      */
     public Process process(String id, Yieldable2Way<Event, Object> taskRunner) {
         return new Process(this, id, taskRunner);
@@ -166,9 +166,9 @@ public class Env {
 
     /**
      * Creates a new process event.<br>
-     * 
+     *
      * @param processable A runner of the process tasks.
-     * @return A new process event. 
+     * @return A new process event.
      */
     public Process process(Processable processable) {
         return processable.bind(this);
@@ -176,17 +176,17 @@ public class Env {
 
     /**
      * <b>Schedules</b> a new timeout event for processing by this environment.
-     * 
+     *
      * @param delay The delay time.
      * @return A new scheduled timeout event.
      */
     public Timeout timeout(int delay) {
-        return new Timeout(this, delay);
+        return timeout(delay, null);
     }
 
     /**
      * <b>Schedules</b> a new timeout event for processing by this environment.
-     * 
+     *
      * @param delay The delay time.
      * @param value The value of the event.
      * @return A new scheduled timeout event.
@@ -197,18 +197,18 @@ public class Env {
 
     /**
      * <b>Schedules</b> a new timeout event for processing by this environment.
-     * 
+     *
      * @param id The event id.
      * @param delay The delay time.
      * @return A new scheduled timeout event.
      */
     public Timeout timeout(String id, int delay) {
-        return new Timeout(this, id, delay);
+        return timeout(id, delay, null);
     }
 
     /**
      * <b>Schedules</b> a new timeout event for processing by this environment.
-     * 
+     *
      * @param id The event id.
      * @param delay The delay time.
      * @param value The value of the event.
@@ -220,7 +220,7 @@ public class Env {
 
     /**
      * Creates a new event instance.
-     * 
+     *
      * @param id The event id.
      * @return A new event.
      */
@@ -230,7 +230,7 @@ public class Env {
 
     /**
      * Creates a new event instance.
-     * 
+     *
      * @param id The event id.
      * @param events The events.
      * @return A new condition event.
@@ -241,7 +241,7 @@ public class Env {
 
     /**
      * Creates a new event instance.
-     * 
+     *
      * @param id The event id.
      * @param events The events.
      * @return A new condition event.
@@ -252,14 +252,14 @@ public class Env {
 
     /**
      * Adds a schedule in the environment.
-     * 
+     *
      * @param id The event id.
      * @param time The time.
      * @param priority The priority.
      * @param runnable The job.
      */
     public void schedule(String id, int time, Event.PriorityType priority, Runnable runnable) {
-        if (time < now) {
+        if (time < this.now) {
             throw new IllegalArgumentException(String.format("time(=%s) must be > the current simulation time.", time));
         }
         Event event = new Event(this, id);
@@ -268,13 +268,13 @@ public class Env {
         this.jobs.add(job);
         logger.info(String.format("%4d> %s> schedule(%s) at %s", getNow(), job.event, job.event.seqNo, job.time));
         if (DEBUG) {
-            logger.info(String.format("%4d> jobs = %s", getNow(), jobs));
+            logger.info(String.format("%4d> jobs = %s", getNow(), this.jobs));
         }
     }
 
     /**
      * Adds a schedule in the environment.
-     * 
+     *
      * @param event The event.
      * @param priority The priority.
      */
@@ -284,7 +284,7 @@ public class Env {
 
     /**
      * Adds a schedule in the environment.
-     * 
+     *
      * @param event The event.
      * @param priority The priority.
      * @param delay The delay time.
@@ -294,13 +294,13 @@ public class Env {
         this.jobs.add(job);
         logger.info(String.format("%4d> %s> schedule(%s) at %s", getNow(), job.event, job.event.seqNo, job.time));
         if (DEBUG) {
-            logger.info(String.format("%4d> jobs = %s", getNow(), jobs));
+            logger.info(String.format("%4d> jobs = %s", getNow(), this.jobs));
         }
     }
 
     /**
      * Runs the environment.
-     * 
+     *
      * @return Stop time.
      */
     public synchronized int run() {
@@ -323,7 +323,7 @@ public class Env {
 
     /**
      * Executes events until the given criterion until is met.
-     * 
+     *
      * @param until The end time.
      * @return Stop time.
      */
@@ -336,7 +336,7 @@ public class Env {
         stopEvent.addCallable(this::stopSim);
         schedule(stopEvent, PriorityType.URGENT, until - this.now);
         try {
-            while (this.now < until && !jobs.isEmpty()) {
+            while (this.now < until && !this.jobs.isEmpty()) {
                 step();
             }
             logger.debug("==== end ====");
@@ -354,20 +354,21 @@ public class Env {
 
     /**
      * Raises a 'Process Done' information to the listener.
-     * 
+     *
      * @param time The time.
      * @param processId The process id.
      * @param event The event.
      */
     public void raiseProcessDone(int time, String processId, Event event) {
         if (this.listener != null) {
+            this.listener.stepDone(time, processId, event.forLog());
             this.executor.submit(() -> this.listener.stepDone(time, processId, event.forLog()));
         }
     }
 
     /**
      * Raises a 'Process Failed' information to the listener.
-     * 
+     *
      * @param time The time.
      * @param processId The process id.
      * @param event The event.
@@ -380,9 +381,9 @@ public class Env {
 
     /**
      * Processes the next event.
-     * 
-     * @throws SimEventException 
-     * 
+     *
+     * @throws SimEventException
+     *
      */
     protected void step() throws SimEventException {
         // 1. get the first job.
@@ -403,7 +404,7 @@ public class Env {
 
     /**
      * Generates next sequence number.
-     * 
+     *
      * @return The sequence number.
      */
     protected int genSeq() {
@@ -418,7 +419,7 @@ public class Env {
 
     /**
      * The job for scheduling.
-     * 
+     *
      * @author Kan
      *
      */
@@ -441,7 +442,7 @@ public class Env {
 
         /**
          * Constructor.
-         * 
+         *
          * @param event The event.
          * @param priority The priority.
          * @param time The time to be scheduled in the environment.
@@ -468,7 +469,7 @@ public class Env {
 
         @Override
         public String toString() {
-            return String.format("%s at %s", event, time);
+            return String.format("%s at %s", this.event, this.time);
         }
     }
 }

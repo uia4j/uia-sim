@@ -7,7 +7,7 @@ public class Yield2WayTest {
 
     @Test
     public void testCallSum2() {
-        Generator2Way<Integer, Integer> gen = Yield2Way.accept(this::callSum2);
+        Generator2Way<Integer, Integer> gen = Yield2Way.accept("y2", this::callSum2);
         int i = 0;
         gen.next();
         do {
@@ -97,6 +97,7 @@ public class Yield2WayTest {
     }
 
     public void callSum2(Yield2Way<Integer, Integer> yield) {
+        Assert.assertEquals("y2", yield.toString());
         int i = 1;
         int sum = 0;
         while (i <= 10) {

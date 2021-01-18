@@ -84,7 +84,7 @@ public class Event {
     public Event(Env env, String id, Object value) {
         this.env = env;
         this.id = id;
-        this.seqNo = env.genSeq();
+        this.seqNo = env == null ? Integer.MAX_VALUE : env.genSeq();
         this.value = value;
         this.envDown = false;
         this.ok = true;

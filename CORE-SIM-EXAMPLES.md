@@ -1,9 +1,6 @@
 Discrete-Event Simulation Examples
 ===
 
-Main Classes
-* uia.sim.Processable
-
 ## Hello Example
 
 ```java
@@ -17,7 +14,6 @@ public class Hello extends Processable {
         yield(env().timeout(10));
         System.out.println("Hello " + getId());
     }
-
 }
 
 public static void main(String[] args) {
@@ -25,7 +21,4 @@ public static void main(String[] args) {
     env.process(new Hello());
     env.run();
 }
-
 ```
-
-## Process Integration

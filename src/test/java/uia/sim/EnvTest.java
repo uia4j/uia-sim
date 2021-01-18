@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import uia.cor.Yield2Way;
+import uia.cor.Yieldable2Way;
 import uia.sim.events.Process;
 
 public class EnvTest {
@@ -16,7 +17,14 @@ public class EnvTest {
     }
 
     @Test
-    public void testListener() {
+    public void testBye() {
+        Env env = new Env();
+        env.process("bye", new Bye(env));
+        env.run();
+    }
+
+    @Test
+    public void testListener() throws InterruptedException {
         final Env env = new Env();
         env.setListener(new EnvListenerAdapter());
         env.process("main", y -> {
@@ -60,19 +68,19 @@ public class EnvTest {
     }
 
     @Test
-    public void test1Process() throws Exception {
+    public void testProcess1() throws Exception {
         System.out.println("now, name> event");
         System.out.println("----------------");
 
         Env env = new Env();
         Process process = env.process("clock", yield -> clock1(env, yield));
         Assert.assertTrue(process.isAlive());
-        Assert.assertEquals(26, env.run(26));
+        Assert.assertEquals(16, env.run(16));
         Assert.assertFalse(process.isAlive());
     }
 
     @Test
-    public void test2Processes() throws Exception {
+    public void testProcess2() throws Exception {
         System.out.println("now, name> event");
         System.out.println("----------------");
 
@@ -81,9 +89,21 @@ public class EnvTest {
         Process process2 = env.process("clock2", yield -> clock2(env, yield));
         Assert.assertTrue(process1.isAlive());
         Assert.assertTrue(process2.isAlive());
-        env.run(30);
+        env.run(10);
         Assert.assertFalse(process1.isAlive());
         Assert.assertFalse(process2.isAlive());
+    }
+
+    @Test
+    public void testProcess3() throws Exception {
+        System.out.println("now, name> event");
+        System.out.println("----------------");
+
+        Env env = new Env(10);
+        Process process = env.process("clock", yield -> clock1(env, yield));
+        Assert.assertTrue(process.isAlive());
+        Assert.assertEquals(14, env.run(14));
+        Assert.assertFalse(process.isAlive());
     }
 
     public void clock1(Env env, Yield2Way<Event, Object> yield) {
@@ -104,15 +124,47 @@ public class EnvTest {
         }
     }
 
+    /**
+     * Extends the Processable to implement a process.
+     *
+     * @author Kan
+     *
+     */
     public class Hello extends Processable {
 
         public Hello(String name) {
             super(name);
         }
 
+        @Override
         public void run() {
             yield(env().timeout(10));
             System.out.println(now() + "> Hello " + getId());
+            yield().call(env().timeout(10));
+            System.out.println(now() + "> Hi " + getId());
+        }
+    }
+
+    /**
+     * Extends the Yieldable2Way to implement a process.
+     *
+     * @author Kan
+     *
+     */
+    public class Bye extends Yieldable2Way<Event, Object> {
+
+        private final Env env;
+
+        public Bye(Env env) {
+            this.env = env;
+        }
+
+        @Override
+        protected void run() {
+            yield(this.env.timeout(10));
+            System.out.println(this.env.getNow() + "> Bye");
+            yield().call(this.env.timeout(10));
+            System.out.println(this.env.getNow() + "> See you");
         }
     }
 }

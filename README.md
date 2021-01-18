@@ -10,6 +10,8 @@ DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __pr
 
 DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
 
+[API](https://uia4j.github.io/uia-sim/index.html)
+
 ## package uia.cor
 The package provides __yield-like__ API. The main concept is
 
@@ -28,8 +30,6 @@ Generator gen = Yield.accept(yield -> ::function);
   * ___gen___.error(ex) - send back an exception.
   * ___gen___.send(Object) - send back a value to ___yield___.
   * ___gen___.close() - stop ___yield___ iterable.
-
-
 
 Below is a simple workflow of Yield-Generator:
 
@@ -65,8 +65,7 @@ public class YieldTest {
 4. `gen.getValue()` - Get the new value passed by `yield.call(i)`.
 5. `while(gen.next())` - Repeat until completing the `for` loop.
  
- 
- Use `Yield2Way` if iteration needs to get a result from `yield.call(value)`.
+Use `Yield2Way` if iteration needs to get a result from `yield.call(value)`.
 
 ```java
 public class Yield2WayTest {
@@ -106,19 +105,17 @@ public class Yield2WayTest {
 4. `gen.next()` - Ask if there is a new value or not and __release step 1__ at the same time.
 5. `int v = yield.call(i++)` - Get the result passed by `gen.send(i * i)`.
 
-
 ## package uia.sim
 The package is core framework of __process-based discrete event simulation__.
 
 Some documents
 
-* [Core Design](CORE_SIM.md)
-* [Examples](CORE_SIM_EXAMPLES.md)
+* [Core Design](CORE-SIM.md)
+* [Examples](CORE-SIM-EXAMPLES.md)
 
 Below is a Java test case compares with Python version.
 
 ### Python
-
 ``` Python
 class School:
     def __init__(self, env):
@@ -191,14 +188,9 @@ The framework is still building and testing. The next tasks are
 3. More reasonable Exception control.
 4. More test cases to prove the framework.
 
-
 # Reference
-
-[API](https://uia4j.github.io/uia-sim/index.html)
-
 [SimPy Home](https://simpy.readthedocs.io/en/latest/)
 
 [SimPy GitLab](https://gitlab.com/team-simpy/simpy)
 
 [Discrete-Event Simulation Wiki](https://en.wikipedia.org/wiki/Discrete-event_simulation)
-
