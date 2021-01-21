@@ -5,13 +5,13 @@ import java.util.Vector;
 import uia.sim.Observable;
 import uia.sim.Processable;
 
-public class Equip extends Processable {
+public class EquipmentWithObvr extends Processable {
 
     private final Vector<Operation> operations;
 
     private Observable<Operation> observable;
 
-    public Equip(String id) {
+    public EquipmentWithObvr(String id) {
         super(id);
         this.operations = new Vector<>();
     }

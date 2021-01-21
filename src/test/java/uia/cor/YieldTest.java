@@ -100,10 +100,46 @@ public class YieldTest {
         Assert.assertTrue(gen.isClosed());
     }
 
+    @Test
+    public void testStop1() {
+        Generator<Integer> gen = Yield.accept("y1", this::callFor);
+        int i = 0;
+        while (gen.next()) {
+            Assert.assertEquals(i, gen.getValue().intValue());
+            i++;
+            if (i == 5) {
+                gen.stop();
+            }
+        }
+        Assert.assertEquals(5, i);
+        Assert.assertTrue(gen.isClosed());
+    }
+
+    @Test
+    public void testStop2() {
+        Generator<Integer> gen = Yield.accept("y1", this::callFor);
+        int i = 0;
+        while (gen.next()) {
+            Assert.assertEquals(i, gen.getValue().intValue());
+            i++;
+            if (i == 5) {
+                gen.stop(new Exception("force stop"));
+            }
+        }
+        Assert.assertEquals(5, i);
+        Assert.assertTrue(gen.isClosed());
+    }
+
     public void callFor(Yield<Integer> yield) {
         Assert.assertEquals("y1", yield.toString());
         for (int i = 0; i < 10; i++) {
-            yield.call(i);
+            try {
+                yield.call(i);
+            }
+            catch (Exception ex) {
+                Assert.assertEquals("force stop", ex.getMessage());
+                return;
+            }
         }
     }
 
@@ -117,22 +153,29 @@ public class YieldTest {
     public void callWhile(Yield<Integer> yield) {
         int i = 0;
         while (yield.isAlive()) {
-            yield.call(i++);
-            if (i >= 10) {
-                yield.close();
+            if (i == 10) {
+                yield.callLast(i);
             }
+            else {
+                yield.call(i);
+            }
+            i++;
         }
+        yield.close();
     }
 
     public void lazyWhile(Yield<Integer> yield) {
         int i = 0;
         while (yield.isAlive()) {
             final int result = i++;
-            yield.call(() -> result);
-            if (i >= 10) {
-                yield.close();
+            if (result == 10) {
+                yield.callLast(() -> result);
+            }
+            else {
+                yield.call(() -> result);
             }
         }
+        yield.close();
     }
 
     public void callForWithError1(Yield<Integer> yield) {

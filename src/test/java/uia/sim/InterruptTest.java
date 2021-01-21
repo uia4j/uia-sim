@@ -92,18 +92,20 @@ public class InterruptTest {
             Process child = env.process("child", y2 -> {
                 try {
                     y2.call(env.timeout(5));
+                    Assert.assertTrue(true);
                 }
                 catch (Exception e) {
+                    Assert.assertTrue(false);
                 }
             });
             try {
                 // wait long enough so that child terminates.
                 y1.call(env.timeout(10));
-                child.interrupt("too late to interrput");
+                child.interrupt(new Exception("too late to interrput"));
                 Assert.assertTrue(false);
             }
             catch (Exception e) {
-                System.out.println(e.getMessage());
+                Assert.assertTrue(true);
             }
         });
         env.run(40);

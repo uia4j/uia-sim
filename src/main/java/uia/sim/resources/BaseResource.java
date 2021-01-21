@@ -29,8 +29,6 @@ public abstract class BaseResource<T extends BaseResource<T>> {
 
     protected final Env env;
 
-    protected final int capacity;
-
     private final List<BaseRequest<T>> requestQueue;
 
     private final List<BaseRelease<T>> releaseQueue;
@@ -45,9 +43,8 @@ public abstract class BaseResource<T extends BaseResource<T>> {
      * @param env The environment.
      * @param capacity The capacity.
      */
-    public BaseResource(Env env, int capacity) {
+    public BaseResource(Env env) {
         this.env = env;
-        this.capacity = capacity;
         this.requestQueue = new ArrayList<>();
         this.releaseQueue = new ArrayList<>();
         this.dispatchRequestsCallable = this::dispatchRequests;
@@ -84,7 +81,7 @@ public abstract class BaseResource<T extends BaseResource<T>> {
     }
 
     /**
-     * Adds a release event in the resource
+     * Adds a release event in the resource.
      * @param release A release event.
      */
     protected void addRelease(BaseRelease<T> release) {

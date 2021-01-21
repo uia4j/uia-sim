@@ -30,6 +30,8 @@ public class Yield2Way<T, R> {
 
     private R callResult;
 
+    private R finalResult;
+
     /**
      * Creates a Yield-Generator pair.
      *
@@ -223,7 +225,7 @@ public class Yield2Way<T, R> {
      * @return The result.
      */
     public R getResult() {
-        return this.callResult;
+        return this.finalResult;
     }
 
     /**
@@ -252,7 +254,8 @@ public class Yield2Way<T, R> {
      */
     public synchronized void close(R result) {
         this.closed = true;
-        this.callResult = result;
+        // this.callResult = result;
+        this.finalResult = result;
         logger.debug(String.format("%s> close(%s)", this.id, result));
         this.notifyAll();
     }

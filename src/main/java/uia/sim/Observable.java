@@ -37,7 +37,7 @@ public class Observable<T> {
 
         try {
             Event evt = this.notifyEvent;
-            this.notifyEvent = new Event(env, id);
+            this.notifyEvent = new Event(this.env, this.id);
             evt.succeed(by, PriorityType.LOW);
             logger.info(String.format("%4d> %s> %s available",
                     this.env.getNow(),

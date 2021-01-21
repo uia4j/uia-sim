@@ -46,6 +46,8 @@ public class Env {
 
     private static final Logger logger = LogManager.getLogger(Env.class);
 
+    private final String id;
+
     private int seqNo;
 
     protected int initialTime;
@@ -68,8 +70,16 @@ public class Env {
      * The constructor.
      */
     public Env() {
-        this.jobs = new PriorityBlockingQueue<>();
-        this.executor = Executors.newFixedThreadPool(1);
+        this("ENV");
+    }
+
+    /**
+     * The constructor.
+     *
+     * @param id The environment id.
+     */
+    public Env(String id) {
+        this(id, 0);
     }
 
     /**
@@ -78,10 +88,30 @@ public class Env {
      * @param initialTime The initial time.
      */
     public Env(int initialTime) {
+        this("env", initialTime);
+    }
+
+    /**
+     * The constructor.
+     *
+     * @param id The environment id.
+     * @param initialTime The initial time.
+     */
+    public Env(String id, int initialTime) {
+        this.id = id;
         this.jobs = new PriorityBlockingQueue<>();
         this.executor = Executors.newFixedThreadPool(1);
         this.now = Math.max(0, initialTime);
         this.initialTime = this.now;
+    }
+
+    /**
+     * Returns the id.
+     *
+     * @return The id.
+     */
+    public String getId() {
+        return this.id;
     }
 
     /**
@@ -181,7 +211,7 @@ public class Env {
      * @return A new scheduled timeout event.
      */
     public Timeout timeout(int delay) {
-        return timeout(delay, null);
+        return new Timeout(this, "delay" + delay, delay);
     }
 
     /**
@@ -203,7 +233,7 @@ public class Env {
      * @return A new scheduled timeout event.
      */
     public Timeout timeout(String id, int delay) {
-        return timeout(id, delay, null);
+        return new Timeout(this, id, delay);
     }
 
     /**
@@ -266,9 +296,17 @@ public class Env {
         event.addCallable(e -> runnable.run());
         Job job = new Job(event, priority, time);
         this.jobs.add(job);
-        logger.info(String.format("%4d> %s> schedule(%s) at %s", getNow(), job.event, job.event.seqNo, job.time));
+        logger.info(String.format("%4d> %s> %s schedule(uid=%s) at %s",
+                getNow(),
+                this.id,
+                job.event,
+                job.event.seqNo,
+                job.time));
         if (DEBUG) {
-            logger.info(String.format("%4d> jobs = %s", getNow(), this.jobs));
+            logger.info(String.format("%4d> %s> jobs = %s",
+                    getNow(),
+                    this.id,
+                    this.jobs));
         }
     }
 
@@ -292,9 +330,17 @@ public class Env {
     public void schedule(Event event, Event.PriorityType priority, int delay) {
         Job job = new Job(event, priority, this.now + delay);
         this.jobs.add(job);
-        logger.info(String.format("%4d> %s> schedule(%s) at %s", getNow(), job.event, job.event.seqNo, job.time));
+        logger.info(String.format("%4d> %s> %s schedule(uid=%s) at %s",
+                getNow(),
+                this.id,
+                job.event,
+                job.event.seqNo,
+                job.time));
         if (DEBUG) {
-            logger.info(String.format("%4d> jobs = %s", getNow(), this.jobs));
+            logger.info(String.format("%4d> %s> jobs = %s",
+                    getNow(),
+                    this.id,
+                    this.jobs));
         }
     }
 
@@ -391,7 +437,11 @@ public class Env {
 
         // 2. update environment time
         this.now = job.time;
-        logger.debug(String.format("%4d> ENV> STEP> %4s> %s, callbacks(%s)", getNow(), this.now, job.event, job.event.getNumberOfCallbables()));
+        logger.debug(String.format("%4d> %s> step> %s, callbacks(uid=%s)",
+                getNow(),
+                this.id,
+                job.event,
+                job.event.getNumberOfCallbables()));
 
         // 3. callback the event.
         job.event.callback();

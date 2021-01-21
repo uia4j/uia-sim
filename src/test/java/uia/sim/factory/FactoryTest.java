@@ -46,8 +46,8 @@ public class FactoryTest {
         // Operation op2 = new Operation("op2");
         // Operation op3 = new Operation("op3");
 
-        Equip eq1 = new Equip("eq1");
-        Equip eq2 = new Equip("eq2");
+        EquipmentWithObvr eq1 = new EquipmentWithObvr("eq1");
+        EquipmentWithObvr eq2 = new EquipmentWithObvr("eq2");
 
         eq1.bind(op1);
         eq2.bind(op1);

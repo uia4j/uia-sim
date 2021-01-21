@@ -46,7 +46,7 @@ public class ResourceTest {
 
         private final int driving;
 
-        protected Car1(String id, Resource res, int driving) {
+        public Car1(String id, Resource res, int driving) {
             super(id);
             this.res = res;
             this.driving = driving;
@@ -74,7 +74,7 @@ public class ResourceTest {
 
         private final int driving;
 
-        protected Car2(String id, Resource res, int driving) {
+        public Car2(String id, Resource res, int driving) {
             super(id);
             this.res = res;
             this.driving = driving;

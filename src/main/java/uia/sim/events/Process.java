@@ -211,8 +211,8 @@ public class Process extends Event {
         this.env.setActiveProcess(null);
 
         if (!next) {
-            succeed(this.taskGen.getResult());
-            logger.info(String.format("%4d> %s> closed", this.env.getNow(), getId(), tx));
+            logger.info(String.format("%4d> %s> will be closed", this.env.getNow(), this, tx));
+            succeed(this.taskGen.getFinalResult());
         }
     }
 

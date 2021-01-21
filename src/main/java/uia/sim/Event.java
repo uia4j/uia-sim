@@ -167,12 +167,33 @@ public class Event {
     /**
      * AND with other event.
      *
+     * @param other The other event.
+     * @return A new condition event.
+     */
+    public Condition and(Event other) {
+        return and("and", other);
+    }
+
+    /**
+     * AND with other event.
+     *
      * @param id The condition event id.
      * @param other The other event.
      * @return A new condition event.
      */
     public Condition and(String id, Event other) {
         return new AllOf(this.env, id, Arrays.asList(this, other));
+    }
+
+    /**
+     * OR with other event.
+     *
+     * @param id The condition event id.
+     * @param other The other event.
+     * @return A new condition event.
+     */
+    public Condition or(Event other) {
+        return or("or", other);
     }
 
     /**
@@ -206,9 +227,11 @@ public class Event {
     }
 
     /**
-     * Tests if the event has been triggered and it's callables are about to be invoked.
+     * Tests if the event has been scheduled into the environment.<br>
      *
-     * @return Triggered or not.
+     * Invoke one of trigger(), succeed(), fail() to schedule this event for processing by the environment.
+     *
+     * @return Scheduled or not.
      */
     public boolean isTriggered() {
         return this.value != PENDING;
@@ -224,7 +247,7 @@ public class Event {
     }
 
     /**
-     * Tests if the event has been triggered successfully.
+     * Tests if the event is Ok or not.
      *
      * @return OK or not.
      */
@@ -252,7 +275,7 @@ public class Event {
     }
 
     /**
-     * NG the event.
+     * NG the event. All the callables WILL NOT be invoked.
      *
      */
     public void ng() {
@@ -274,7 +297,7 @@ public class Event {
      * @param event The specific event.
      */
     public synchronized void trigger(Event event) {
-        logger.debug(String.format("%4d> %s> triggered(%s) by %s", this.env.getNow(), getId(), this.seqNo, event.getId()));
+        logger.debug(String.format("%4d> %s> triggered(uid=%s) by %s", this.env.getNow(), getId(), this.seqNo, event.getId()));
         this.ok = event.isOk();
         this.value = event.value;
         // schedule
@@ -299,7 +322,7 @@ public class Event {
      * @param priority The priority.
      */
     public synchronized void succeed(Object value, PriorityType priority) {
-        logger.debug(String.format("%4d> %s> succeed(%s)", this.env.getNow(), getId(), this.seqNo));
+        logger.debug(String.format("%4d> %s> succeed(uid=%s)", this.env.getNow(), getId(), this.seqNo));
         if (isTriggered()) {
             throw new SimEventException(this, "The event:" + this.id + " has alreday been triggered");
         }
@@ -317,7 +340,7 @@ public class Event {
      * @param cause The failed cause.
      */
     public synchronized void fail(Exception cause) {
-        logger.debug(String.format("%4d> %s> fail(%s), %s", this.env.getNow(), getId(), this.seqNo, cause.getMessage()));
+        logger.debug(String.format("%4d> %s> fail(uid=%s), %s", this.env.getNow(), getId(), this.seqNo, cause.getMessage()));
         if (isTriggered()) {
             throw new SimEventException(this, "The event:" + this.id + " has alreday been triggered");
         }
@@ -329,18 +352,20 @@ public class Event {
     }
 
     /**
-     * Executes all instances of callable.
+     * Executes all instances of callable.<br>
+     * The event will be marked as 'processed' at the same time.
      *
      */
     public synchronized void callback() {
+        logger.info(String.format("%4d> %s> -- call(uid=%s) --", this.env.getNow(), this, this.seqNo));
+        this.processed = true;
         try {
             while (!this.callables.isEmpty()) {
                 this.callables.remove(0).accept(this);
             }
         }
         finally {
-            logger.info(String.format("%4d> %s> done(%s)", this.env.getNow(), this, this.seqNo));
-            this.processed = true;
+            logger.debug(String.format("%4d> %s> == done(uid=%s) ==", this.env.getNow(), this, this.seqNo));
             this.callables.clear();
         }
     }
@@ -371,7 +396,7 @@ public class Event {
      * @return The information.
      */
     public String toFullString() {
-        return String.format("%s(key=%s,ok=%s,triggered=%s,proccessed=%s),",
+        return String.format("%s(uid=%s,ok=%s,triggered=%s,proccessed=%s)",
                 getId(),
                 this.seqNo,
                 this.isOk(),

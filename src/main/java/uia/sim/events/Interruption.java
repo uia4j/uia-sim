@@ -23,7 +23,7 @@ public class Interruption extends Event {
      * @return The interrupt event.
      */
     public static Interruption schedule(Process process, Exception cause) {
-        return schedule(process, new SimEventException(process, "interruption", cause));
+        return schedule(process, cause.getMessage());
     }
 
     /**
@@ -59,8 +59,11 @@ public class Interruption extends Event {
             return;
         }
 
+        // make sure the target event will not resume the process.
         Event target = this.process.getTarget();
         this.process.unbind(target);
+
+        // resume the process by this interruption event.
         this.process.resume(this);
     }
 

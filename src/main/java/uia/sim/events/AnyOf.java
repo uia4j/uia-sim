@@ -1,6 +1,5 @@
 package uia.sim.events;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +8,7 @@ import uia.sim.Event;
 
 /**
  * AnyOf condition event.
- * 
+ *
  * @author Kan
  *
  */
@@ -17,7 +16,7 @@ public class AnyOf extends Condition {
 
     /**
      * The constructor.
-     * 
+     *
      * @param env The environment.
      * @param id The event id.
      * @param events The events used to check pass or not.
@@ -28,13 +27,13 @@ public class AnyOf extends Condition {
 
     @Override
     public Condition and(String id, Event event) {
-        return new AllOf(env, id, Arrays.asList(this, event));
+        // beautiful design
+        return new AllOf(this.env, id, Arrays.asList(this, event));
     }
 
     @Override
     public Condition or(String id, Event event) {
-        this.events.add(event);
-        return new AnyOf(this.env, id, new ArrayList<>(this.events));
+        return new AnyOf(this.env, id, Arrays.asList(this, event));
     }
 
     @Override
@@ -43,7 +42,9 @@ public class AnyOf extends Condition {
     }
 
     @Override
-    protected boolean evaluate(List<Event> events, int okEvents) {
-        return events.size() == 0 || okEvents > 0;
+    protected boolean evaluate(List<Event> events) {
+        return events.stream()
+                .filter(e -> e.isProcessed())
+                .findFirst().isPresent();
     }
 }

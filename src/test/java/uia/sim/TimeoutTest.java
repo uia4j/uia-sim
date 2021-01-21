@@ -48,7 +48,7 @@ public class TimeoutTest {
         Env env = new Env();
         env.process("timeout", y -> {
             try {
-                Object ok = y.call(env.timeout(1, "ok"));
+                Object ok = y.call(env.timeout("to1", 1, "ok"));
                 Assert.assertEquals("ok", ok);
             }
             catch (Exception e) {
@@ -61,7 +61,7 @@ public class TimeoutTest {
     @Test
     public void testShared() {
         Env env = new Env();
-        final Timeout timeout = env.timeout(1);
+        final Timeout timeout = env.timeout("to1", 1);
         final ArrayList<String> logs = new ArrayList<>();
         env.process("t1", y -> {
             try {

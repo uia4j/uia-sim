@@ -18,13 +18,10 @@ public abstract class BaseRelease<T extends BaseResource<T>> extends Event imple
 
     protected final Process process;
 
-    protected final BaseRequest<T> request;
-
-    protected BaseRelease(T resource, String id, BaseRequest<T> request) {
+    protected BaseRelease(T resource, String id) {
         super(resource.getEnv(), id);
         this.resource = resource;
         this.process = resource.getEnv().getActiveProcess();
-        this.request = request;
     }
 
     @Override

@@ -5,14 +5,16 @@ import java.util.ArrayList;
 import uia.sim.Env;
 
 /**
- * A simple resource implementation.
+ * A capacity based resource.
  *
  * @author Kan
  *
  */
-public class Resource extends BaseResource<Resource> {
+public final class Resource extends BaseResource<Resource> {
 
-    private ArrayList<Request> requests;
+    private final int capacity;
+
+    private final ArrayList<Request> requests;
 
     /**
      * The constructor.
@@ -21,14 +23,15 @@ public class Resource extends BaseResource<Resource> {
      * @param capacity The capacity.
      */
     public Resource(Env env, int capacity) {
-        super(env, capacity);
+        super(env);
+        this.capacity = capacity;
         this.requests = new ArrayList<>();
     }
 
     /**
      * Requests a resource.
      *
-     * @param id The id.
+     * @param id The request id.
      * @return The request event.
      */
     public Request request(String id) {
@@ -38,7 +41,7 @@ public class Resource extends BaseResource<Resource> {
     /**
      * Release a resource.
      *
-     * @param id The id.
+     * @param id The release id.
      * @param request The request to be released.
      * @return The release event.
      */
@@ -47,7 +50,7 @@ public class Resource extends BaseResource<Resource> {
     }
 
     @Override
-    public boolean doRequest(BaseRequest<Resource> request) {
+    protected boolean doRequest(BaseRequest<Resource> request) {
         if (this.requests.size() < this.capacity) {
             this.requests.add((Request) request);
             request.succeed(null);      // resume the process to work.
@@ -59,8 +62,8 @@ public class Resource extends BaseResource<Resource> {
     }
 
     @Override
-    public boolean doRelease(BaseRelease<Resource> release) {
-        this.requests.remove(release.request);
+    protected boolean doRelease(BaseRelease<Resource> release) {
+        this.requests.remove(((Release) release).request);
         release.succeed(null);      // resume the resource to refresh requests.
         return true;
     }
@@ -71,9 +74,15 @@ public class Resource extends BaseResource<Resource> {
      * @author Kan
      *
      */
-    public static class Request extends BaseRequest<Resource> {
+    public static final class Request extends BaseRequest<Resource> {
 
-        public Request(Resource resource, String id) {
+        /**
+         * The constructor.
+         *
+         * @param resource The resource.
+         * @param id The request id.
+         */
+        protected Request(Resource resource, String id) {
             super(resource, id);
             this.resource.addRequest(this);
         }
@@ -90,10 +99,23 @@ public class Resource extends BaseResource<Resource> {
      * @author Kan
      *
      */
-    public static class Release extends BaseRelease<Resource> {
+    public static final class Release extends BaseRelease<Resource> {
 
-        public Release(Resource resource, String id, Request request) {
-            super(resource, id + "_release", request);
+        /**
+         * The request which pairs with this release.
+         */
+        public final Request request;
+
+        /**
+         * The constructor.
+         *
+         * @param resource The resource.
+         * @param id The release id.
+         * @param request The request which pairs with this release.
+         */
+        protected Release(Resource resource, String id, Request request) {
+            super(resource, id + "_release");
+            this.request = request;
             this.resource.addRelease(this);
         }
 

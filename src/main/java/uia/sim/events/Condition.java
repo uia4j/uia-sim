@@ -1,9 +1,11 @@
 package uia.sim.events;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import uia.sim.Env;
 import uia.sim.Event;
+import uia.sim.SimEventException;
 
 /**
  * The abstract condition event.
@@ -13,9 +15,9 @@ import uia.sim.Event;
  */
 public abstract class Condition extends Event {
 
-    protected final List<Event> events;
+    private final List<Event> events;
 
-    private int checkCount;
+    private final Consumer<Event> checkCallable;
 
     /**
      * The constructor.
@@ -27,27 +29,48 @@ public abstract class Condition extends Event {
     protected Condition(Env env, String id, List<Event> events) {
         super(env, id);
         this.events = events;
+        this.checkCallable = new Consumer<Event>() {
 
-        // Immediately succeed if no events are provided.
-        if (events.isEmpty()) {
+            @Override
+            public void accept(Event event) {
+                Condition.this.check(event);
+            }
+        };
+
+        if (this.events.isEmpty()) {
+            // Immediately succeed if no events are provided.
             succeed(new ConditionValue());
-            return;
         }
-
-        // Check if the condition is met for each processed event.
-        // Attach method::check() as a callback otherwise.
-        for (Event event : events) {
-            if (event.isProcessed()) {
-                check(event);
-            }
-            else {
-                event.addCallable(this::check);
+        else {
+            // Register a callable which will build the value of this condition
+            // after it has been processed.
+            addCallable(this::buildValue);
+            for (Event event : this.events) {
+                if (event.isProcessed()) {
+                    // Check if the condition is pass immediately.
+                    check(event);
+                }
+                else {
+                    // Attach checkCallback to the event.
+                    // When the event is processing, it will notify this condition to check again.
+                    event.addCallable(this.checkCallable);
+                }
             }
         }
+    }
 
-        // Register a callable which will build the value of this condition
-        // after it has been triggered.
-        addCallable(this::buildValue);
+    /**
+     * NG this condition will transmit the status to the nest conditions.
+     *
+     */
+    @Override
+    public void ng() {
+        super.ng();
+        for (Event e : this.events) {
+            if (e instanceof Condition) {
+                e.ng();
+            }
+        }
     }
 
     private void buildValue(Event event) {
@@ -61,7 +84,7 @@ public abstract class Condition extends Event {
 
     private void populateValue(ConditionValue cv) {
         for (Event event : this.events) {
-            event.removeCallable(this::check);
+            event.removeCallable(this.checkCallable);
             if (event instanceof Condition) {
                 ((Condition) event).populateValue(cv);
             }
@@ -73,7 +96,7 @@ public abstract class Condition extends Event {
 
     private void removeCheck() {
         for (Event event : this.events) {
-            event.removeCallable(this::check);
+            event.removeCallable(this.checkCallable);
             if (event instanceof Condition) {
                 ((Condition) event).removeCheck();
             }
@@ -81,21 +104,24 @@ public abstract class Condition extends Event {
     }
 
     private void check(Event event) {
-        if (isTriggered()) {
+        // ignore if this condition is triggered or NG.
+        if (isTriggered() || !isOk()) {
             return;
         }
 
-        this.checkCount++;
-        if (!event.isOk()) {
-            // Abort if the event has failed.
-            event.defused();
-            // event.fail(event.getValue());
-        }
-        else if (evaluate(this.events, this.checkCount)) {
-            // The condition has been met. The buildValue() callable will
-            // populate the ConditionValue once this condition is processed.
+        if (evaluate(this.events)) {
             succeed(null);
         }
+        else {
+            boolean allChceked = !this.events.stream()
+                    .filter(e -> !e.isProcessed())
+                    .findFirst()
+                    .isPresent();
+            if (allChceked) {
+                fail(new SimEventException(this, "condition failed"));
+            }
+        }
+
     }
 
     /**
@@ -105,6 +131,6 @@ public abstract class Condition extends Event {
      * @param count the pass count.
      * @return Pass or not.
      */
-    protected abstract boolean evaluate(List<Event> events, int count);
+    protected abstract boolean evaluate(List<Event> events);
 
 }

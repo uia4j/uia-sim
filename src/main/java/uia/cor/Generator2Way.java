@@ -70,6 +70,18 @@ public class Generator2Way<T, R> {
     }
 
     /**
+     * Returns the last result and tests if there is a next iteration or not.
+     *
+     * @param callResult The result sent back to the iteration.
+     * @return The next information.
+     */
+    public synchronized NextResult<T> nextResult(R callResult) {
+        this.yield.send(callResult);
+        boolean hasNext = this.yield.next(false);
+        return new NextResult<T>(hasNext, this.yield.getValue());
+    }
+
+    /**
      * Checks if there is a next iteration or not.<br>
      * The method calls 2 methods: error(value), next().
      *
@@ -82,20 +94,33 @@ public class Generator2Way<T, R> {
     }
 
     /**
+     * Returns the last result and tests if there is a next iteration or not.
+     *
+     * @param cause The cause.
+     * @return The next information.
+     */
+    public synchronized NextResult<T> errorNextResult(Exception cause) {
+        this.yield.error(cause);
+        boolean hasNext = this.yield.next(false);
+        return new NextResult<T>(hasNext, this.yield.getValue());
+    }
+
+    /**
+     * Returns the current value of the iteration.
+     *
+     * @return The current value.
+     */
+    public synchronized T getValue() {
+        return this.yield.getValue();
+    }
+
+    /**
      * Returns the final result of the iteration.
      *
      * @return The result.
      */
-    public R getResult() {
+    public R getFinalResult() {
         return this.yield.getResult();
-    }
-
-    /**
-     * Stops the iteration successfully.
-     *
-     */
-    public synchronized void stop() {
-        this.yield.next(true);
     }
 
     /**
@@ -125,36 +150,5 @@ public class Generator2Way<T, R> {
      */
     public boolean isClosed() {
         return this.yield.isClosed();
-    }
-
-    /**
-     * Returns the last result.
-     *
-     * @return The next information.
-     */
-    public synchronized NextResult<T> nextResult() {
-        boolean hasNext = this.yield.next(false);
-        return new NextResult<T>(hasNext, this.yield.getValue());
-    }
-
-    /**
-     * Returns the last result and tests if there is a next iteration or not.
-     *
-     * @param callResult The result sent back to the iteration.
-     * @return The next information.
-     */
-    public synchronized NextResult<T> nextResult(R callResult) {
-        this.yield.send(callResult);
-        boolean hasNext = this.yield.next(false);
-        return new NextResult<T>(hasNext, this.yield.getValue());
-    }
-
-    /**
-     * Returns the current value of the iteration.
-     *
-     * @return The current value.
-     */
-    public synchronized T getValue() {
-        return this.yield.getValue();
     }
 }

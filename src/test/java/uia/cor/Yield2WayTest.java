@@ -16,8 +16,42 @@ public class Yield2WayTest {
         }
         while (gen.next(i * i));
         Assert.assertEquals(10, i);
-        Assert.assertEquals(385, (int) gen.getResult());
+        Assert.assertEquals(385, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
+    }
+
+    @Test
+    public void test1stop1() {
+        Generator2Way<Integer, Integer> gen = Yield2Way.accept("y2", this::callSum2);
+        int i = 0;
+        gen.next();
+        do {
+            i = gen.getValue();
+            System.out.println("value=" + i);
+            if (i == 5) {
+                gen.stop(i * i);
+            }
+        }
+        while (gen.next(i * i));
+        System.out.println(gen.getFinalResult());
+        Assert.assertEquals(5, i);
+    }
+
+    @Test
+    public void test1stop2() {
+        Generator2Way<Integer, Integer> gen = Yield2Way.accept("y2", this::callSum2);
+        int i = 0;
+        gen.next();
+        do {
+            i = gen.getValue();
+            System.out.println("value=" + i);
+            if (i == 5) {
+                gen.stop(new Exception("force stop"));
+            }
+        }
+        while (gen.next(i * i));
+        System.out.println(gen.getFinalResult());
+        Assert.assertEquals(5, i);
     }
 
     @Test
@@ -35,7 +69,7 @@ public class Yield2WayTest {
         }
         while (gen.next(i * i));
         Assert.assertEquals(5, i);
-        Assert.assertEquals(55, (int) gen.getResult());
+        Assert.assertEquals(55, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -53,7 +87,7 @@ public class Yield2WayTest {
         }
         while (gen.next(i * i));
         Assert.assertEquals(10, i);
-        Assert.assertEquals(385, (int) gen.getResult());
+        Assert.assertEquals(385, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -68,7 +102,7 @@ public class Yield2WayTest {
         }
         while (gen.next(i * i));
         Assert.assertEquals(10, i);
-        Assert.assertEquals(0, (int) gen.getResult());
+        Assert.assertEquals(0, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -89,17 +123,20 @@ public class Yield2WayTest {
     public void testError() {
         Generator2Way<Integer, Integer> gen = Yield2Way.accept(this::callSum2WithError);
         int i = 0;
-        gen.next();
-        do {
-            i = gen.getValue().intValue();
-            System.out.println("value=" + gen.getValue());
+        NextResult<Integer> nr;
+        while (!gen.isClosed()) {
+            System.out.println("value=" + i);
             if (i > 5) {
-                gen.error("i>5");
+                nr = gen.errorNextResult(new Exception("i>5"));
+                Assert.assertEquals(i, nr.value.intValue());
             }
+            else {
+                nr = gen.nextResult(i * i);
+                Assert.assertEquals(i + 1, nr.value.intValue());
+            }
+            i = nr.value;
         }
-        while (gen.next(i * i));
         Assert.assertEquals(6, i);
-        Assert.assertTrue(gen.isClosed());
     }
 
     public void lazySum2(Yield2Way<Integer, Integer> yield) {

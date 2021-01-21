@@ -15,7 +15,7 @@ public class Yieldable2WayTest {
             System.out.println("value=" + i);
         }
         Assert.assertEquals(10, i);
-        Assert.assertEquals(385, (int) gen.getResult());
+        Assert.assertEquals(385, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -32,7 +32,7 @@ public class Yieldable2WayTest {
             }
         }
         Assert.assertEquals(5, i);
-        Assert.assertEquals(55, (int) gen.getResult());
+        Assert.assertEquals(55, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
@@ -49,7 +49,7 @@ public class Yieldable2WayTest {
             }
         }
         Assert.assertEquals(6, i);
-        Assert.assertEquals(55, (int) gen.getResult());
+        Assert.assertEquals(55, (int) gen.getFinalResult());
         Assert.assertTrue(gen.isClosed());
     }
 
