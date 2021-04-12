@@ -50,7 +50,7 @@ public class ProcessTimeCalculatorTest {
         j1b.setPrev(j1a);
         j1c.setPrev(j1b);
 
-        factory.preload(j1a);
+        factory.prepare(j1a);
         factory.run(500);
         //
         factory.getReport().printlnOp(true);

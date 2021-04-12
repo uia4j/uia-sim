@@ -2,10 +2,6 @@ package uia.road.utils;
 
 public final class TimeFormat {
 
-    private TimeFormat() {
-
-    }
-
     public static String fromSec(int time) {
         int hour = time / 3600;
         int min = (time - hour * 3600) / 60;

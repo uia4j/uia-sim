@@ -18,17 +18,17 @@ import uia.sim.Env;
  */
 public class Factory<T> {
 
+    private final Env env;
+
     private final TreeMap<String, Op<T>> operations;
 
     private final TreeMap<String, Equip<T>> equips;
 
     private final SimReport report;
 
-    private Env env;
+    private ProcessTimeCalculator<T> processTimeCalculator;
 
     private EquipStrategy<T> equipStrategy;
-
-    private ProcessTimeCalculator<T> processTimeCalculator;
 
     private PathTimeCalculator<T> pathTimeCalculator;
 
@@ -37,11 +37,10 @@ public class Factory<T> {
     }
 
     public Factory(int defaultPathTime) {
+        this.env = new Env();
         this.operations = new TreeMap<>();
         this.equips = new TreeMap<>();
         this.report = new SimReport();
-        this.env = new Env();
-        this.equipStrategy = new EquipStrategy.Default<>();
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
     }
 
@@ -57,12 +56,13 @@ public class Factory<T> {
         return this.equips.size();
     }
 
-    public EquipStrategy<T> getEquipStrategy() {
-        return this.equipStrategy;
-    }
-
-    public void setEquipStrategy(EquipStrategy<T> equipStrategy) {
-        this.equipStrategy = equipStrategy;
+    /**
+     * Returns the report.
+     * 
+     * @return The report.
+     */
+    public SimReport getReport() {
+        return this.report;
     }
 
     public ProcessTimeCalculator<T> getProcessTimeCalculator() {
@@ -73,21 +73,20 @@ public class Factory<T> {
         this.processTimeCalculator = processTimeCalculator;
     }
 
+    public EquipStrategy<T> getEquipStrategy() {
+        return this.equipStrategy;
+    }
+
+    public void setEquipStrategy(EquipStrategy<T> equipStrategy) {
+        this.equipStrategy = equipStrategy;
+    }
+
     public PathTimeCalculator<T> getPathTimeCalculator() {
         return this.pathTimeCalculator;
     }
 
     public void setPathTimeCalculator(PathTimeCalculator<T> pathTimeCalculator) {
         this.pathTimeCalculator = pathTimeCalculator;
-    }
-
-    /**
-     * Returns the report.
-     * 
-     * @return The report.
-     */
-    public SimReport getReport() {
-        return this.report;
     }
 
     /**
@@ -133,18 +132,27 @@ public class Factory<T> {
      * Adds an operation in the factory.
      * 
      * @param op The operation.
+     * @return True if the operation is added into this factory.
      */
-    public void addOperation(Op<T> op) {
-        if (!this.operations.containsKey(op.getId())) {
-            this.operations.put(op.getId(), op);
+    public boolean addOperation(Op<T> op) {
+        if (this.operations.containsKey(op.getId())) {
+            return false;
         }
+        this.operations.put(op.getId(), op);
+        return true;
     }
 
+    /**
+     * Creates an operation and add into this factory.
+     * 
+     * @param id The operation id.
+     * @return The operation.
+     */
     public Op<T> createOperation(String id) {
         Op<T> op = this.operations.get(id);
         if (op == null) {
             op = new Op<>(id, this);
-            this.operations.put(id, op);
+            addOperation(op);
         }
         return op;
     }
@@ -165,16 +173,29 @@ public class Factory<T> {
      * Adds an equipment in the factory.
      * 
      * @param equip The equipment.
+     * @return True if the equipment is added into this factory.
      */
-    public void addEquip(Equip<T> equip) {
+    public boolean addEquip(Equip<T> equip) {
+        if (this.equips.containsKey(equip.getId())) {
+            return false;
+        }
         this.equips.put(equip.getId(), equip);
+        return true;
     }
 
-    public Equip<T> createEquip(String id, int maxBoxes, int chCount) {
+    /**
+     * Creates an equipment and add into this factory.
+     * 
+     * @param id The equipment id.
+     * @param loadPorts Number of load port.
+     * @param chCount Number of the channel.
+     * @return The equipment.
+     */
+    public Equip<T> createEquip(String id, int loadPorts, int chCount) {
         Equip<T> eq = this.equips.get(id);
         if (eq == null) {
-            eq = new EquipMuch<>(id, this, maxBoxes, chCount);
-            this.equips.put(id, eq);
+            eq = new EquipMuch<>(id, this, loadPorts, chCount);
+            addEquip(eq);
         }
         return eq;
     }
@@ -221,19 +242,19 @@ public class Factory<T> {
         }
     }
 
-    public boolean preload(Job<T> job) {
+    public boolean prepare(Job<T> job) {
         JobBox<T> box = new JobBox<T>(job.getBoxId(), job.getOperation(), job);
         box.getInfo().addString("jobs", job.getId());
-        return preload(box);
+        return prepare(box);
     }
 
     /**
-     * Enqueue a box at specific operation.
+     * Prepares a box at specific operation.
      * @param opId The operation id.
      * @param box The box.
      * @return True if the box is placed at specific operation.
      */
-    public boolean preload(JobBox<T> box) {
+    public boolean prepare(JobBox<T> box) {
         Op<T> op = this.operations.get(box.getOperation());
         if (op == null) {
             return false;
@@ -243,12 +264,12 @@ public class Factory<T> {
     }
 
     /**
-     * Preloads a job into a specific equipment.
+     * Prepares a job into a specific equipment.
      * @param eqId The equipment id.
      * @param job The job.
-     * @return True if the job is preloaded into the equipment.
+     * @return True if the job is loaded into the equipment.
      */
-    public boolean preload(Job<T> job, String eqId) {
+    public boolean prepare(Job<T> job, String eqId) {
         Equip<T> eq = this.equips.get(eqId);
         if (eq == null) {
             return false;

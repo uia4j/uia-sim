@@ -18,7 +18,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
          */
 
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator(this);
+        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
         // build operations
         Op<Integer> o1 = factory.createOperation("o1");
@@ -53,13 +53,13 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         j2b.setPrev(j2a);
         j2c.setPrev(j2b);
 
-        factory.preload(j1a);
-        factory.preload(j2a);
+        factory.prepare(j1a);
+        factory.prepare(j2a);
         factory.run(1000);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnSimpleOp();
+        factory.getReport().printlnSimpleEquip();
+        factory.getReport().printlnSimpleJob();
     }
 
     @Test
@@ -102,15 +102,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         j1b.setPrev(j1a);
         j1c.setPrev(j1b);
         Job<Integer> j2a = new Job<>("job2", o1.getId(), 100);
-        Job<Integer> j2b = new Job<>("job2", o2.getId(), 250);  // make eq4 idle
+        Job<Integer> j2b = new Job<>("job2", o2.getId(), 250);  // cause eq4 idle
         Job<Integer> j2c = new Job<>("job2", o3.getId(), 150);
         j2a.setNext(j2b);
         j2b.setNext(j2c);
         j2b.setPrev(j2a);
         j2c.setPrev(j2b);
 
-        factory.preload(j1a);
-        factory.preload(j2a);
+        factory.prepare(j1a);
+        factory.prepare(j2a);
         factory.run(1000);
         //
         factory.getReport().printlnOp(true);
@@ -158,15 +158,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         j1b.setPrev(j1a);
         j1c.setPrev(j1b);
         Job<Integer> j2a = new Job<>("job2", o1.getId(), 50);
-        Job<Integer> j2b = new Job<>("job2", o2.getId(), 350);  // late
+        Job<Integer> j2b = new Job<>("job2", o2.getId(), 350);  // late at op3
         Job<Integer> j2c = new Job<>("job2", o3.getId(), 150);
         j2a.setNext(j2b);
         j2b.setNext(j2c);
         j2b.setPrev(j2a);
         j2c.setPrev(j2b);
 
-        factory.preload(j1a);               // at the operation
-        factory.preload(j2a, e1.getId());   // block job1
+        factory.prepare(j1a);               // at the operation
+        factory.prepare(j2a, e1.getId());   // block job1
         factory.run(1000);
         //
         factory.getReport().printlnOp(true);
@@ -221,8 +221,9 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         j2b.setPrev(j2a);
         j2c.setPrev(j2b);
 
-        factory.preload(j1a);
-        factory.preload(j2a);
+        // box
+        factory.prepare(j1a);
+        factory.prepare(j2a);
         factory.run(1000);
         //
         factory.getReport().printlnOp(true);

@@ -12,12 +12,4 @@ import uia.road.Job;
 public interface EquipStrategy<T> {
 
     public void update(Equip<T> equip, Job<T> job, String event);
-
-    public static final class Default<T> implements EquipStrategy<T> {
-
-        @Override
-        public void update(Equip<T> equip, Job<T> job, String event) {
-        }
-
-    }
 }

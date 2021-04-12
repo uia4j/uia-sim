@@ -111,6 +111,36 @@ public class SimReport {
         result.forEach(l -> println(l));
     }
 
+    public void printlnSimpleOp() {
+        this.opEvents.stream()
+                .collect(Collectors.groupingBy(e -> e.getOperation()))
+                .forEach((k, v) -> {
+                    Collections.sort(v, this::sort);
+                    System.out.println(k);
+                    v.forEach(l -> printlnSimple(l));
+                });
+    }
+
+    public void printlnSimpleEquip() {
+        this.equipEvents.stream()
+                .collect(Collectors.groupingBy(e -> e.getEquip()))
+                .forEach((k, v) -> {
+                    Collections.sort(v, this::sort);
+                    System.out.println(k);
+                    v.forEach(l -> printlnSimple(l));
+                });
+    }
+
+    public void printlnSimpleJob() {
+        this.jobEvents.stream()
+                .collect(Collectors.groupingBy(e -> e.getJob()))
+                .forEach((k, v) -> {
+                    Collections.sort(v, this::sort);
+                    System.out.println(k);
+                    v.forEach(l -> printlnSimple(l));
+                });
+    }
+
     public List<OpEvent> getOpLogs() {
         return this.opEvents;
     }
@@ -145,6 +175,12 @@ public class SimReport {
                 l.getTime(),
                 l.getEvent(),
                 this.gson.toJson(l)));
+    }
+
+    private void printlnSimple(Event l) {
+        System.out.println(String.format("%8s %8s",
+                this.timeFormat.apply(l.getTime()),
+                l));
     }
 
     private int sort(Event e1, Event e2) {

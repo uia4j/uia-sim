@@ -18,17 +18,17 @@ import uia.sim.Processable;
  */
 public class EquipMuch<T> extends Equip<T> {
 
-    private ArrayList<Channel<T>> chs;
+    private final int loadPorts;
+
+    private final ArrayList<Channel<T>> chs;
+
+    private final TreeMap<String, JobBox<T>> preload;
+
+    private final TreeMap<String, JobBox<T>> boxes;
 
     private Event waitingCh;
 
     private Event waitingLoad;
-
-    private int loadPorts;
-
-    private TreeMap<String, JobBox<T>> boxes;
-
-    private TreeMap<String, JobBox<T>> preload;
 
     /**
      * The constructor.
@@ -41,13 +41,13 @@ public class EquipMuch<T> extends Equip<T> {
     public EquipMuch(String id, Factory<T> factory, int loadPorts, int chCount) {
         super(id, factory);
         this.loadPorts = loadPorts <= 0 ? Integer.MAX_VALUE : loadPorts;
-        this.boxes = new TreeMap<>();
-        this.preload = new TreeMap<>();
         this.chs = new ArrayList<>();
         for (int i = 1, c = Math.max(1, chCount); i <= c; i++) {
             Channel<T> ch = new Channel<>(id + "_ch" + i, this);
             this.chs.add(ch);
         }
+        this.preload = new TreeMap<>();
+        this.boxes = new TreeMap<>();
     }
 
     @Override
@@ -69,22 +69,17 @@ public class EquipMuch<T> extends Equip<T> {
 
     @Override
     protected void run() {
-        // preload
-        try {
-            for (JobBox<T> box : this.preload.values()) {
-                try {
-                    for (Job<T> job : box.getJobs()) {
-                        Channel<T> ch = findChannel();
-                        ch.run(job);
-                    }
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
+        // start to process jobs
+        for (JobBox<T> box : this.preload.values()) {
+            try {
+                for (Job<T> job : box.getJobs()) {
+                    Channel<T> ch = findChannel();
+                    ch.run(job);
                 }
             }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         this.preload.clear();
 

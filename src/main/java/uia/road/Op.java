@@ -182,11 +182,8 @@ public class Op<T> {
      * @return The box dequeued.
      */
     public synchronized JobBox<T> dequeue(Equip<T> equip) {
-        if (this.jobs.isEmpty()) {
-            return new JobBox<>("uknonwn", this.id);
-        }
-
-        SelectResult<T> selected = equip.getJobSelector()
+        SelectResult<T> selected = equip
+                .getJobSelector()
                 .select(equip, this.jobs);
         if (selected.isEmpty()) {
             return new JobBox<>("uknonwn", this.id);

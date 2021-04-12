@@ -4,7 +4,7 @@ import java.util.Map;
 
 import uia.road.SimInfo;
 
-public class Event implements Comparable<Event> {
+public abstract class Event implements Comparable<Event> {
 
     protected final int time;
 
@@ -12,12 +12,7 @@ public class Event implements Comparable<Event> {
 
     protected Map<String, Object> info;
 
-    public Event(int time, String event) {
-        this.time = time;
-        this.event = event;
-    }
-
-    public Event(int time, String event, SimInfo info) {
+    protected Event(int time, String event, SimInfo info) {
         this.time = time;
         this.event = event;
         this.info = info == null ? null : info.toMap();
@@ -42,5 +37,10 @@ public class Event implements Comparable<Event> {
     @Override
     public int compareTo(Event e) {
         return this.time - e.getTime();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%8d %-15s", getTime(), getEvent());
     }
 }

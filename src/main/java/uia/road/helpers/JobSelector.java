@@ -37,11 +37,6 @@ public interface JobSelector<T> {
             this.jobs = new ArrayList<>();
         }
 
-        public SelectResult(String groupId) {
-            this.groupId = groupId;
-            this.jobs = new ArrayList<>();
-        }
-
         public SelectResult(String groupId, List<Job<T>> jobs) {
             this.groupId = groupId;
             this.jobs = jobs;
@@ -72,6 +67,7 @@ public interface JobSelector<T> {
             if (jobs.isEmpty()) {
                 return new SelectResult<>();
             }
+
             String boxId = jobs.get(0).getBoxId();
             List<Job<T>> selected = jobs.stream()
                     .filter(j -> boxId.equals(j.getBoxId()))

@@ -40,7 +40,7 @@ public class Path<T> extends Processable {
         });
 
         yield(env().timeout(this.time));
-        this.factory.preload(this.box);
+        this.factory.prepare(this.box);
     }
 
     @Override
