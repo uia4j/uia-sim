@@ -66,6 +66,7 @@ public class ProcessTest {
         final Process parent = env.process("parent", y1 -> {
             Process child = env.process("child", y2 -> {
                 y2.call(env.timeout(10));
+                Assert.assertEquals(10, env.getNow());
             });
 
             try {
@@ -96,6 +97,7 @@ public class ProcessTest {
         final Process parent = env.process("parent", y1 -> {
             Process child = env.process("child", y2 -> {
                 y2.call(env.timeout(10));
+                System.out.println(1);
             });
 
             try {
@@ -108,6 +110,7 @@ public class ProcessTest {
                 Assert.assertEquals(1, env.getNow());
 
                 y1.call(child);
+                System.out.println(2);
                 Assert.assertEquals(10, env.getNow());
             }
         });
@@ -115,6 +118,38 @@ public class ProcessTest {
         env.process("interuptor", y -> {
             y.call(env.timeout(1));
             parent.interrupt("down");
+        });
+
+        env.run();
+    }
+
+    @Test
+    public void testInteraction() {
+        final Env env = new Env();
+        final Process p1 = env.process("timeout", y -> {
+            try {
+                y.call(env.timeout(10));
+                Assert.assertFalse(true);
+            }
+            catch (Exception ex) {
+                Assert.assertEquals(5, env.getNow());
+            }
+        });
+        final Process p2 = env.process("timeout", y -> {
+            try {
+                y.call(env.timeout(11));
+                Assert.assertEquals(11, env.getNow());
+            }
+            catch (Exception ex) {
+                Assert.assertFalse(true);
+            }
+        });
+
+        env.process("main", y -> {
+            y.call(env.timeout(5));
+            p1.interrupt("done");
+            y.call(env.timeout(8));
+            p2.interrupt("done");
         });
 
         env.run();

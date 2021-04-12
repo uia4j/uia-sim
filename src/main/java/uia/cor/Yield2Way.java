@@ -309,6 +309,9 @@ public class Yield2Way<T, R> {
             this.iterable.accept(this);	// block until finishing iteration.
         }
         catch (Exception ex) {
+            if (!"envDown".equals(ex.getMessage())) {
+                ex.printStackTrace();
+            }
             logger.error(String.format("%s> ruuning() failed", this.id), ex);
         }
         finally {

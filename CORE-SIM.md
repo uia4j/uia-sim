@@ -7,6 +7,18 @@ DESim4J 的設計參考 SimPy，核心為 Env 和 Event。
 * Env 內的 PriorityQueue 對所有的 Event 進行排序管理。
 * 啟動模擬後，Env 會依序取得 Event，並執行 Event 內的 callable(s)。
 
+## Event
+
+事件物件中的幾個關鍵特性：
+
+* 事件物件被建立時，不會立即被加入 Env 的 Event 佇列中。
+* trigger - 將事件加入 Env 的 Event 佇列中，等待執行。
+* succeed - 將事件加入 Env 的 Event 佇列中，等待執行。
+* callback - Env 將此 Event 移出佇列並執行。
+* isTriggered - 檢查此事件是否被加入 Env 的 Event 佇列中。
+* isProcessed - 檢查此事件是否被執行並移除 Env 的 Event 佇列中。
+
+
 ## Timeout Event
 當建立 Timeout 事件時，Timeout 會自動將自己註冊到 Env 的 Event 佇列中，排定被觸發的時間為 `env.now() + delayTime`。
 

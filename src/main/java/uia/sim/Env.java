@@ -426,6 +426,15 @@ public class Env {
     }
 
     /**
+     * Checks the first job.
+     * 
+     * @return The first job.
+     */
+    public Job seeFirstJob() {
+        return this.jobs.peek();
+    }
+
+    /**
      * Processes the next event.
      *
      * @throws SimEventException

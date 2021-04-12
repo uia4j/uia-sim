@@ -57,5 +57,9 @@ public class ContainerTest {
                 Assert.assertTrue(false);
             }
         }
+
+        @Override
+        protected void initial() {
+        }
     }
 }

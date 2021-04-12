@@ -66,6 +66,10 @@ public class ResourceTest {
                 Assert.assertTrue(false);
             }
         }
+
+        @Override
+        protected void initial() {
+        }
     }
 
     public static class Car2 extends Processable {
@@ -93,6 +97,10 @@ public class ResourceTest {
                 Assert.assertEquals("can not wait", ex.getMessage());
                 Assert.assertTrue(true);
             }
+        }
+
+        @Override
+        protected void initial() {
         }
     }
 }

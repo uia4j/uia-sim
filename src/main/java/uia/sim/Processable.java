@@ -88,7 +88,7 @@ public abstract class Processable {
 
         this.env = env;
         this.process = env.process(this.id, this::readyToGo);
-        postBind();
+        initial();
         return this.process;
     }
 
@@ -142,8 +142,7 @@ public abstract class Processable {
      * Invoked after binding. Override the method to configure the environment instead of in constructor.
      *
      */
-    protected void postBind() {
-    }
+    protected abstract void initial();
 
     /**
      * Runs this process.

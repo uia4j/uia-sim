@@ -158,6 +158,10 @@ public class EnvTest {
             yield().call(env().timeout(10));
             System.out.println(this + " Hi");
         }
+
+        @Override
+        protected void initial() {
+        }
     }
 
     /**

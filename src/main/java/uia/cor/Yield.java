@@ -294,6 +294,9 @@ public class Yield<T> {
             this.iterable.accept(this);	// blocking
         }
         catch (Exception ex) {
+            if (!"envDown".equals(ex.getMessage())) {
+                ex.printStackTrace();
+            }
             logger.error(String.format("%s> ruuning() failed", this.id), ex);
         }
         finally {
