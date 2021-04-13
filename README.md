@@ -10,6 +10,8 @@ DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __pr
 
 DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
 
+The [ROAD](ROAD.md) is a RD sub-project that build a abstract simulator of the manufacturing factory.
+
 [API](https://uia4j.github.io/uia-sim/index.html)
 
 ## package uia.cor
