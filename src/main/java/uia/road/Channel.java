@@ -50,8 +50,8 @@ public class Channel<T> {
     public void run(Job<T> job) throws Exception {
         if (this.job != null) {
             throw new Exception(String.format("%s CAN NOT move in. %s is running in the %s. time:%s",
-                    job.getId(),
-                    this.job.getId(),
+                    job.getProductName(),
+                    this.job.getProductName(),
                     this.id,
                     this.equip.getFactory().getEnv().getNow()));
         }
@@ -60,7 +60,7 @@ public class Channel<T> {
         this.processing = true;
         this.equip.getFactory()
                 .getEnv()
-                .process(job.getId(), this::run);
+                .process(job.getProductName(), this::run);
     }
 
     protected final void run(Yield2Way<Event, Object> yield) {
@@ -75,7 +75,7 @@ public class Channel<T> {
         // 1. process start
         int now1 = factory.now();
         factory.log(new JobEvent(
-                this.job.getId(),
+                this.job.getProductName(),
                 this.job.getBoxId(),
                 now1,
                 this.job.isProcessing() ? JobEvent.PROCESSING : JobEvent.PROCESS_START,
@@ -94,7 +94,7 @@ public class Channel<T> {
         // 3. process end
         int now2 = factory.now();
         factory.log(new JobEvent(
-                this.job.getId(),
+                this.job.getProductName(),
                 this.job.getBoxId(),
                 now2,
                 JobEvent.PROCESS_END,

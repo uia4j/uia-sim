@@ -83,19 +83,13 @@ o3.serve(e4);
 Job<Integer> j1a = new Job<>("job1", o1.getId(), 100);
 Job<Integer> j1b = new Job<>("job1", o2.getId(), 50);
 Job<Integer> j1c = new Job<>("job1", o3.getId(), 150);
-j1a.setNext(j1b);
-j1b.setNext(j1c);
-j1b.setPrev(j1a);
-j1c.setPrev(j1b);
+j1a.setNext(j1b).setNext(j1c);
 
 // prepare job2 (j2a -> j2b -> j2c)
 Job<Integer> j2a = new Job<>("job2", o1.getId(), 100);
 Job<Integer> j2b = new Job<>("job2", o2.getId(), 50);
 Job<Integer> j2c = new Job<>("job2", o3.getId(), 150);
-j2a.setNext(j2b);
-j2b.setNext(j2c);
-j2b.setPrev(j2a);
-j2c.setPrev(j2b);
+j2a.setNext(j2b).setNext(j2c);
 
 // place FIRST job of jobs sequence into the factory
 factory.prepare(j1a);
@@ -105,9 +99,9 @@ factory.prepare(j2a);
 factory.run(1000);
 
 // print simple logs
-factory.getReport().printlnSimpleOp();
-factory.getReport().printlnSimpleEquip();
-factory.getReport().printlnSimpleJob();
+factory.getReport().printlnSimpleOpEvents();
+factory.getReport().printlnSimpleEquipEvents();
+factory.getReport().printlnSimpleJobEvents();
 
 ```
 

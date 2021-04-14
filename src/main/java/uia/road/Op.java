@@ -63,6 +63,14 @@ public class Op<T> {
     }
 
     /**
+     * 
+     * @return
+     */
+    public int getEnqueued() {
+        return this.jobs.size();
+    }
+
+    /**
      * Returns all equipments the operation serves.
      * @return
      */
@@ -106,7 +114,7 @@ public class Op<T> {
             box.getJobs().forEach(j -> {
                 j.updateInfo();
                 this.factory.log(new JobEvent(
-                        j.getId(),
+                        j.getProductName(),
                         j.getBoxId(),
                         now,
                         JobEvent.QT_PENDING,
@@ -129,7 +137,7 @@ public class Op<T> {
             box.getJobs().forEach(j -> {
                 j.updateInfo();
                 this.factory.log(new JobEvent(
-                        j.getId(),
+                        j.getProductName(),
                         j.getBoxId(),
                         now,
                         JobEvent.HOLD,
@@ -152,7 +160,7 @@ public class Op<T> {
             //
             this.jobs.add(j);
             this.factory.log(new JobEvent(
-                    j.getId(),
+                    j.getProductName(),
                     j.getBoxId(),
                     now,
                     JobEvent.DISPATCHED,
@@ -193,7 +201,7 @@ public class Op<T> {
         boxInfo.setString("equip", equip.getId());
         selected.getJobs().forEach(j -> {
             this.jobs.remove(j);
-            boxInfo.addString("jobs", j.getId());
+            boxInfo.addString("jobs", j.getProductName());
         });
         OpEvent e = new OpEvent(
                 this.id,

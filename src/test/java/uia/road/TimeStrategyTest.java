@@ -44,17 +44,17 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 10);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
+        // control move in/out
         j1b.getStrategy().getMoveIn().setFrom(15);
         j1b.getStrategy().getMoveOut().setFrom(30);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnOpEvents(true);
+        factory.getReport().printlnEquipEvents(true);
+        factory.getReport().printlnJobEvents("job1");
     }
 
     @Test
@@ -90,17 +90,19 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
+        // control move in
         j1b.getStrategy().getMoveIn().setFrom(15);
+        // legal before 38
         j1b.getStrategy().getMoveOut().setTo(38);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnOpEvents(true);
+        factory.getReport().printlnEquipEvents("e1");
+        factory.getReport().printlnEquipEvents("e2");
+        factory.getReport().printlnSimpleJobEvents();
     }
 
     @Test
@@ -115,7 +117,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
          * o2:         .
          */
 
-        Factory<Integer> factory = new Factory<>(11);   // path time: 11
+        Factory<Integer> factory = new Factory<>(11);   // dispatch too slowly
         factory.setProcessTimeCalculator(this);
 
         // build operations
@@ -136,16 +138,16 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
+        // legal before 15
         j1b.getStrategy().getMoveIn().setTo(15);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnSimpleOpEvents();
+        factory.getReport().printlnSimpleEquipEvents();
+        factory.getReport().printlnSimpleJobEvents();
     }
 
     @Test
@@ -174,6 +176,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
             @Override
             public void update(Equip<Integer> equip, Job<Integer> job, String event) {
                 if (JobEvent.MOVE_IN.equals(event)) {
+                    // control move in/out time
                     job.findNextAt("o2").getStrategy().getMoveIn().setFrom(job.getMoveInTime() + 30);
                     job.findNextAt("o2").getStrategy().getMoveOut().setFrom(job.getMoveInTime() + 30 + 20);
                 }
@@ -192,20 +195,19 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 10);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnSimpleOpEvents();
+        factory.getReport().printlnSimpleEquipEvents();
+        factory.getReport().printlnSimpleJobEvents();
     }
 
     @Test
     public void test5() throws Exception {
         /**
-         *    o1 (30) o2
+         *    o1 (29) o2
          *    10      20
          *    e1------e2
          * i1:       +30
@@ -214,7 +216,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
          * o2        +25(hold)
          */
 
-        Factory<Integer> factory = new Factory<>(30);   // dispatch too slowly
+        Factory<Integer> factory = new Factory<>(29);   // dispatch too slowly
         factory.setProcessTimeCalculator(this);
 
         // build operations
@@ -229,6 +231,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
             public void update(Equip<Integer> equip, Job<Integer> job, String event) {
                 if (JobEvent.MOVE_IN.equals(event)) {
                     job.findNextAt("o2").getStrategy().getMoveIn().setFrom(job.getMoveInTime() + 30);
+                    // legal before 55
                     job.findNextAt("o2").getStrategy().getMoveOut().setTo(job.getMoveInTime() + 30 + 25);
                 }
             }
@@ -246,20 +249,19 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnSimpleOpEvents();
+        factory.getReport().printlnSimpleEquipEvents();
+        factory.getReport().printlnSimpleJobEvents();
     }
 
     @Test
     public void test6() throws Exception {
         /**
-         *    o1 (30) o2
+         *    o1 (31) o2
          *    10      20
          *    e1------e2
          * i1:         .
@@ -268,7 +270,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
          * o2          .
          */
 
-        Factory<Integer> factory = new Factory<>(30);   // dispatch too slowly
+        Factory<Integer> factory = new Factory<>(31);   // dispatch slowly
         factory.setProcessTimeCalculator(this);
         factory.setEquipStrategy(new EquipStrategy<Integer>() {
 
@@ -299,14 +301,13 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
         j1a.setNext(j1b);
-        j1b.setPrev(j1a);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        factory.getReport().printlnSimpleOpEvents();
+        factory.getReport().printlnSimpleEquipEvents();
+        factory.getReport().printlnSimpleJobEvents();
     }
 
     @Override

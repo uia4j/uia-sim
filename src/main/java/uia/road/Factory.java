@@ -1,5 +1,8 @@
 package uia.road;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import uia.road.events.EquipEvent;
@@ -54,6 +57,20 @@ public class Factory<T> {
 
     public int getCountOfEquipments() {
         return this.equips.size();
+    }
+
+    public boolean isIdle() {
+        boolean idle = !this.equips.values().stream()
+                .filter(e -> !e.isIdle())
+                .findAny()
+                .isPresent();
+        if (idle) {
+            idle = !this.operations.values().stream()
+                    .filter(o -> o.getEnqueued() > 0)
+                    .findAny()
+                    .isPresent();
+        }
+        return idle;
     }
 
     /**
@@ -206,12 +223,14 @@ public class Factory<T> {
      * @param box The box.
      */
     public void dispatch(JobBox<T> box) {
-        TreeMap<String, JobBox<T>> nextBoxes = new TreeMap<>();
+        Op<T> from = this.getOperation(box.getOperation());
+
+        TreeMap<String, List<Job<T>>> nextBoxes = new TreeMap<>();
         for (Job<T> doneJ : box.getJobs()) {
             Job<T> nextJ = doneJ.getNext();
             if (nextJ == null) {
                 this.log(new JobEvent(
-                        doneJ.getId(),
+                        doneJ.getProductName(),
                         doneJ.getBoxId(),
                         now(),
                         JobEvent.DONE,
@@ -220,31 +239,48 @@ public class Factory<T> {
                         doneJ.getInfo()));
                 continue;
             }
-            JobBox<T> nextBox = nextBoxes.get(nextJ.getOperation());
+            List<Job<T>> nextBox = nextBoxes.get(nextJ.getOperation());
             if (nextBox == null) {
-                nextBox = new JobBox<>(box.getId(), nextJ.getOperation());
+                nextBox = new ArrayList<>();
                 nextBoxes.put(nextJ.getOperation(), nextBox);
             }
-            nextBox.addJob(nextJ);
-            nextBox.getInfo().addString("jobs", nextJ.getId());
+            nextBox.add(nextJ);
         }
 
-        Op<T> from = getOperation(box.getOperation());
-        for (JobBox<T> bx : nextBoxes.values()) {
+        SimInfo info = new SimInfo();
+        int i = 1;
+        for (Map.Entry<String, List<Job<T>>> e : nextBoxes.entrySet()) {
+            // split
+            String boxId = nextBoxes.size() == 1
+                    ? box.getId()
+                    : box.getId() + "." + (i++);
+
+            JobBox<T> nextBox = new JobBox<>(boxId, e.getKey(), e.getValue());
             int pathTime = this.pathTimeCalculator.calc(
                     from,
-                    getOperation(bx.getOperation()));
+                    getOperation(nextBox.getOperation()));
             this.env.process(new Path<T>(
-                    bx.getId() + "_dispatch_to_" + bx.getOperation(),
+                    nextBox.getId() + "_dispatch_to_" + nextBox.getOperation(),
                     this,
-                    bx,
+                    nextBox,
                     pathTime));
+            info.addString("split", boxId);
+        }
+
+        if (nextBoxes.size() > 1) {
+            log(new OpEvent(
+                    from.getId(),
+                    now(),
+                    OpEvent.SPLIT,
+                    box.getId(),
+                    from.getEnqueued(),
+                    info));
         }
     }
 
     public boolean prepare(Job<T> job) {
         JobBox<T> box = new JobBox<T>(job.getBoxId(), job.getOperation(), job);
-        box.getInfo().addString("jobs", job.getId());
+        box.getInfo().addString("jobs", job.getProductName());
         return prepare(box);
     }
 
@@ -278,14 +314,19 @@ public class Factory<T> {
         return true;
     }
 
+    public int run(int until) throws Exception {
+        return run(until, 1800);
+    }
+
     /**
      * Starts the simulation.
      * 
      * @param until The end time.
+     * @param cycleTime The cycle time used to check if the factory is idle.
      * @return The stop time.
      * @throws Exception Failed to start up.
      */
-    public int run(int until) throws Exception {
+    public int run(int until, int cycleTime) throws Exception {
         if (this.equips.isEmpty()) {
             return 0;
         }
@@ -296,6 +337,16 @@ public class Factory<T> {
         for (Equip<T> equip : this.equips.values()) {
             this.env.process(equip);
         }
+
+        this.env.process("idle", y2 -> {
+            boolean idled = false;
+            while (!idled) {
+                y2.call(this.env.timeout("factory", cycleTime));
+                idled = isIdle();
+            }
+            this.env.stop();
+        });
+
         return this.env.run(until);
     }
 

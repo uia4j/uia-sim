@@ -138,6 +138,13 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     public abstract boolean isBusy();
 
     /**
+     * Tests if the equipment is idle.
+     * 
+     * @return True if the equipment is idle.
+     */
+    public abstract boolean isIdle();
+
+    /**
      * Adds a job.
      * 
      * @param job A job.
@@ -148,7 +155,9 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         for (Op<T> o : this.operations) {
             o.link(this.jobNotifier);
         }
-        yield(this.jobNotifier.waiting(getId(), this.waitingMaxTime));
+        // performance issue
+        // yield(this.jobNotifier.waiting(getId(), this.waitingMaxTime));
+        yield(this.jobNotifier.waiting(getId()));
     }
 
     @Override

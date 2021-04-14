@@ -57,6 +57,11 @@ public class EquipMuch<T> extends Equip<T> {
     }
 
     @Override
+    public boolean isIdle() {
+        return this.boxes.isEmpty();
+    }
+
+    @Override
     public void addPreload(Job<T> job) {
         JobBox<T> box = this.preload.get(job.getBoxId());
         if (box == null) {
@@ -141,7 +146,7 @@ public class EquipMuch<T> extends Equip<T> {
             box.getJobs().forEach(j -> {
                 j.updateInfo();
                 this.factory.log(new JobEvent(
-                        j.getId(),
+                        j.getProductName(),
                         j.getBoxId(),
                         now,
                         JobEvent.MOVE_IN,
@@ -210,7 +215,7 @@ public class EquipMuch<T> extends Equip<T> {
         box.getJobs().forEach(j -> {
             j.updateInfo();
             this.factory.log(new JobEvent(
-                    j.getId(),
+                    j.getProductName(),
                     j.getBoxId(),
                     now,
                     JobEvent.MOVE_OUT,
@@ -227,7 +232,7 @@ public class EquipMuch<T> extends Equip<T> {
             box.getJobs().forEach(j -> {
                 j.updateInfo();
                 this.factory.log(new JobEvent(
-                        j.getId(),
+                        j.getProductName(),
                         j.getBoxId(),
                         this.factory.now(),
                         JobEvent.HOLD,

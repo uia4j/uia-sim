@@ -9,7 +9,7 @@ package uia.road;
  */
 public class Job<T> {
 
-    private final String id;
+    private final String productName;
 
     private final String operation;
 
@@ -51,14 +51,14 @@ public class Job<T> {
     /**
      * Constructor.
      * 
-     * @param id The job id.
+     * @param productName The product name.
      * @param boxId The box id.
      * @param operation The operation.
      * @param data The reference data.
      */
-    public Job(String id, String boxId, String operation, T data) {
-        this.id = id;
-        this.boxId = boxId == null ? this.id : boxId;
+    public Job(String productName, String boxId, String operation, T data) {
+        this.productName = productName;
+        this.boxId = boxId == null ? this.productName : boxId;
         this.operation = operation;
         this.data = data;
         this.info = new SimInfo();
@@ -68,12 +68,12 @@ public class Job<T> {
     }
 
     /**
-     * Returns the job id.
+     * Returns the product name.
      * 
-     * @return The job id.
+     * @return The product name.
      */
-    public String getId() {
-        return this.id;
+    public String getProductName() {
+        return this.productName;
     }
 
     /**
@@ -127,16 +127,24 @@ public class Job<T> {
         return this.prev;
     }
 
-    public void setPrev(Job<T> prev) {
-        this.prev = prev;
+    public Job<T> setPrev(Job<T> prev) {
+        if (this.prev != prev) {
+            this.prev = prev;
+            this.prev.setNext(this);
+        }
+        return this.prev;
     }
 
     public Job<T> getNext() {
         return this.next;
     }
 
-    public void setNext(Job<T> next) {
-        this.next = next;
+    public Job<T> setNext(Job<T> next) {
+        if (this.next != next) {
+            this.next = next;
+            next.setPrev(this);
+        }
+        return this.next;
     }
 
     public String getBoxId() {
@@ -225,7 +233,7 @@ public class Job<T> {
     @Override
     public String toString() {
         return String.format("%s @ %s",
-                this.id,
+                this.productName,
                 this.operation);
     }
 

@@ -45,16 +45,16 @@ public class ProcessTimeCalculatorTest {
         Job<Integer> j1a = new Job<>("job1", o1.getId(), 100);
         Job<Integer> j1b = new Job<>("job1", o2.getId(), 100);
         Job<Integer> j1c = new Job<>("job1", o3.getId(), 100);
-        j1a.setNext(j1b);
-        j1b.setNext(j1c);
-        j1b.setPrev(j1a);
-        j1c.setPrev(j1b);
+        j1a.setNext(j1b).setNext(j1c);
 
         factory.prepare(j1a);
         factory.run(500);
         //
-        factory.getReport().printlnOp(true);
-        factory.getReport().printlnEquip(true);
-        factory.getReport().printlnJob(true);
+        System.out.println("operations:");
+        factory.getReport().printlnOpEvents(false);
+        System.out.println("equipment:");
+        factory.getReport().printlnEquipEvents(false);
+        System.out.println("jobs:");
+        factory.getReport().printlnJobEvents(false);
     }
 }

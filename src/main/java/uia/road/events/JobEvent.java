@@ -24,7 +24,7 @@ public class JobEvent extends Event {
 
     public static final String DONE = "DONE";
 
-    private String job;
+    private String product;
 
     private String box;
 
@@ -32,20 +32,20 @@ public class JobEvent extends Event {
 
     private int timeIdled;
 
-    public JobEvent(String job, String box, int time, String event, String eventTarget, int timeIdled, SimInfo info) {
+    public JobEvent(String product, String box, int time, String event, String eventTarget, int timeIdled, SimInfo info) {
         super(time, event, info);
-        this.job = job;
+        this.product = product;
         this.box = box;
         this.eventTarget = eventTarget;
         this.timeIdled = timeIdled;
     }
 
-    public String getJob() {
-        return this.job;
+    public String getProduct() {
+        return this.product;
     }
 
-    public void setJob(String job) {
-        this.job = job;
+    public void setProduct(String product) {
+        this.product = product;
     }
 
     public String getBox() {
@@ -70,5 +70,13 @@ public class JobEvent extends Event {
 
     public void setTimeIdled(int timeIdled) {
         this.timeIdled = timeIdled;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%8d %-15s - %s",
+                getTime(),
+                getEvent(),
+                getEventTarget() == null ? "" : getEventTarget());
     }
 }

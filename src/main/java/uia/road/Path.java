@@ -30,7 +30,7 @@ public class Path<T> extends Processable {
         this.box.getJobs().forEach(j -> {
             j.updateInfo();
             this.factory.log(new JobEvent(
-                    j.getId(),
+                    j.getProductName(),
                     j.getBoxId(),
                     now,
                     JobEvent.DISPATCHING,

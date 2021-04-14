@@ -12,6 +12,8 @@ public class OpEvent extends Event {
 
     public static final String HOLD = "HOLD";
 
+    public static final String SPLIT = "SPLIT";
+
     private String operation;
 
     private String box;
@@ -47,5 +49,13 @@ public class OpEvent extends Event {
 
     public void setQueued(int queued) {
         this.queued = queued;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%8d %-15s - %s",
+                getTime(),
+                getEvent(),
+                getBox());
     }
 }

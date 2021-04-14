@@ -41,7 +41,7 @@ public class SimReport {
         this.gson = new GsonBuilder().create();
     }
 
-    public void printlnOp(boolean group) {
+    public void printlnOpEvents(boolean group) {
         if (group) {
             this.opEvents.stream()
                     .collect(Collectors.groupingBy(e -> e.getOperation()))
@@ -56,7 +56,8 @@ public class SimReport {
         }
     }
 
-    public void printlnOp(String id) {
+    public void printlnOpEvents(String id) {
+        System.out.println(id);
         List<OpEvent> result = this.opEvents.stream()
                 .filter(o -> id.equals(o.getOperation()))
                 .collect(Collectors.toList());
@@ -64,7 +65,7 @@ public class SimReport {
         result.forEach(l -> println(l));
     }
 
-    public void printlnEquip(boolean group) {
+    public void printlnEquipEvents(boolean group) {
         if (group) {
             this.equipEvents.stream()
                     .collect(Collectors.groupingBy(e -> e.getEquip()))
@@ -79,7 +80,8 @@ public class SimReport {
         }
     }
 
-    public void printlnEquip(String id) {
+    public void printlnEquipEvents(String id) {
+        System.out.println(id);
         List<EquipEvent> result = this.equipEvents.stream()
                 .filter(e -> id.equals(e.getEquip()))
                 .collect(Collectors.toList());
@@ -88,10 +90,10 @@ public class SimReport {
 
     }
 
-    public void printlnJob(boolean group) {
+    public void printlnJobEvents(boolean group) {
         if (group) {
             this.jobEvents.stream()
-                    .collect(Collectors.groupingBy(e -> e.getJob()))
+                    .collect(Collectors.groupingBy(e -> e.getProduct()))
                     .forEach((k, v) -> {
                         Collections.sort(v, this::sort);
                         System.out.println(k);
@@ -103,15 +105,16 @@ public class SimReport {
         }
     }
 
-    public void printlnJob(String id) {
+    public void printlnJobEvents(String id) {
+        System.out.println(id);
         List<JobEvent> result = this.jobEvents.stream()
-                .filter(j -> id.equals(j.getJob()))
+                .filter(j -> id.equals(j.getProduct()))
                 .collect(Collectors.toList());
         Collections.sort(result);
         result.forEach(l -> println(l));
     }
 
-    public void printlnSimpleOp() {
+    public void printlnSimpleOpEvents() {
         this.opEvents.stream()
                 .collect(Collectors.groupingBy(e -> e.getOperation()))
                 .forEach((k, v) -> {
@@ -121,7 +124,7 @@ public class SimReport {
                 });
     }
 
-    public void printlnSimpleEquip() {
+    public void printlnSimpleEquipEvents() {
         this.equipEvents.stream()
                 .collect(Collectors.groupingBy(e -> e.getEquip()))
                 .forEach((k, v) -> {
@@ -131,9 +134,9 @@ public class SimReport {
                 });
     }
 
-    public void printlnSimpleJob() {
+    public void printlnSimpleJobEvents() {
         this.jobEvents.stream()
-                .collect(Collectors.groupingBy(e -> e.getJob()))
+                .collect(Collectors.groupingBy(e -> e.getProduct()))
                 .forEach((k, v) -> {
                     Collections.sort(v, this::sort);
                     System.out.println(k);

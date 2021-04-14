@@ -63,4 +63,12 @@ public class EquipEvent extends Event {
     public void setBox(String box) {
         this.box = box;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%8d %-15s - %s",
+                getTime(),
+                getEvent(),
+                getBox() == null ? "" : getBox());
+    }
 }

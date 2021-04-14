@@ -388,14 +388,23 @@ public class Env {
             logger.debug("==== end ====");
         }
         catch (Throwable ex) {
-            logger.debug("==== end with exception ====");
+            logger.debug(String.format("==== end(%s) ====", ex.getMessage()));
         }
 
         while (!this.jobs.isEmpty()) {
-            this.jobs.poll().event.envDown();
-            // this.jobs.remove(0).event.envDown();
+            try {
+                this.jobs.poll().event.envDown();
+            }
+            catch (Throwable ex) {
+            }
         }
         return this.now;
+    }
+
+    public void stop() {
+        Event stopEvent = event("stop");
+        stopEvent.addCallable(this::stopSim);
+        schedule(stopEvent, PriorityType.URGENT, 0);
     }
 
     /**
@@ -473,7 +482,7 @@ public class Env {
     }
 
     private void stopSim(Event event) {
-        throw new SimException("stop the simulation");
+        throw new SimStopException();
     }
 
     /**
