@@ -60,7 +60,7 @@ public class Channel<T> {
         this.processing = true;
         this.equip.getFactory()
                 .getEnv()
-                .process(job.getProductName(), this::run);
+                .process(job.getProductName() + "_" + this.id + "_process", this::run);
     }
 
     protected final void run(Yield2Way<Event, Object> yield) {
@@ -73,31 +73,32 @@ public class Channel<T> {
                 .calc(this.equip, this.job);
 
         // 1. process start
-        int now1 = factory.now();
+        int now1 = factory.ticksNow();
         factory.log(new JobEvent(
+                this.job.getId(),
                 this.job.getProductName(),
-                this.job.getBoxId(),
                 now1,
                 this.job.isProcessing() ? JobEvent.PROCESSING : JobEvent.PROCESS_START,
+                this.job.getOperation(),
                 this.id,
                 now1 - this.job.getDispatchedTime(),
                 this.job.getInfo()));
         this.job.setProcessing(true);
         this.job.setFinished(false);
-        this.equip.processStarted(this, this.job);
 
         // 2. processing
-        yield.call(factory.getEnv().timeout(processTime));
+        yield.call(factory.getEnv().timeout(this.job.getProductName() + "_" + this.id + "_process_end", processTime));
         this.job.setProcessing(false);
         this.job.setFinished(true);
 
         // 3. process end
-        int now2 = factory.now();
+        int now2 = factory.ticksNow();
         factory.log(new JobEvent(
+                this.job.getId(),
                 this.job.getProductName(),
-                this.job.getBoxId(),
                 now2,
                 JobEvent.PROCESS_END,
+                this.job.getOperation(),
                 this.id,
                 0,
                 this.job.getInfo()));
@@ -105,5 +106,10 @@ public class Channel<T> {
         this.job = null;
         this.processing = false;
         this.equip.processEnded(this, job);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s processing:%s", this.id, this.processing);
     }
 }

@@ -1,9 +1,8 @@
 package uia.road;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.IntFunction;
+import java.util.Vector;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -13,7 +12,6 @@ import uia.road.events.EquipEvent;
 import uia.road.events.Event;
 import uia.road.events.JobEvent;
 import uia.road.events.OpEvent;
-import uia.road.utils.TimeFormat;
 
 /**
  * Simulation report.
@@ -21,26 +19,27 @@ import uia.road.utils.TimeFormat;
  * @author Kan
  *
  */
-public class SimReport {
+public class SimReportTextLogger implements SimReportLogger {
 
-    private final List<OpEvent> opEvents;
+    protected Gson gson;
 
-    private final List<EquipEvent> equipEvents;
+    protected final List<OpEvent> opEvents;
 
-    private final List<JobEvent> jobEvents;
+    protected final List<EquipEvent> equipEvents;
 
-    private IntFunction<String> timeFormat;
+    protected final List<JobEvent> jobEvents;
 
-    private Gson gson;
+    protected final Factory<?> factory;
 
-    public SimReport() {
-        this.opEvents = new ArrayList<>();
-        this.equipEvents = new ArrayList<>();
-        this.jobEvents = new ArrayList<>();
-        this.timeFormat = TimeFormat::fromSec;
+    public SimReportTextLogger(Factory<?> factory) {
         this.gson = new GsonBuilder().create();
+        this.opEvents = new Vector<>();
+        this.equipEvents = new Vector<>();
+        this.jobEvents = new Vector<>();
+        this.factory = factory;
     }
 
+    @Override
     public void printlnOpEvents(boolean group) {
         if (group) {
             this.opEvents.stream()
@@ -56,6 +55,7 @@ public class SimReport {
         }
     }
 
+    @Override
     public void printlnOpEvents(String id) {
         System.out.println(id);
         List<OpEvent> result = this.opEvents.stream()
@@ -65,6 +65,7 @@ public class SimReport {
         result.forEach(l -> println(l));
     }
 
+    @Override
     public void printlnEquipEvents(boolean group) {
         if (group) {
             this.equipEvents.stream()
@@ -80,6 +81,7 @@ public class SimReport {
         }
     }
 
+    @Override
     public void printlnEquipEvents(String id) {
         System.out.println(id);
         List<EquipEvent> result = this.equipEvents.stream()
@@ -90,6 +92,7 @@ public class SimReport {
 
     }
 
+    @Override
     public void printlnJobEvents(boolean group) {
         if (group) {
             this.jobEvents.stream()
@@ -105,6 +108,7 @@ public class SimReport {
         }
     }
 
+    @Override
     public void printlnJobEvents(String id) {
         System.out.println(id);
         List<JobEvent> result = this.jobEvents.stream()
@@ -114,6 +118,7 @@ public class SimReport {
         result.forEach(l -> println(l));
     }
 
+    @Override
     public void printlnSimpleOpEvents() {
         this.opEvents.stream()
                 .collect(Collectors.groupingBy(e -> e.getOperation()))
@@ -124,6 +129,7 @@ public class SimReport {
                 });
     }
 
+    @Override
     public void printlnSimpleEquipEvents() {
         this.equipEvents.stream()
                 .collect(Collectors.groupingBy(e -> e.getEquip()))
@@ -134,6 +140,7 @@ public class SimReport {
                 });
     }
 
+    @Override
     public void printlnSimpleJobEvents() {
         this.jobEvents.stream()
                 .collect(Collectors.groupingBy(e -> e.getProduct()))
@@ -156,25 +163,32 @@ public class SimReport {
         return this.jobEvents;
     }
 
+    @Override
     public void log(OpEvent e) {
         this.opEvents.add(e);
     }
 
+    @Override
     public void log(EquipEvent e) {
         this.equipEvents.add(e);
     }
 
+    @Override
     public void log(JobEvent e) {
         this.jobEvents.add(e);
     }
 
     public String toTimeString(int time) {
-        return this.timeFormat.apply(time);
+        return this.factory.getTimeType().format(time);
+    }
+
+    @Override
+    public void flush() {
     }
 
     private void println(Event l) {
         System.out.println(String.format("%8s %8d %-15s - %s",
-                this.timeFormat.apply(l.getTime()),
+                this.factory.getTimeType().format(l.getTime()),
                 l.getTime(),
                 l.getEvent(),
                 this.gson.toJson(l)));
@@ -182,7 +196,7 @@ public class SimReport {
 
     private void printlnSimple(Event l) {
         System.out.println(String.format("%8s %8s",
-                this.timeFormat.apply(l.getTime()),
+                this.factory.getTimeType().format(l.getTime()),
                 l));
     }
 

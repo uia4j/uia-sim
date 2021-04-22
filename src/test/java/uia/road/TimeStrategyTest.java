@@ -1,15 +1,12 @@
 package uia.road;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import uia.road.events.JobEvent;
 import uia.road.helpers.EquipStrategy;
-import uia.road.helpers.JobSelector;
 import uia.road.helpers.ProcessTimeCalculator;
 
-public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSelector<Integer> {
+public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
 
     @Test
     public void test1() throws Exception {
@@ -33,7 +30,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         // build equipments
         Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -41,8 +37,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 10);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 10);
         j1a.setNext(j1b);
 
         // control move in/out
@@ -52,9 +48,9 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOpEvents(true);
-        factory.getReport().printlnEquipEvents(true);
-        factory.getReport().printlnJobEvents("job1");
+        factory.getLogger().printlnOpEvents(true);
+        factory.getLogger().printlnEquipEvents(true);
+        factory.getLogger().printlnJobEvents("job1");
     }
 
     @Test
@@ -79,7 +75,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         // build equipments
         Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -87,8 +82,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 20);
         j1a.setNext(j1b);
 
         // control move in
@@ -99,10 +94,10 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnOpEvents(true);
-        factory.getReport().printlnEquipEvents("e1");
-        factory.getReport().printlnEquipEvents("e2");
-        factory.getReport().printlnSimpleJobEvents();
+        factory.getLogger().printlnOpEvents(true);
+        factory.getLogger().printlnEquipEvents("e1");
+        factory.getLogger().printlnEquipEvents("e2");
+        factory.getLogger().printlnSimpleJobEvents();
     }
 
     @Test
@@ -127,7 +122,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         // build equipments
         Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -135,8 +129,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 20);
         j1a.setNext(j1b);
 
         // legal before 15
@@ -145,9 +139,9 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnSimpleOpEvents();
-        factory.getReport().printlnSimpleEquipEvents();
-        factory.getReport().printlnSimpleJobEvents();
+        factory.getLogger().printlnSimpleOpEvents();
+        factory.getLogger().printlnSimpleEquipEvents();
+        factory.getLogger().printlnSimpleJobEvents();
     }
 
     @Test
@@ -184,7 +178,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
 
         });
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -192,16 +185,16 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 10);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 10);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnSimpleOpEvents();
-        factory.getReport().printlnSimpleEquipEvents();
-        factory.getReport().printlnSimpleJobEvents();
+        factory.getLogger().printlnSimpleOpEvents();
+        factory.getLogger().printlnSimpleEquipEvents();
+        factory.getLogger().printlnSimpleJobEvents();
     }
 
     @Test
@@ -238,7 +231,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
 
         });
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -246,16 +238,16 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 20);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnSimpleOpEvents();
-        factory.getReport().printlnSimpleEquipEvents();
-        factory.getReport().printlnSimpleJobEvents();
+        factory.getLogger().printlnSimpleOpEvents();
+        factory.getLogger().printlnSimpleEquipEvents();
+        factory.getLogger().printlnSimpleJobEvents();
     }
 
     @Test
@@ -290,7 +282,6 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         // build equipments
         Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
         Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setJobSelector(this);
         e2.setWaitingMaxTime(12);
 
         // bind operations and equipments
@@ -298,29 +289,20 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer>, JobSele
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("job1", o1.getId(), 10);
-        Job<Integer> j1b = new Job<>("job1", o2.getId(), 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 20);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);
         factory.run(100);
         //
-        factory.getReport().printlnSimpleOpEvents();
-        factory.getReport().printlnSimpleEquipEvents();
-        factory.getReport().printlnSimpleJobEvents();
+        factory.getLogger().printlnSimpleOpEvents();
+        factory.getLogger().printlnSimpleEquipEvents();
+        factory.getLogger().printlnSimpleJobEvents();
     }
 
     @Override
     public int calc(Equip<Integer> equip, Job<Integer> job) {
         return job.getData().intValue();
-    }
-
-    @Override
-    public SelectResult<Integer> select(Equip<Integer> equip, List<Job<Integer>> jobs) {
-        if (jobs.isEmpty()) {
-            return new SelectResult<>();
-        }
-        Job<Integer> job = jobs.get(0);
-        return new SelectResult<>(job);
     }
 }

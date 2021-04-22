@@ -37,13 +37,13 @@ public class JobSelectorTest implements JobSelector<Domain> {
         // build jobs
         Random r = new Random();
         for (int i = 0; i < 10; i++) {
-            factory.prepare(new Job<>("job" + i, o1.getId(), new Domain(r.nextInt(5), 20)));
+            factory.prepare(new Job<>("" + i, "job" + i, o1.getId(), new Domain(r.nextInt(5), 20)));
         }
 
         factory.run(1000);
         //
         System.out.println("jobs:");
-        factory.getReport().printlnJobEvents(false);
+        factory.getLogger().printlnJobEvents(false);
     }
 
     public static class Domain {
@@ -59,12 +59,13 @@ public class JobSelectorTest implements JobSelector<Domain> {
     }
 
     @Override
-    public SelectResult<Domain> select(Equip<Domain> equip, List<Job<Domain>> jobs) {
-        if (jobs.isEmpty()) {
-            return new SelectResult<>();
-        }
-
+    public synchronized Job<Domain> select(Equip<Domain> equip, List<Job<Domain>> jobs) {
         Collections.sort(jobs, (a, b) -> a.getData().priority - b.getData().priority);
-        return new SelectResult<Domain>(jobs.get(0));
+        for (Job<Domain> job : jobs) {
+            if (!job.isLoaded()) {
+                return job;
+            }
+        }
+        return null;
     }
 }

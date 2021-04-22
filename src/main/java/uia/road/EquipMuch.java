@@ -1,8 +1,9 @@
 package uia.road;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.TreeMap;
+import java.util.Vector;
 
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
@@ -22,13 +23,13 @@ public class EquipMuch<T> extends Equip<T> {
 
     private final ArrayList<Channel<T>> chs;
 
-    private final TreeMap<String, JobBox<T>> preload;
+    private final List<Job<T>> loaded;
 
-    private final TreeMap<String, JobBox<T>> boxes;
+    private final List<Job<T>> running;
 
     private Event waitingCh;
 
-    private Event waitingLoad;
+    private int idleStart;
 
     /**
      * The constructor.
@@ -46,200 +47,205 @@ public class EquipMuch<T> extends Equip<T> {
             Channel<T> ch = new Channel<>(id + "_ch" + i, this);
             this.chs.add(ch);
         }
-        this.preload = new TreeMap<>();
-        this.boxes = new TreeMap<>();
+        this.loaded = new Vector<>();
+        this.running = new Vector<>();
     }
 
     @Override
-    public boolean isBusy() {
-        Optional<Channel<T>> opts = this.chs.stream().filter(c -> !c.isProcessing()).findAny();
-        return !opts.isPresent();
+    public boolean isLoaded() {
+        return (this.loaded.size() + this.running.size()) >= this.loadPorts;
     }
 
     @Override
     public boolean isIdle() {
-        return this.boxes.isEmpty();
+        return this.running.isEmpty();
     }
 
     @Override
-    public void addPreload(Job<T> job) {
-        JobBox<T> box = this.preload.get(job.getBoxId());
-        if (box == null) {
-            box = new JobBox<>(job.getBoxId(), job.getOperation());
-            this.boxes.put(box.getId(), box);
-            box.addJob(job);
+    public boolean load(Job<T> job) {
+        synchronized (this) {
+            if (isLoaded()) {
+                return false;
+            }
+            if (!job.load(getId())) {
+                return false;
+            }
+            this.loaded.add(job);
         }
-        this.preload.put(box.getId(), box);
+        notifyJobs();
+        return true;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void run() {
-        // start to process jobs
-        for (JobBox<T> box : this.preload.values()) {
-            try {
-                for (Job<T> job : box.getJobs()) {
-                    Channel<T> ch = findChannel();
-                    ch.run(job);
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        this.preload.clear();
-
-        // normal
         while (yield().isAlive()) {
-            // check box loading
-            if (this.boxes.size() >= this.loadPorts) {
-                EquipEvent e1 = new EquipEvent(
+            // check if full loaded
+            if (this.running.size() >= this.loadPorts) {
+                this.factory.log(new EquipEvent(
                         getId(),
                         null,
-                        this.factory.now(),
+                        this.factory.ticksNow(),
                         EquipEvent.BUSY,
                         null,
                         null,
-                        null);
-                this.factory.log(e1);
-                this.waitingLoad = this.getFactory().getEnv().event("waiting");
-                yield(this.waitingLoad);
-                this.waitingLoad = null;
+                        null));
+                waitingJobs();                  // block
                 continue;
             }
 
-            // check if some channel is available
-            // TODO: Allow to move in jobs if channels are not available?
-            Channel<T> ch = findChannel();
-
-            // find jobs
-            JobBox<T> box = new JobBox<>("unknown", null);
-            for (Op<T> op : this.operations) {
-                box = op.dequeue(this);
-                if (!box.isEmpty()) {
-                    this.operations.remove(op);
-                    this.operations.add(op);
-                    break;
+            // move in from load ports.
+            if (!this.loaded.isEmpty()) {
+                Object[] objs = this.loaded.toArray();
+                for (Object obj : objs) {
+                    moveIn((Job<T>) obj);       // block maybe
                 }
-            }
-
-            // waiting new jobs
-            if (box.isEmpty()) {
-                waitingJobs();
+                this.loaded.clear();
                 continue;
             }
 
-            int now = this.factory.now();
-
-            // move in
-            box.setMoveInTime(now);
-            this.boxes.put(box.getId(), box);
-            updateStrategy(box, EquipEvent.MOVE_IN);
-
-            this.factory.log(new EquipEvent(
-                    getId(),
-                    null,
-                    now,
-                    EquipEvent.MOVE_IN,
-                    box.getOperation(),
-                    box.getId(),
-                    box.getInfo()));
-            box.getJobs().forEach(j -> {
-                j.updateInfo();
-                this.factory.log(new JobEvent(
-                        j.getProductName(),
-                        j.getBoxId(),
-                        now,
-                        JobEvent.MOVE_IN,
-                        getId(),
-                        now - j.getDispatchedTime(),
-                        j.getInfo()));
-            });
-
-            try {
-                for (Job<T> job : box.getJobs()) {
-                    ch = findChannel();
-                    ch.run(job);
-                }
+            Job<T> job = pull();
+            if (job == null) {
+                waitingJobs();                  // block
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
+            else {
+                this.factory.getOperation(job.getOperation()).dequeue(job);
+                moveIn(job);                    // block maybe
             }
         }
-    }
-
-    @Override
-    public void processStarted(Channel<T> channel, Job<T> job) {
     }
 
     @Override
     public void processEnded(Channel<T> channel, Job<T> job) {
-        JobBox<T> box = this.boxes.get(job.getBoxId());
-
-        if (this.waitingCh != null) {
-            this.waitingCh.succeed(channel);
-            this.waitingCh = null;
+        synchronized (this) {
+            if (this.waitingCh != null) {
+                this.waitingCh.succeed(channel);
+                this.waitingCh = null;
+            }
         }
-        if (box.isFinished()) {
-            TimeStrategy ts = box.calcMoveOutStrategy();
-            int delay = ts.getFrom() - this.getFactory().now();
-            if (delay <= 0) {
-                moveOut(box);
-            }
-            else {
-                this.factory.getEnv().process(new MoveOut(box, delay));
-            }
+
+        int delay = job.getStrategy().getMoveOut().getFrom() - this.getFactory().ticksNow();
+        if (delay > 0) {
+            this.factory.getEnv().process(new MoveOut(job, delay));
+        }
+        else {
+            moveOut(job);
         }
     }
 
-    private void moveOut(JobBox<T> box) {
-        int now = this.getFactory().now();
+    private Job<T> pull() {
+        ArrayList<Job<T>> jobs = new ArrayList<>();
+        for (Op<T> op : this.operations) {
+            jobs.addAll(op.getEnqueued());
+        }
+        return this.jobSelector.select(this, jobs);
+    }
 
-        // move out
-        box.setMoveOutTime(now);
-        this.boxes.remove(box.getId());
-        updateStrategy(box, EquipEvent.MOVE_OUT);
-        // 
-        if (this.waitingLoad != null) {
-            this.waitingLoad.succeed(this);
-            this.waitingLoad = null;
+    /**
+     * May be <b>blocked<b> if no workable channel.
+     * 
+     * @param job The job.
+     */
+    private void moveIn(Job<T> job) {
+        int now = this.factory.ticksNow();
+
+        if (this.running.isEmpty()) {
+            this.factory.log(new EquipEvent(
+                    getId(),
+                    null,
+                    this.factory.ticksNow(),
+                    EquipEvent.IDLE_END,
+                    null,
+                    null,
+                    new SimInfo().setInt("idled", now - this.idleStart)));
         }
 
+        // move in
+        job.setMoveInTime(now);
+        updateStrategy(job, EquipEvent.MOVE_IN);
+        //
+        this.running.add(job);
+        this.loaded.remove(job);
+        this.factory.log(new EquipEvent(
+                getId(),
+                null,
+                now,
+                EquipEvent.MOVE_IN,
+                job.getOperation(),
+                job.getProductName(),
+                null));
+        this.factory.log(new JobEvent(
+                job.getId(),
+                job.getProductName(),
+                now,
+                JobEvent.MOVE_IN,
+                job.getOperation(),
+                getId(),
+                now - job.getDispatchedTime(),
+                job.getInfo()));
+
+        try {
+            // may be blocked
+            findChannel().run(job);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void moveOut(Job<T> job) {
+        int now = this.getFactory().ticksNow();
+
+        // move out
+        job.setMoveOutTime(now);
+        updateStrategy(job, EquipEvent.MOVE_OUT);
+
+        this.running.remove(job);
         this.factory.log(new EquipEvent(
                 getId(),
                 null,
                 now,
                 EquipEvent.MOVE_OUT,
-                box.getOperation(),
-                box.getId(),
-                box.getInfo()));
-        box.getJobs().forEach(j -> {
-            j.updateInfo();
-            this.factory.log(new JobEvent(
-                    j.getProductName(),
-                    j.getBoxId(),
-                    now,
-                    JobEvent.MOVE_OUT,
+                job.getOperation(),
+                job.getProductName(),
+                null));
+        this.factory.log(new JobEvent(
+                job.getId(),
+                job.getProductName(),
+                now,
+                JobEvent.MOVE_OUT,
+                job.getOperation(),
+                getId(),
+                0,
+                job.getInfo()));
+        if (this.running.isEmpty()) {
+            this.idleStart = this.factory.ticksNow();
+            this.factory.log(new EquipEvent(
                     getId(),
-                    0,
-                    j.getInfo()));
-        });
+                    null,
+                    this.factory.ticksNow(),
+                    EquipEvent.IDLE_START,
+                    null,
+                    null,
+                    null));
+        }
 
-        TimeStrategy ts = box.calcMoveOutStrategy();
-        if (now <= ts.getTo()) {
-            this.factory.dispatch(box);
+        notifyJobs();
+
+        if (now <= job.getStrategy().getMoveOut().getTo()) {
+            this.factory.dispatchToNext(job);
         }
         else {
-            box.getJobs().forEach(j -> {
-                j.updateInfo();
-                this.factory.log(new JobEvent(
-                        j.getProductName(),
-                        j.getBoxId(),
-                        this.factory.now(),
-                        JobEvent.HOLD,
-                        getId(),
-                        0,
-                        j.getInfo()));
-            });
+            job.updateInfo();
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    this.factory.ticksNow(),
+                    JobEvent.HOLD,
+                    job.getOperation(),
+                    getId(),
+                    0,
+                    job.getInfo()));
         }
     }
 
@@ -249,7 +255,7 @@ public class EquipMuch<T> extends Equip<T> {
         Optional<Channel<T>> opts = this.chs.stream().filter(c -> !c.isProcessing()).findAny();
         ch = opts.isPresent() ? opts.get() : null;
         if (ch == null) {
-            this.waitingCh = this.getFactory().getEnv().event("waiting_ch");
+            this.waitingCh = this.getFactory().getEnv().event(getId() + "_waiting_ch");
             ch = (Channel<T>) yield(this.waitingCh);
             this.waitingCh = null;
         }
@@ -258,20 +264,20 @@ public class EquipMuch<T> extends Equip<T> {
 
     class MoveOut extends Processable {
 
-        private final JobBox<T> box;
+        private final Job<T> job;
 
         private final int delay;
 
-        public MoveOut(JobBox<T> box, int delay) {
-            super(box.getId() + "_moveout");
-            this.box = box;
+        public MoveOut(Job<T> job, int delay) {
+            super(job.getProductName() + "_moveout");
+            this.job = job;
             this.delay = delay;
         }
 
         @Override
         protected void run() {
-            yield(env().timeout(this.delay));
-            EquipMuch.this.moveOut(this.box);
+            yield(env().timeout(this.job.getProductName() + "_moveout_delay", this.delay));
+            EquipMuch.this.moveOut(this.job);
         }
 
         @Override

@@ -6,7 +6,7 @@ import java.util.Vector;
 import uia.road.helpers.EquipStrategy;
 import uia.road.helpers.JobSelector;
 import uia.road.helpers.ProcessTimeCalculator;
-import uia.sim.Notifier;
+import uia.sim.Event;
 import uia.sim.Processable;
 
 /**
@@ -28,9 +28,11 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     protected EquipStrategy<T> strategy;
 
-    protected Notifier<Op<T>> jobNotifier;
+    private Event jobNotifier;
 
     private int waitingMaxTime;
+
+    private boolean enabled;
 
     /**
      * The constructor.
@@ -42,8 +44,9 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         super(id);
         this.factory = factory;
         this.operations = new Vector<>();
-        this.jobSelector = new JobSelector.FIFO<>();
+        this.jobSelector = new JobSelector.Any<>();
         this.waitingMaxTime = 300;
+        this.enabled = true;
     }
 
     /**
@@ -87,6 +90,10 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         return this.jobSelector;
     }
 
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+
     /**
      * Sets the job selector.
      * 
@@ -124,6 +131,9 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      * @param operation The operations.
      */
     public void serve(Op<T> operation) {
+        if (operation == null) {
+            return;
+        }
         if (!this.operations.contains(operation)) {
             this.operations.add(operation);
             operation.serve(this);
@@ -131,11 +141,11 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     }
 
     /**
-     * Tests if the equipment is busy.
+     * Tests if the equipment is loaded.
      * 
      * @return True if the equipment is busy.
      */
-    public abstract boolean isBusy();
+    public abstract boolean isLoaded();
 
     /**
      * Tests if the equipment is idle.
@@ -149,20 +159,30 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      * 
      * @param job A job.
      */
-    public abstract void addPreload(Job<T> job);
+    public abstract boolean load(Job<T> job);
 
     protected void waitingJobs() {
-        for (Op<T> o : this.operations) {
-            o.link(this.jobNotifier);
+        synchronized (this) {
+            if (this.jobNotifier != null) {
+                return;
+            }
+            this.jobNotifier = this.factory.getEnv().event(getId() + "_waiting_jobs");
         }
-        // performance issue
-        // yield(this.jobNotifier.waiting(getId(), this.waitingMaxTime));
-        yield(this.jobNotifier.waiting(getId()));
+        yield(this.jobNotifier);
+    }
+
+    protected void notifyJobs() {
+        synchronized (this) {
+            if (this.jobNotifier == null) {
+                return;
+            }
+            this.jobNotifier.succeed(null);
+            this.jobNotifier = null;
+        }
     }
 
     @Override
     protected void initial() {
-        this.jobNotifier = new Notifier<Op<T>>(env(), getId() + "_op_obvr");
     }
 
     @Override
@@ -180,13 +200,11 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         }
     }
 
-    protected void updateStrategy(JobBox<T> box, String event) {
+    protected void updateStrategy(Job<T> job, String event) {
         EquipStrategy<T> strategy = getStrategy();
-        if (strategy == null) {
-            return;
-        }
-        for (Job<T> job : box.getJobs()) {
+        if (strategy != null) {
             strategy.update(this, job, event);
+            job.updateInfo();
         }
     }
 }

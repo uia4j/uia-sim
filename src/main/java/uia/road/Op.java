@@ -2,13 +2,12 @@ package uia.road;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import uia.road.events.JobEvent;
 import uia.road.events.OpEvent;
-import uia.road.helpers.JobSelector.SelectResult;
-import uia.sim.Notifier;
+import uia.road.helpers.EquipSelector;
 import uia.sim.Processable;
 
 /**
@@ -28,7 +27,7 @@ public class Op<T> {
 
     private Vector<Job<T>> jobs;
 
-    private ArrayList<Notifier<Op<T>>> notifiers;
+    private EquipSelector<T> equipSelector;
 
     /**
      * The constructor.
@@ -41,7 +40,7 @@ public class Op<T> {
         this.factory = factory;
         this.equips = new Vector<>();
         this.jobs = new Vector<>();
-        this.notifiers = new ArrayList<>();
+        this.equipSelector = new EquipSelector.Any<>();
     }
 
     /**
@@ -63,19 +62,21 @@ public class Op<T> {
     }
 
     /**
+     * Returns all equipments the operation serves.
      * 
      * @return
      */
-    public int getEnqueued() {
-        return this.jobs.size();
+    public List<Equip<T>> getEquips() {
+        return new ArrayList<>(this.equips);
     }
 
     /**
-     * Returns all equipments the operation serves.
-     * @return
+     * Returns the jobs enqueued in this operation.
+     * 
+     * @return The jobs.
      */
-    public List<Equip<T>> getEquips() {
-        return this.equips;
+    public List<Job<T>> getEnqueued() {
+        return new ArrayList<>(this.jobs);
     }
 
     /**
@@ -84,6 +85,9 @@ public class Op<T> {
      * @param eq The equipment.
      */
     public void serve(Equip<T> eq) {
+        if (eq == null) {
+            return;
+        }
         if (!this.equips.contains(eq)) {
             this.equips.add(eq);
             eq.serve(this);
@@ -91,130 +95,113 @@ public class Op<T> {
     }
 
     /**
-     * Links the operation. The operation will notify waiting equipments when new jobs are available.
-     * 
-     * @param notifier The notifier.
-     */
-    public void link(Notifier<Op<T>> notifier) {
-        this.notifiers.add(notifier);
-    }
-
-    /**
      * Enqueues a box in this operation.
      * 
-     * @param box The box.
+     * @param job The job.
+     * @param running If the job can be moved in automatically.
      */
-    public synchronized void enqueue(JobBox<T> box) {
-        int now = this.factory.now();
-        box.setDispatchedTime(now);
+    public void enqueue(Job<T> job, boolean push) {
+        int now = this.factory.ticksNow();
+        job.setDispatchedTime(now);
+        job.updateInfo();
 
-        TimeStrategy ts = box.calcMoveInStrategy();
-        if (now < ts.getFrom()) {
+        // move in time control: pending
+        int from = job.getStrategy().getMoveIn().getFrom();
+        if (now < from) {
             // delay
-            box.getJobs().forEach(j -> {
-                j.updateInfo();
-                this.factory.log(new JobEvent(
-                        j.getProductName(),
-                        j.getBoxId(),
-                        now,
-                        JobEvent.QT_PENDING,
-                        this.id,
-                        0,
-                        j.getInfo()));
-            });
-            this.factory.log(new OpEvent(
-                    this.id,
-                    now,
-                    OpEvent.QT_PENDING,
-                    box.getId(),
-                    this.jobs.size(),
-                    box.getInfo()));
-            this.factory.getEnv().process(new DelayEnqueue(box, ts.getFrom() - now));
-            return;
-        }
-        else if (now > ts.getTo()) {
-            // hold
-            box.getJobs().forEach(j -> {
-                j.updateInfo();
-                this.factory.log(new JobEvent(
-                        j.getProductName(),
-                        j.getBoxId(),
-                        now,
-                        JobEvent.HOLD,
-                        this.id,
-                        0,
-                        j.getInfo()));
-            });
-            this.factory.log(new OpEvent(
-                    this.id,
-                    now,
-                    OpEvent.HOLD,
-                    box.getId(),
-                    this.jobs.size(),
-                    box.getInfo()));
-            return;
-        }
-
-        box.getJobs().forEach(j -> {
-            j.updateInfo();
-            //
-            this.jobs.add(j);
             this.factory.log(new JobEvent(
-                    j.getProductName(),
-                    j.getBoxId(),
+                    job.getId(),
+                    job.getProductName(),
                     now,
-                    JobEvent.DISPATCHED,
+                    JobEvent.QT_PENDING,
                     this.id,
+                    null,
                     0,
-                    j.getInfo()));
-        });
-        this.factory.log(new OpEvent(
-                this.id,
+                    job.getInfo()));
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    job.getProductName(),
+                    OpEvent.QT_PENDING,
+                    this.jobs.size(),
+                    job.getInfo()));
+            this.factory.getEnv().process(new DelayEnqueue(job, from - now));
+            return;
+        }
+        // move in time control: hold
+        int to = job.getStrategy().getMoveIn().getTo();
+        if (now > to) {
+            // hold
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    now,
+                    JobEvent.HOLD,
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()));
+            return;
+        }
+        // dispatched
+        this.factory.log(new JobEvent(
+                job.getId(),
+                job.getProductName(),
                 now,
-                OpEvent.ENQUEUE,
-                box.getId(),
-                this.jobs.size(),
-                box.getInfo()));
-
-        // notify idled equipment.
-        Random r = new Random();
-        while (!this.notifiers.isEmpty()) {
-            this.notifiers.remove(r.nextInt(this.notifiers.size())).available(this);
+                JobEvent.DISPATCHED,
+                this.id,
+                null,
+                0,
+                job.getInfo()));
+        if (!push || !push(job)) {
+            this.jobs.add(job);
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    OpEvent.ENQUEUE,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    null));
+        }
+        else {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    OpEvent.PUSH,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    null));
         }
     }
 
     /**
-     * Dequeues a box from this operation for a specific equipment.
+     * Dequeues the jobs from the operation.
      * 
-     * @param equip The requesting equipment.
-     * @return The box dequeued.
+     * @param equip The equipment.
+     * @param box The box.
+     * @return
      */
-    public synchronized JobBox<T> dequeue(Equip<T> equip) {
-        SelectResult<T> selected = equip
-                .getJobSelector()
-                .select(equip, this.jobs);
-        if (selected.isEmpty()) {
-            return new JobBox<>("uknonwn", this.id);
+    public void dequeue(Job<T> job) {
+        if (!this.jobs.remove(job)) {
+            return;
         }
 
-        SimInfo boxInfo = new SimInfo();
-        boxInfo.setString("equip", equip.getId());
-        selected.getJobs().forEach(j -> {
-            this.jobs.remove(j);
-            boxInfo.addString("jobs", j.getProductName());
-        });
-        OpEvent e = new OpEvent(
+        this.factory.log(new OpEvent(
                 this.id,
-                this.factory.now(),
-                OpEvent.DEQUEUE,
-                selected.getGroupId(),
+                this.factory.ticksNow(),
+                OpEvent.PULL,
+                job.getProductName(),
                 this.jobs.size(),
-                boxInfo);
-        this.factory.log(e);
-
-        JobBox<T> box = new JobBox<>(selected.getGroupId(), this.id, selected.getJobs());
-        box.setInfo(boxInfo);
-        return box;
+                null));
+        if (this.jobs.isEmpty()) {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    this.factory.ticksNow(),
+                    OpEvent.IDLE,
+                    null,
+                    this.jobs.size(),
+                    null));
+        }
     }
 
     @Override
@@ -237,6 +224,59 @@ public class Op<T> {
         }
     }
 
+    protected synchronized void preload() {
+        int i = 0;
+        while (i < this.jobs.size()) {
+            Job<T> job = this.jobs.get(i);
+            if (push(job)) {
+                this.jobs.remove(job);
+                this.factory.log(new OpEvent(
+                        this.id,
+                        this.factory.ticksNow(),
+                        OpEvent.PUSH,
+                        job.getProductName(),
+                        this.jobs.size(),
+                        null));
+            }
+            else {
+                i++;
+            }
+        }
+        if (this.jobs.isEmpty()) {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    this.factory.ticksNow(),
+                    OpEvent.IDLE,
+                    null,
+                    this.jobs.size(),
+                    null));
+        }
+    }
+
+    private synchronized boolean push(Job<T> job) {
+        List<String> checked = new ArrayList<>();
+        List<Equip<T>> equips = this.equips.stream()
+                .filter(e -> !checked.contains(e.getId()) && !e.isLoaded())
+                .collect(Collectors.toList());
+
+        Equip<T> equip = this.equipSelector.select(job, equips);
+        boolean pushed = false;
+        while (equip != null) {
+            checked.add(equip.getId());
+            if (equip.load(job)) {
+                pushed = true;
+                equip = null;
+            }
+            else {
+                equips = this.equips.stream()
+                        .filter(e -> !checked.contains(e.getId()) && !e.isLoaded())
+                        .collect(Collectors.toList());
+                equip = this.equipSelector.select(job, equips);
+            }
+        }
+        return pushed;
+    }
+
     /**
      * A Delay enqueue process.
      * 
@@ -245,7 +285,7 @@ public class Op<T> {
      */
     public class DelayEnqueue extends Processable {
 
-        private final JobBox<T> box;
+        private final Job<T> job;
 
         private final int delay;
 
@@ -255,16 +295,16 @@ public class Op<T> {
          * @param box The box.
          * @param delay The delay time.
          */
-        public DelayEnqueue(JobBox<T> box, int delay) {
-            super(box.getId() + "_delay_enqueue");
-            this.box = box;
+        public DelayEnqueue(Job<T> job, int delay) {
+            super(job.getProductName() + "_delay_enqueue");
+            this.job = job;
             this.delay = delay;
         }
 
         @Override
         protected void run() {
             yield(env().timeout(this.delay));
-            Op.this.enqueue(this.box);
+            Op.this.enqueue(this.job, true);
         }
 
         @Override

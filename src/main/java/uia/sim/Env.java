@@ -1,7 +1,9 @@
 package uia.sim;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -139,6 +141,10 @@ public class Env {
      */
     public int getNow() {
         return this.now;
+    }
+
+    public int size() {
+        return this.jobs.size();
     }
 
     /**
@@ -296,17 +302,19 @@ public class Env {
         event.addCallable(e -> runnable.run());
         Job job = new Job(event, priority, time);
         this.jobs.add(job);
-        logger.info(String.format("%4d> %s> %s schedule(uid=%s) at %s",
+        logger.info(String.format("%4d> %s>  sch> %s,uid=%s at %s",
                 getNow(),
                 this.id,
                 job.event,
                 job.event.seqNo,
                 job.time));
         if (DEBUG) {
+            ArrayList<String> order = new ArrayList<>();
+            this.jobs.forEach(j -> order.add(j.toString()));
             logger.info(String.format("%4d> %s> jobs = %s",
                     getNow(),
                     this.id,
-                    this.jobs));
+                    order));
         }
     }
 
@@ -330,7 +338,7 @@ public class Env {
     public void schedule(Event event, Event.PriorityType priority, int delay) {
         Job job = new Job(event, priority, this.now + delay);
         this.jobs.add(job);
-        logger.info(String.format("%4d> %s> %s schedule(uid=%s) at %s",
+        logger.info(String.format("%4d> %s>  sch> %s,uid=%s at %s",
                 getNow(),
                 this.id,
                 job.event,
@@ -351,14 +359,22 @@ public class Env {
      */
     public synchronized int run() {
         logger.debug("==== start ====");
+        long c = 0;
         try {
+            long check = 5000;
             while (!this.jobs.isEmpty()) {
-                step();
+                c += step();
+                if (c >= check) {
+                    System.out.println(String.format("run: %s steps", c));
+                    check += 5000;
+                }
             }
+            System.out.println(String.format("run: %s steps", c));
             logger.debug("==== end ====");
         }
         catch (Throwable ex) {
-            logger.debug("==== end with exception ====");
+            System.out.println(String.format("run: %s steps, throw %s", c, ex.getMessage()));
+            logger.debug(String.format("==== end(%s) ====", ex.getMessage()));
         }
 
         while (!this.jobs.isEmpty()) {
@@ -374,20 +390,29 @@ public class Env {
      * @return Stop time.
      */
     public synchronized int run(final int until) {
-        logger.debug("==== start ====");
         if (until < this.now) {
             throw new IllegalArgumentException(String.format("until(=%s) must be > the current simulation time.", until));
         }
         Event stopEvent = event("stop");
         stopEvent.addCallable(this::stopSim);
         schedule(stopEvent, PriorityType.URGENT, until - this.now);
+
+        logger.info("==== start ====");
+        long c = 0;
         try {
+            long check = 5000;
             while (this.now < until && !this.jobs.isEmpty()) {
-                step();
+                c += step();
+                if (c >= check) {
+                    System.out.println(String.format("run: %s steps", c));
+                    check += 5000;
+                }
             }
-            logger.debug("==== end ====");
+            System.out.println(String.format("run: %s steps", c));
+            logger.info("==== end ====");
         }
         catch (Throwable ex) {
+            System.out.println(String.format("run: %s steps, throw %s", c, ex.getMessage()));
             logger.debug(String.format("==== end(%s) ====", ex.getMessage()));
         }
 
@@ -396,6 +421,7 @@ public class Env {
                 this.jobs.poll().event.envDown();
             }
             catch (Throwable ex) {
+                ex.printStackTrace();
             }
         }
         return this.now;
@@ -449,13 +475,18 @@ public class Env {
      * @throws SimEventException
      *
      */
-    protected void step() throws SimEventException {
+    protected int step() throws RuntimeException {
+        return stepOne();
+        // return stepParallel();
+    }
+
+    private int stepOne() throws RuntimeException {
         // 1. get the first job.
         Job job = this.jobs.poll();
 
         // 2. update environment time
         this.now = job.time;
-        logger.debug(String.format("%4d> %s> step> %s, callbacks(uid=%s)",
+        logger.debug(String.format("%4d> %s> step> %s, callbacks(%s)",
                 getNow(),
                 this.id,
                 job.event,
@@ -468,6 +499,50 @@ public class Env {
         if (!job.event.isOk() && !job.event.isDefused()) {
             throw new SimEventException(job.event, job.event + " is NG and not defused");
         }
+
+        return 1;
+    }
+
+    @SuppressWarnings("unused")
+    private int stepParallel() throws RuntimeException {
+        // 1. get jobs with the same time.
+        int now = this.jobs.peek().time;
+        ArrayList<Job> jobs = new ArrayList<>();
+        while (!this.jobs.isEmpty() && this.jobs.peek().time == now) {
+            jobs.add(this.jobs.poll());
+        }
+        this.now = now;
+        final Vector<RuntimeException> result = new Vector<>();
+        logger.info(String.format("%4d> %s> step> parallel, %s",
+                getNow(),
+                this.id,
+                jobs));
+        jobs.parallelStream().forEach(job -> {
+            logger.info(String.format("%4d> %s> step> %s, callbacks(%s)",
+                    getNow(),
+                    this.id,
+                    job.event,
+                    job.event.getNumberOfCallbables()));
+
+            // 3. callback the event.
+            try {
+                job.event.callback();
+                // 4. check if event is OK.
+                if (!job.event.isOk() && !job.event.isDefused()) {
+                    throw new SimEventException(job.event, job.event + " is NG and not defused");
+                }
+            }
+            catch (SimStopException ex) {
+                result.add(0, ex);
+            }
+            catch (RuntimeException ex) {
+                result.add(ex);
+            }
+        });
+        if (!result.isEmpty()) {
+            throw result.get(0);
+        }
+        return jobs.size();
     }
 
     /**

@@ -1,9 +1,9 @@
 package uia.road;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.Date;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
@@ -11,15 +11,43 @@ import uia.road.events.OpEvent;
 import uia.road.helpers.EquipStrategy;
 import uia.road.helpers.PathTimeCalculator;
 import uia.road.helpers.ProcessTimeCalculator;
+import uia.road.utils.TimeFormat;
 import uia.sim.Env;
 
 /**
+ * The factory.<br>
  * 
+ * <p>
+ * The default values:<br>
+ * 1. pathTime is 0.<br>
+ * 2. timeFactor is 1000.<br>
+ * </p>
+ *  
  * @author Kan
  *
  * @param <T> Reference data of the job.
  */
 public class Factory<T> {
+
+    public enum TimeType {
+
+        SEC(1000, TimeFormat::fromSec),
+
+        MIN(60000, TimeFormat::fromMin);
+
+        public final int factor;
+
+        private final Function<Integer, String> format;
+
+        TimeType(int factor, Function<Integer, String> format) {
+            this.factor = factor;
+            this.format = format;
+        }
+
+        public String format(int ticks) {
+            return this.format.apply(ticks);
+        }
+    }
 
     private final Env env;
 
@@ -27,13 +55,17 @@ public class Factory<T> {
 
     private final TreeMap<String, Equip<T>> equips;
 
-    private final SimReport report;
+    private SimReportLogger logger;
 
     private ProcessTimeCalculator<T> processTimeCalculator;
 
     private EquipStrategy<T> equipStrategy;
 
     private PathTimeCalculator<T> pathTimeCalculator;
+
+    private Date zeroTime;
+
+    private TimeType timeType;
 
     public Factory() {
         this(0);
@@ -43,12 +75,29 @@ public class Factory<T> {
         this.env = new Env();
         this.operations = new TreeMap<>();
         this.equips = new TreeMap<>();
-        this.report = new SimReport();
+        this.logger = new SimReportTextLogger(this);
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
+        this.timeType = TimeType.SEC;
     }
 
     public Env getEnv() {
         return this.env;
+    }
+
+    public Date getZeroTime() {
+        return this.zeroTime;
+    }
+
+    public void setZeroTime(Date zeroTime) {
+        this.zeroTime = zeroTime;
+    }
+
+    public TimeType getTimeType() {
+        return this.timeType;
+    }
+
+    public void setTimeType(TimeType timeType) {
+        this.timeType = timeType;
     }
 
     public int getCountOfOperations() {
@@ -66,20 +115,30 @@ public class Factory<T> {
                 .isPresent();
         if (idle) {
             idle = !this.operations.values().stream()
-                    .filter(o -> o.getEnqueued() > 0)
+                    .filter(o -> o.getEnqueued().size() > 0)
                     .findAny()
                     .isPresent();
         }
+        // bug: if job in path?
         return idle;
     }
 
     /**
-     * Returns the report.
+     * Sets the logger.
      * 
-     * @return The report.
+     * @param logger The logger.
      */
-    public SimReport getReport() {
-        return this.report;
+    public void setLogger(SimReportLogger logger) {
+        this.logger = logger;
+    }
+
+    /**
+     * Returns the report logger.
+     * 
+     * @return The report logger.
+     */
+    public SimReportLogger getLogger() {
+        return this.logger;
     }
 
     public ProcessTimeCalculator<T> getProcessTimeCalculator() {
@@ -112,7 +171,7 @@ public class Factory<T> {
      * @param e An operation event.
      */
     public void log(OpEvent e) {
-        this.report.log(e);
+        this.logger.log(e);
     }
 
     /**
@@ -121,7 +180,7 @@ public class Factory<T> {
      * @param e An equipment event.
      */
     public void log(EquipEvent e) {
-        this.report.log(e);
+        this.logger.log(e);
     }
 
     /**
@@ -130,7 +189,7 @@ public class Factory<T> {
      * @param e A job event.
      */
     public void log(JobEvent e) {
-        this.report.log(e);
+        this.logger.log(e);
     }
 
     /**
@@ -145,6 +204,10 @@ public class Factory<T> {
                 : this.operations.get(id);
     }
 
+    public Set<String> getOperations() {
+        return this.operations.keySet();
+    }
+
     /**
      * Adds an operation in the factory.
      * 
@@ -152,11 +215,13 @@ public class Factory<T> {
      * @return True if the operation is added into this factory.
      */
     public boolean addOperation(Op<T> op) {
-        if (this.operations.containsKey(op.getId())) {
-            return false;
+        synchronized (this.operations) {
+            if (this.operations.containsKey(op.getId())) {
+                return false;
+            }
+            this.operations.put(op.getId(), op);
+            return true;
         }
-        this.operations.put(op.getId(), op);
-        return true;
     }
 
     /**
@@ -166,12 +231,14 @@ public class Factory<T> {
      * @return The operation.
      */
     public Op<T> createOperation(String id) {
-        Op<T> op = this.operations.get(id);
-        if (op == null) {
-            op = new Op<>(id, this);
-            addOperation(op);
+        synchronized (this.operations) {
+            Op<T> op = this.operations.get(id);
+            if (op == null) {
+                op = new Op<>(id, this);
+                addOperation(op);
+            }
+            return op;
         }
-        return op;
     }
 
     /**
@@ -193,11 +260,13 @@ public class Factory<T> {
      * @return True if the equipment is added into this factory.
      */
     public boolean addEquip(Equip<T> equip) {
-        if (this.equips.containsKey(equip.getId())) {
-            return false;
+        synchronized (this.equips) {
+            if (this.equips.containsKey(equip.getId())) {
+                return false;
+            }
+            this.equips.put(equip.getId(), equip);
+            return true;
         }
-        this.equips.put(equip.getId(), equip);
-        return true;
     }
 
     /**
@@ -209,124 +278,104 @@ public class Factory<T> {
      * @return The equipment.
      */
     public Equip<T> createEquip(String id, int loadPorts, int chCount) {
-        Equip<T> eq = this.equips.get(id);
-        if (eq == null) {
-            eq = new EquipMuch<>(id, this, loadPorts, chCount);
-            addEquip(eq);
+        synchronized (this.equips) {
+            Equip<T> eq = this.equips.get(id);
+            if (eq == null) {
+                eq = new EquipMuch<>(id, this, loadPorts, chCount);
+                addEquip(eq);
+            }
+            return eq;
         }
-        return eq;
     }
 
     /**
-     * Dispatch the box to next operation.
+     * Prepares a box to its operation.
      * 
-     * @param box The box.
+     * @param job The job.
      */
-    public void dispatch(JobBox<T> box) {
-        Op<T> from = this.getOperation(box.getOperation());
-
-        TreeMap<String, List<Job<T>>> nextBoxes = new TreeMap<>();
-        for (Job<T> doneJ : box.getJobs()) {
-            Job<T> nextJ = doneJ.getNext();
-            if (nextJ == null) {
-                this.log(new JobEvent(
-                        doneJ.getProductName(),
-                        doneJ.getBoxId(),
-                        now(),
-                        JobEvent.DONE,
-                        null,
-                        0,
-                        doneJ.getInfo()));
-                continue;
+    public void prepare(Job<T> job) {
+        Op<T> op = null;
+        synchronized (this.operations) {
+            op = this.operations.get(job.getOperation());
+            if (op == null) {
+                op = new Op<T>(job.getOperation(), this);
+                this.operations.put(op.getId(), op);
             }
-            List<Job<T>> nextBox = nextBoxes.get(nextJ.getOperation());
-            if (nextBox == null) {
-                nextBox = new ArrayList<>();
-                nextBoxes.put(nextJ.getOperation(), nextBox);
-            }
-            nextBox.add(nextJ);
         }
-
-        SimInfo info = new SimInfo();
-        int i = 1;
-        for (Map.Entry<String, List<Job<T>>> e : nextBoxes.entrySet()) {
-            // split
-            String boxId = nextBoxes.size() == 1
-                    ? box.getId()
-                    : box.getId() + "." + (i++);
-
-            JobBox<T> nextBox = new JobBox<>(boxId, e.getKey(), e.getValue());
-            int pathTime = this.pathTimeCalculator.calc(
-                    from,
-                    getOperation(nextBox.getOperation()));
-            this.env.process(new Path<T>(
-                    nextBox.getId() + "_dispatch_to_" + nextBox.getOperation(),
-                    this,
-                    nextBox,
-                    pathTime));
-            info.addString("split", boxId);
-        }
-
-        if (nextBoxes.size() > 1) {
-            log(new OpEvent(
-                    from.getId(),
-                    now(),
-                    OpEvent.SPLIT,
-                    box.getId(),
-                    from.getEnqueued(),
-                    info));
-        }
-    }
-
-    public boolean prepare(Job<T> job) {
-        JobBox<T> box = new JobBox<T>(job.getBoxId(), job.getOperation(), job);
-        box.getInfo().addString("jobs", job.getProductName());
-        return prepare(box);
+        op.enqueue(job, false);
     }
 
     /**
-     * Prepares a box at specific operation.
-     * @param opId The operation id.
-     * @param box The box.
-     * @return True if the box is placed at specific operation.
+     * Dispatches a box to its operation and run.
+     * 
+     * @param job The job.
      */
-    public boolean prepare(JobBox<T> box) {
-        Op<T> op = this.operations.get(box.getOperation());
-        if (op == null) {
-            return false;
+    public void dispatch(Job<T> job) {
+        Op<T> op = null;
+        synchronized (this.operations) {
+            op = this.operations.get(job.getOperation());
+            if (op == null) {
+                op = new Op<T>(job.getOperation(), this);
+                this.operations.put(op.getId(), op);
+            }
         }
-        op.enqueue(box);
-        return true;
+        op.enqueue(job, true);
     }
 
     /**
-     * Prepares a job into a specific equipment.
+     * Loads a job into a specific equipment.
      * @param eqId The equipment id.
      * @param job The job.
      * @return True if the job is loaded into the equipment.
      */
-    public boolean prepare(Job<T> job, String eqId) {
+    public boolean dispatch(Job<T> job, String eqId) {
         Equip<T> eq = this.equips.get(eqId);
         if (eq == null) {
             return false;
         }
-        eq.addPreload(job);
-        return true;
+        return eq.load(job);
+    }
+
+    /**
+     * Dispatches the box to next operation.
+     * 
+     * @param box The box.
+     */
+    public void dispatchToNext(Job<T> doneJ) {
+        Job<T> nextJ = doneJ.getNext();
+        if (nextJ == null) {
+            this.log(new JobEvent(
+                    doneJ.getId(),
+                    doneJ.getProductName(),
+                    ticksNow(),
+                    JobEvent.DONE,
+                    null,
+                    null,
+                    0,
+                    doneJ.getInfo()));
+            return;
+        }
+
+        int pathTime = this.pathTimeCalculator.calc(
+                getOperation(doneJ.getOperation()),
+                getOperation(nextJ.getOperation()));
+
+        this.env.process(new Path<>("", this, nextJ, pathTime));
     }
 
     public int run(int until) throws Exception {
-        return run(until, 1800);
+        return run(until, 0);
     }
 
     /**
      * Starts the simulation.
      * 
      * @param until The end time.
-     * @param cycleTime The cycle time used to check if the factory is idle.
+     * @param healthCheck The cycle time used to check if the factory is idle.
      * @return The stop time.
      * @throws Exception Failed to start up.
      */
-    public int run(int until, int cycleTime) throws Exception {
+    public int run(int until, int healthCheck) throws Exception {
         if (this.equips.isEmpty()) {
             return 0;
         }
@@ -334,28 +383,54 @@ public class Factory<T> {
             throw new NullPointerException("No process time calculator. Set it up first.");
         }
 
+        if (this.zeroTime == null) {
+            this.zeroTime = new Date();
+        }
+        for (Op<T> op : this.operations.values()) {
+            op.preload();
+        }
         for (Equip<T> equip : this.equips.values()) {
             this.env.process(equip);
         }
 
-        this.env.process("idle", y2 -> {
-            boolean idled = false;
-            while (!idled) {
-                y2.call(this.env.timeout("factory", cycleTime));
-                idled = isIdle();
-            }
-            this.env.stop();
-        });
+        if (healthCheck > 0) {
+            this.env.process("idle", y2 -> {
+                boolean idled = false;
+                while (!idled) {
+                    y2.call(this.env.timeout("factory", healthCheck));
+                    idled = isIdle();
+                }
+                this.env.stop();
+            });
+        }
 
         return this.env.run(until);
     }
 
     /**
-     * Returns the current time of the simulation.
+     * Returns the current ticks of the simulation.
+     * 
+     * @return The current ticks.
+     */
+    public int ticksNow() {
+        return this.env.getNow();
+    }
+
+    /**
+     * Returns the ticks of a specific time.
+     * 
+     * @return The ticks.
+     */
+    public int ticks(Date time) {
+        return (int) ((time.getTime() - this.zeroTime.getTime()) / this.timeType.factor);
+    }
+
+    /**
+     * Returns the current time based on zero time.
      * 
      * @return The current time.
      */
-    public int now() {
-        return this.env.getNow();
+    public Date nowTime() {
+        return new Date(this.zeroTime.getTime() + ticksNow() * this.timeType.factor);
     }
 }

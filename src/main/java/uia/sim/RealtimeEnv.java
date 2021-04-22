@@ -27,7 +27,7 @@ public class RealtimeEnv extends Env {
     }
 
     @Override
-    protected void step() throws SimEventException {
+    protected int step() throws SimEventException {
         Job job = this.jobs.peek();
         int ms = job.time - getNow();
         if (ms > 0) {
@@ -38,6 +38,6 @@ public class RealtimeEnv extends Env {
 
             }
         }
-        super.step();
+        return super.step();
     }
 }

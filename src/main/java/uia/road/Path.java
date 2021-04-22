@@ -13,34 +13,38 @@ public class Path<T> extends Processable {
 
     private final Factory<T> factory;
 
-    private final JobBox<T> box;
+    private final Job<T> job;
 
     private final int time;
 
-    protected Path(String id, Factory<T> factory, JobBox<T> box, int time) {
+    protected Path(String id, Factory<T> factory, Job<T> job, int time) {
         super(id);
         this.factory = factory;
-        this.box = box;
+        this.job = job;
         this.time = time;
     }
 
     @Override
     protected void run() {
-        int now = this.factory.now();
-        this.box.getJobs().forEach(j -> {
-            j.updateInfo();
-            this.factory.log(new JobEvent(
-                    j.getProductName(),
-                    j.getBoxId(),
-                    now,
-                    JobEvent.DISPATCHING,
-                    this.box.getOperation(),
-                    0,
-                    j.getInfo()));
-        });
-
-        yield(env().timeout(this.time));
-        this.factory.prepare(this.box);
+        int now = this.factory.ticksNow();
+        this.job.updateInfo();
+        this.factory.log(new JobEvent(
+                this.job.getId(),
+                this.job.getProductName(),
+                now,
+                JobEvent.DISPATCHING,
+                this.job.getOperation(),
+                null,
+                0,
+                this.job.getInfo()));
+        try {
+            this.job.setDispatchingTime(now);
+            yield(env().timeout(this.time));
+            this.factory.dispatch(this.job);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override

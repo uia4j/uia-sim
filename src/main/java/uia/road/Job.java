@@ -9,6 +9,8 @@ package uia.road;
  */
 public class Job<T> {
 
+    private final String id;
+
     private final String productName;
 
     private final String operation;
@@ -19,8 +21,6 @@ public class Job<T> {
 
     private final Strategy strategy;
 
-    private String boxId;
-
     private boolean processing;
 
     private boolean finished;
@@ -28,6 +28,8 @@ public class Job<T> {
     private int dispatchingTime;
 
     private int dispatchedTime;
+
+    private String moveInEquip;
 
     private int moveInTime;
 
@@ -37,34 +39,30 @@ public class Job<T> {
 
     private Job<T> next;
 
-    /**
-     * Constructor.
-     * 
-     * @param id The job id.
-     * @param operation The operation.
-     * @param data The reference data.
-     */
-    public Job(String id, String operation, T data) {
-        this(id, id, operation, data);
-    }
+    private int priority;
 
     /**
      * Constructor.
      * 
+     * @param id The id.
      * @param productName The product name.
-     * @param boxId The box id.
      * @param operation The operation.
      * @param data The reference data.
      */
-    public Job(String productName, String boxId, String operation, T data) {
+    public Job(String id, String productName, String operation, T data) {
+        this.id = id;
         this.productName = productName;
-        this.boxId = boxId == null ? this.productName : boxId;
         this.operation = operation;
         this.data = data;
         this.info = new SimInfo();
         this.processing = false;
         this.finished = false;
         this.strategy = new Strategy();
+        this.priority = Integer.MAX_VALUE;
+    }
+
+    public String getId() {
+        return this.id;
     }
 
     /**
@@ -130,7 +128,9 @@ public class Job<T> {
     public Job<T> setPrev(Job<T> prev) {
         if (this.prev != prev) {
             this.prev = prev;
-            this.prev.setNext(this);
+            if (prev != null) {
+                this.prev.setNext(this);
+            }
         }
         return this.prev;
     }
@@ -142,17 +142,11 @@ public class Job<T> {
     public Job<T> setNext(Job<T> next) {
         if (this.next != next) {
             this.next = next;
-            next.setPrev(this);
+            if (next != null) {
+                next.setPrev(this);
+            }
         }
         return this.next;
-    }
-
-    public String getBoxId() {
-        return this.boxId;
-    }
-
-    public void setBoxId(String boxId) {
-        this.boxId = boxId;
     }
 
     /**
@@ -164,11 +158,6 @@ public class Job<T> {
         return this.dispatchingTime;
     }
 
-    /**
-     * Sets the time dispatching to the operation.
-     * 
-     * @param dispatchingTime The time.
-     */
     public void setDispatchingTime(int dispatchingTime) {
         this.dispatchingTime = dispatchingTime;
     }
@@ -182,13 +171,12 @@ public class Job<T> {
         return this.dispatchedTime;
     }
 
-    /**
-     * Sets the arrival time at the operation.
-     * 
-     * @param dispatchedTime The time.
-     */
     public void setDispatchedTime(int dispatchedTime) {
         this.dispatchedTime = dispatchedTime;
+    }
+
+    public String getMoveInEquip() {
+        return this.moveInEquip;
     }
 
     public int getMoveInTime() {
@@ -207,6 +195,18 @@ public class Job<T> {
         this.moveOutTime = moveOutTime;
     }
 
+    public boolean isLoaded() {
+        return this.moveInEquip != null;
+    }
+
+    public synchronized boolean load(String moveInEquip) {
+        if (this.moveInEquip != null && !this.moveInEquip.equals(moveInEquip)) {
+            return false;
+        }
+        this.moveInEquip = moveInEquip;
+        return true;
+    }
+
     public Job<T> findNextAt(String operation) {
         Job<T> chk = this;
         while (chk != null && !operation.equals(chk.getOperation())) {
@@ -223,11 +223,22 @@ public class Job<T> {
         return chk;
     }
 
+    public int getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     public void updateInfo() {
         this.info.getInfo("moveIn").setInt("from", this.strategy.getMoveIn().getFrom());
         this.info.getInfo("moveIn").setInt("to", this.strategy.getMoveIn().getTo());
         this.info.getInfo("moveOut").setInt("from", this.strategy.getMoveOut().getFrom());
         this.info.getInfo("moveOut").setInt("to", this.strategy.getMoveOut().getTo());
+        if (this.next != null) {
+            this.next.updateInfo();
+        }
     }
 
     @Override

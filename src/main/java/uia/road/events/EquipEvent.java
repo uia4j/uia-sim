@@ -14,6 +14,10 @@ public class EquipEvent extends Event {
 
     public static final String MOVE_OUT = "MOVE_OUT";
 
+    public static final String IDLE_START = "IDLE_START";
+
+    public static final String IDLE_END = "IDLE_END";
+
     public static final String BUSY = "BUSY";
 
     private String equip;

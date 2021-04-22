@@ -24,20 +24,31 @@ public class JobEvent extends Event {
 
     public static final String DONE = "DONE";
 
+    private String id;
+
     private String product;
 
-    private String box;
+    private String operation;
 
-    private String eventTarget;
+    private String equipment;
 
     private int timeIdled;
 
-    public JobEvent(String product, String box, int time, String event, String eventTarget, int timeIdled, SimInfo info) {
+    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, SimInfo info) {
         super(time, event, info);
+        this.id = id;
         this.product = product;
-        this.box = box;
-        this.eventTarget = eventTarget;
+        this.operation = operation;
+        this.equipment = equipment;
         this.timeIdled = timeIdled;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getProduct() {
@@ -48,20 +59,20 @@ public class JobEvent extends Event {
         this.product = product;
     }
 
-    public String getBox() {
-        return this.box;
+    public String getOperation() {
+        return this.operation;
     }
 
-    public void setBox(String box) {
-        this.box = box;
+    public void setOperation(String operation) {
+        this.operation = operation;
     }
 
-    public String getEventTarget() {
-        return this.eventTarget;
+    public String getEquipment() {
+        return this.equipment;
     }
 
-    public void setEventTarget(String eventTarget) {
-        this.eventTarget = eventTarget;
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
     }
 
     public int getTimeIdled() {
@@ -74,9 +85,18 @@ public class JobEvent extends Event {
 
     @Override
     public String toString() {
-        return String.format("%8d %-15s - %s",
-                getTime(),
-                getEvent(),
-                getEventTarget() == null ? "" : getEventTarget());
+        if (this.equipment == null) {
+            return String.format("%8d %-15s - %-45s",
+                    this.time,
+                    this.event,
+                    this.operation == null ? "" : this.operation);
+        }
+        else {
+            return String.format("%8d %-15s - %-45s, eq:%s",
+                    this.time,
+                    this.event,
+                    this.operation,
+                    this.equipment);
+        }
     }
 }

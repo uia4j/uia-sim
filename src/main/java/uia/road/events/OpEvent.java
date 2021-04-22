@@ -4,26 +4,26 @@ import uia.road.SimInfo;
 
 public class OpEvent extends Event {
 
+    public static final String IDLE = "IDLE";
+
     public static final String QT_PENDING = "QT_PENDING";
+
+    public static final String PUSH = "PUSH";
 
     public static final String ENQUEUE = "ENQUEUE";
 
-    public static final String DEQUEUE = "DEQUEUE";
-
-    public static final String HOLD = "HOLD";
-
-    public static final String SPLIT = "SPLIT";
+    public static final String PULL = "PULL";
 
     private String operation;
 
-    private String box;
+    private String job;
 
     private int queued;
 
-    public OpEvent(String operation, int time, String event, String box, int queued, SimInfo info) {
+    public OpEvent(String operation, int time, String event, String job, int queued, SimInfo info) {
         super(time, event, info);
         this.operation = operation;
-        this.box = box;
+        this.job = job;
         this.queued = queued;
     }
 
@@ -35,12 +35,12 @@ public class OpEvent extends Event {
         this.operation = operation;
     }
 
-    public String getBox() {
-        return this.box;
+    public String getJob() {
+        return this.job;
     }
 
-    public void setBox(String box) {
-        this.box = box;
+    public void setJob(String job) {
+        this.job = job;
     }
 
     public int getQueued() {
@@ -56,6 +56,6 @@ public class OpEvent extends Event {
         return String.format("%8d %-15s - %s",
                 getTime(),
                 getEvent(),
-                getBox());
+                getJob() == null ? "" : getJob());
     }
 }
