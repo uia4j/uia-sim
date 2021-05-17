@@ -22,6 +22,12 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     protected final Vector<Op<T>> operations;
 
+    protected final SimInfo info;
+
+    protected final E10 e10;
+
+    protected String area;
+
     protected ProcessTimeCalculator<T> processTimeCalculator;
 
     protected JobSelector<T> jobSelector;
@@ -30,9 +36,13 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private Event jobNotifier;
 
-    private int waitingMaxTime;
-
     private boolean enabled;
+
+    private int timeTag;
+
+    private Vector<String> reserved;
+
+    private int compensationTime;
 
     /**
      * The constructor.
@@ -44,9 +54,11 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         super(id);
         this.factory = factory;
         this.operations = new Vector<>();
+        this.info = new SimInfo();
+        this.e10 = new E10();
         this.jobSelector = new JobSelector.Any<>();
-        this.waitingMaxTime = 300;
         this.enabled = true;
+        this.reserved = new Vector<>();
     }
 
     /**
@@ -65,6 +77,52 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      */
     public List<Op<T>> getOperations() {
         return this.operations;
+    }
+
+    public SimInfo getInfo() {
+        return this.info;
+    }
+
+    public E10 getE10() {
+        return this.e10;
+    }
+
+    public String getArea() {
+        return this.area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public int getCompensationTime() {
+        return this.compensationTime;
+    }
+
+    public void setCompensationTime(int compensationTime) {
+        this.compensationTime = Math.max(0, compensationTime);
+    }
+
+    public int getReservedNumber() {
+        return this.reserved.size();
+    }
+
+    public boolean addReserved(Job<T> job) {
+        synchronized (this) {
+            if (!isLoadable(job)) {
+                return false;
+            }
+            this.reserved.add(job.getId());
+            return true;
+        }
+    }
+
+    public boolean removeReserved(Job<T> job) {
+        return this.reserved.remove(job.getId());
+    }
+
+    public boolean isReserved(Job<T> job) {
+        return this.reserved.contains(job.getId());
     }
 
     public ProcessTimeCalculator<T> getProcessTimeCalculator() {
@@ -117,14 +175,6 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.strategy = strategy;
     }
 
-    public int getWaitingMaxTime() {
-        return this.waitingMaxTime;
-    }
-
-    public void setWaitingMaxTime(int waitingMaxTime) {
-        this.waitingMaxTime = Math.max(10, waitingMaxTime);
-    }
-
     /**
      * Serves the operation.
      * 
@@ -141,11 +191,12 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     }
 
     /**
-     * Tests if the equipment is loaded.
+     * Tests if the equipment is loadable.
      * 
-     * @return True if the equipment is busy.
+     * @param job A job.
+     * @return True if the equipment is loadable.
      */
-    public abstract boolean isLoaded();
+    public abstract boolean isLoadable(Job<T> job);
 
     /**
      * Tests if the equipment is idle.
@@ -155,11 +206,35 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     public abstract boolean isIdle();
 
     /**
-     * Adds a job.
+     * Loads a job into the equipment.
      * 
      * @param job A job.
      */
     public abstract boolean load(Job<T> job);
+
+    public void close() {
+        if (this.isIdle()) {
+            doneStandby();
+        }
+        else {
+            doneProductive();
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o != null && o instanceof Equip) {
+            return getId().equals(((Equip<?>) o).getId());
+        }
+        else {
+            return false;
+        }
+    }
 
     protected void waitingJobs() {
         synchronized (this) {
@@ -181,30 +256,36 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         }
     }
 
-    @Override
-    protected void initial() {
-    }
-
-    @Override
-    public int hashCode() {
-        return this.getId().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof Equip) {
-            return this.getId().equals(((Equip<?>) o).getId());
-        }
-        else {
-            return false;
-        }
-    }
-
     protected void updateStrategy(Job<T> job, String event) {
         EquipStrategy<T> strategy = getStrategy();
         if (strategy != null) {
             strategy.update(this, job, event);
             job.updateInfo();
         }
+    }
+
+    protected int doneStandby() {
+        int time = now() - this.timeTag;
+        this.timeTag = now();
+        this.e10.addStandnbyTime(time);
+        return time;
+    }
+
+    protected int doneProductive() {
+        int time = now() - this.timeTag;
+        this.timeTag = now();
+        this.e10.addProductiveTime(time);
+        return time;
+    }
+
+    protected int doneScheduledDowned() {
+        int time = now() - this.timeTag;
+        this.timeTag = now();
+        this.e10.addScheduledDownTime(time);
+        return time;
+    }
+
+    @Override
+    protected void initial() {
     }
 }

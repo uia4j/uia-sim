@@ -18,11 +18,11 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
          */
         Factory<Integer> factory = new Factory<>();
 
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
-        Equip<Integer> e1 = factory.createEquip("e1", 2, 2);
-        Equip<Integer> e2 = factory.createEquip("e2", 2, 2);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 1);
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 2);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 2, 2);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 1);
         o1.serve(e1);
         o2.serve(e2);
         o2.serve(e3);
@@ -62,15 +62,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
-        Op<Integer> o3 = factory.createOperation("o3");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
+        Op<Integer> o3 = factory.tryCreateOperation("o3");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 2, 2);
-        Equip<Integer> e2 = factory.createEquip("e2", 2, 2);
-        Equip<Integer> e3 = factory.createEquip("e3", 2, 2);
-        Equip<Integer> e4 = factory.createEquip("e4", 1, 2);    // move in job2 at 300
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 2);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 2, 2);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 2, 2);
+        Equip<Integer> e4 = factory.tryCreateEquip("e4", 1, 2);    // move in job2 at 300
 
         // bind operations and equipments
         o1.serve(e1);
@@ -112,15 +112,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
-        Op<Integer> o3 = factory.createOperation("o3");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
+        Op<Integer> o3 = factory.tryCreateOperation("o3");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 2, 2);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 1);
-        Equip<Integer> e4 = factory.createEquip("e4", 1, 2);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 2);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 1);
+        Equip<Integer> e4 = factory.tryCreateEquip("e4", 1, 2);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -162,15 +162,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
-        Op<Integer> o3 = factory.createOperation("o3");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
+        Op<Integer> o3 = factory.tryCreateOperation("o3");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 1);
-        Equip<Integer> e4 = factory.createEquip("e4", 2, 2);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 1);
+        Equip<Integer> e4 = factory.tryCreateEquip("e4", 2, 2);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -212,12 +212,12 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 2, 2);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 2);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 2);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 2);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -254,14 +254,14 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 2);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 2);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 2);
-        Equip<Integer> e4 = factory.createEquip("e3", 1, 2);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 2);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 2);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 2);
+        Equip<Integer> e4 = factory.tryCreateEquip("e3", 1, 2);
 
         // bind operations and equipments
         o1.serve(e1);

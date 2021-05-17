@@ -152,7 +152,7 @@ public abstract class Processable {
 
     @Override
     public String toString() {
-        return this.process.toString();
+        return "Proc(" + getId() + ")";
     }
 
     private void readyToGo(Yield2Way<Event, Object> yield) {

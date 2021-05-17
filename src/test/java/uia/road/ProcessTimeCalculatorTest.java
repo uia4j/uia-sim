@@ -24,14 +24,14 @@ public class ProcessTimeCalculatorTest {
         });
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
-        Op<Integer> o3 = factory.createOperation("o3");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
+        Op<Integer> o3 = factory.tryCreateOperation("o3");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        Equip<Integer> e3 = factory.createEquip("e3", 1, 1);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
+        Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 1);
 
         // custom process time calculator
         e2.setProcessTimeCalculator((e, j) -> j.getData().intValue() * 2);

@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,6 +65,8 @@ public class Env {
 
     private ExecutorService executor;
 
+    private boolean parallel;
+
     static {
         UUID.randomUUID();
     }
@@ -105,6 +108,7 @@ public class Env {
         this.executor = Executors.newFixedThreadPool(1);
         this.now = Math.max(0, initialTime);
         this.initialTime = this.now;
+        this.parallel = false;
     }
 
     /**
@@ -114,6 +118,14 @@ public class Env {
      */
     public String getId() {
         return this.id;
+    }
+
+    public boolean isParallel() {
+        return this.parallel;
+    }
+
+    public void setParallel(boolean parallel) {
+        this.parallel = parallel;
     }
 
     /**
@@ -359,11 +371,15 @@ public class Env {
      */
     public synchronized int run() {
         logger.debug("==== start ====");
+        logger.debug("parallel:" + this.parallel);
         long c = 0;
+        Supplier<Integer> step = this.parallel
+                ? this::stepParallel
+                : this::stepOne;
         try {
             long check = 5000;
             while (!this.jobs.isEmpty()) {
-                c += step();
+                c += step.get();
                 if (c >= check) {
                     System.out.println(String.format("run: %s steps", c));
                     check += 5000;
@@ -399,10 +415,13 @@ public class Env {
 
         logger.info("==== start ====");
         long c = 0;
+        Supplier<Integer> step = this.parallel
+                ? this::stepParallel
+                : this::stepOne;
         try {
             long check = 5000;
             while (this.now < until && !this.jobs.isEmpty()) {
-                c += step();
+                c += step.get();
                 if (c >= check) {
                     System.out.println(String.format("run: %s steps", c));
                     check += 5000;
@@ -420,8 +439,11 @@ public class Env {
             try {
                 this.jobs.poll().event.envDown();
             }
-            catch (Throwable ex) {
-                ex.printStackTrace();
+            catch (SimStopException ex1) {
+
+            }
+            catch (Throwable ex2) {
+                ex2.printStackTrace();
             }
         }
         return this.now;
@@ -503,7 +525,6 @@ public class Env {
         return 1;
     }
 
-    @SuppressWarnings("unused")
     private int stepParallel() throws RuntimeException {
         // 1. get jobs with the same time.
         int now = this.jobs.peek().time;

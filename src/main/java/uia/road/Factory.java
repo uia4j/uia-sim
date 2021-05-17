@@ -78,6 +78,7 @@ public class Factory<T> {
         this.logger = new SimReportTextLogger(this);
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
         this.timeType = TimeType.SEC;
+        this.zeroTime = new Date();
     }
 
     public Env getEnv() {
@@ -208,37 +209,8 @@ public class Factory<T> {
         return this.operations.keySet();
     }
 
-    /**
-     * Adds an operation in the factory.
-     * 
-     * @param op The operation.
-     * @return True if the operation is added into this factory.
-     */
-    public boolean addOperation(Op<T> op) {
-        synchronized (this.operations) {
-            if (this.operations.containsKey(op.getId())) {
-                return false;
-            }
-            this.operations.put(op.getId(), op);
-            return true;
-        }
-    }
-
-    /**
-     * Creates an operation and add into this factory.
-     * 
-     * @param id The operation id.
-     * @return The operation.
-     */
-    public Op<T> createOperation(String id) {
-        synchronized (this.operations) {
-            Op<T> op = this.operations.get(id);
-            if (op == null) {
-                op = new Op<>(id, this);
-                addOperation(op);
-            }
-            return op;
-        }
+    public Set<String> getEquips() {
+        return this.equips.keySet();
     }
 
     /**
@@ -254,18 +226,36 @@ public class Factory<T> {
     }
 
     /**
-     * Adds an equipment in the factory.
+     * Creates an operation and add into this factory.
      * 
-     * @param equip The equipment.
-     * @return True if the equipment is added into this factory.
+     * @param id The operation id.
+     * @return The operation.
      */
-    public boolean addEquip(Equip<T> equip) {
-        synchronized (this.equips) {
-            if (this.equips.containsKey(equip.getId())) {
-                return false;
+    public Op<T> tryCreateOperation(String id) {
+        synchronized (this.operations) {
+            Op<T> op = this.operations.get(id);
+            if (op == null) {
+                op = new Op<>(id, this);
+                this.operations.put(op.getId(), op);
             }
-            this.equips.put(equip.getId(), equip);
-            return true;
+            return op;
+        }
+    }
+
+    /**
+     * Adds an operation in the factory.
+     * 
+     * @param op The operation.
+     * @return True if the operation is added into this factory.
+     */
+    public Op<T> tryAddOperation(Op<T> op) {
+        synchronized (this.operations) {
+            Op<T> selected = this.operations.get(op.getId());
+            if (selected == null) {
+                selected = op;
+                this.operations.put(op.getId(), op);
+            }
+            return selected;
         }
     }
 
@@ -277,19 +267,36 @@ public class Factory<T> {
      * @param chCount Number of the channel.
      * @return The equipment.
      */
-    public Equip<T> createEquip(String id, int loadPorts, int chCount) {
+    public Equip<T> tryCreateEquip(String id, int loadPorts, int chCount) {
         synchronized (this.equips) {
             Equip<T> eq = this.equips.get(id);
             if (eq == null) {
                 eq = new EquipMuch<>(id, this, loadPorts, chCount);
-                addEquip(eq);
+                this.equips.put(eq.getId(), eq);
             }
             return eq;
         }
     }
 
     /**
-     * Prepares a box to its operation.
+     * Adds an equipment in the factory.
+     * 
+     * @param equip The equipment.
+     * @return True if the equipment is added into this factory.
+     */
+    public Equip<T> tryAddEquip(Equip<T> equip) {
+        synchronized (this.equips) {
+            Equip<T> selected = this.equips.get(equip.getId());
+            if (selected == null) {
+                selected = equip;
+                this.equips.put(equip.getId(), equip);
+            }
+            return selected;
+        }
+    }
+
+    /**
+     * Prepares a job to its operation.
      * 
      * @param job The job.
      */
@@ -306,7 +313,7 @@ public class Factory<T> {
     }
 
     /**
-     * Dispatches a box to its operation and run.
+     * Dispatches a job to its operation and run.
      * 
      * @param job The job.
      */
@@ -337,9 +344,9 @@ public class Factory<T> {
     }
 
     /**
-     * Dispatches the box to next operation.
+     * Dispatches the job to next operation.
      * 
-     * @param box The box.
+     * @param doneJ The job
      */
     public void dispatchToNext(Job<T> doneJ) {
         Job<T> nextJ = doneJ.getNext();
@@ -365,6 +372,23 @@ public class Factory<T> {
 
     public int run(int until) throws Exception {
         return run(until, 0);
+    }
+
+    public void printlnE10(int totalTime) {
+        for (Equip<T> eq : this.equips.values()) {
+            System.out.println(eq.getId());
+            System.out.println(String.format("  productive: %6.2f%%", 100.0d * eq.getE10().getProductiveTime() / totalTime));
+            System.out.println(String.format("     standby: %6.2f%%", 100.0d * eq.getE10().getStandbyTime() / totalTime));
+        }
+    }
+
+    public void printlnE79(int totalTime) {
+        for (Equip<T> eq : this.equips.values()) {
+            E79 e79 = new E79(totalTime, eq.getE10());
+            System.out.println(eq.getId());
+            System.out.println("  availablility: " + e79.availabilityEfficiency());
+            System.out.println("  operation:     " + e79.availabilityEfficiency());
+        }
     }
 
     /**
@@ -404,7 +428,14 @@ public class Factory<T> {
             });
         }
 
-        return this.env.run(until);
+        try {
+            return this.env.run(until);
+        }
+        finally {
+            for (Equip<T> eq : this.equips.values()) {
+                eq.close();
+            }
+        }
     }
 
     /**

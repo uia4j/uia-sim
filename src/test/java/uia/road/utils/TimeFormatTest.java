@@ -17,9 +17,9 @@ public class TimeFormatTest {
 
     @Test
     public void testFromMin() {
-        Assert.assertEquals(" 0 01:01", TimeFormat.fromMin(61));
-        Assert.assertEquals(" 0 23:59", TimeFormat.fromMin(1439));
-        Assert.assertEquals(" 1 01:01", TimeFormat.fromMin(1501));
+        Assert.assertEquals("  0 01:01", TimeFormat.fromMin(61));
+        Assert.assertEquals("  0 23:59", TimeFormat.fromMin(1439));
+        Assert.assertEquals("  1 01:01", TimeFormat.fromMin(1501));
     }
 
     @Test

@@ -17,13 +17,11 @@ public class Job<T> {
 
     private final T data;
 
+    private String area;
+
     private final SimInfo info;
 
     private final Strategy strategy;
-
-    private boolean processing;
-
-    private boolean finished;
 
     private int dispatchingTime;
 
@@ -39,7 +37,13 @@ public class Job<T> {
 
     private Job<T> next;
 
-    private int priority;
+    private int qty;
+
+    private int processingQty;
+
+    private int processedQty;
+
+    private boolean engineering;
 
     /**
      * Constructor.
@@ -55,10 +59,32 @@ public class Job<T> {
         this.operation = operation;
         this.data = data;
         this.info = new SimInfo();
-        this.processing = false;
-        this.finished = false;
         this.strategy = new Strategy();
-        this.priority = Integer.MAX_VALUE;
+        this.qty = 1;
+        this.engineering = false;
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param job The job
+     */
+    public Job(Job<T> job) {
+        this.id = job.id;
+        this.productName = job.productName;
+        this.operation = job.operation;
+        this.data = job.data;
+        this.area = job.area;
+        this.info = job.info;
+        this.strategy = job.strategy;
+        this.dispatchingTime = job.dispatchingTime;
+        this.dispatchedTime = job.dispatchedTime;
+        this.moveInEquip = job.moveInEquip;
+        this.moveInTime = job.moveInTime;
+        this.moveOutTime = job.moveOutTime;
+        this.qty = job.qty;
+        this.processingQty = job.processingQty;
+        this.processedQty = job.processedQty;
     }
 
     public String getId() {
@@ -92,6 +118,14 @@ public class Job<T> {
         return this.data;
     }
 
+    public String getArea() {
+        return this.area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
     /**
      * Returns the extra information. The information will be logged.
      * 
@@ -105,20 +139,8 @@ public class Job<T> {
         return this.strategy;
     }
 
-    public boolean isProcessing() {
-        return this.processing;
-    }
-
-    public void setProcessing(boolean processing) {
-        this.processing = processing;
-    }
-
     public boolean isFinished() {
-        return this.finished;
-    }
-
-    public void setFinished(boolean finished) {
-        this.finished = finished;
+        return this.processedQty >= this.qty;
     }
 
     public Job<T> getPrev() {
@@ -195,6 +217,44 @@ public class Job<T> {
         this.moveOutTime = moveOutTime;
     }
 
+    public int getQty() {
+        return this.qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = Math.max(1, qty);
+    }
+
+    public boolean isEngineering() {
+        return this.engineering;
+    }
+
+    public void setEngineering(boolean engineering) {
+        this.engineering = engineering;
+    }
+
+    public int getProcessingQty() {
+        return this.processingQty;
+    }
+
+    public int getProcessedQty() {
+        return this.processedQty;
+    }
+
+    public synchronized void processing(int qty) {
+        this.processingQty += qty;
+        if (this.processedQty >= this.qty) {
+            this.processedQty = this.qty;
+        }
+    }
+
+    public synchronized void processed(int qty) {
+        this.processedQty += qty;
+        if (this.processedQty >= this.qty) {
+            this.processedQty = this.qty;
+        }
+    }
+
     public boolean isLoaded() {
         return this.moveInEquip != null;
     }
@@ -208,27 +268,37 @@ public class Job<T> {
     }
 
     public Job<T> findNextAt(String operation) {
-        Job<T> chk = this;
-        while (chk != null && !operation.equals(chk.getOperation())) {
-            chk = chk.getNext();
+        if (this.next == null) {
+            return null;
         }
-        return chk;
+        if (operation.equals(this.next.getOperation())) {
+            return this.next;
+        }
+        return this.next.findNextAt(operation);
     }
 
     public Job<T> findPrevAt(String operation) {
-        Job<T> chk = this;
-        while (chk != null && !operation.equals(chk.getOperation())) {
-            chk = chk.getPrev();
+        if (this.prev == null) {
+            return null;
         }
-        return chk;
+        if (operation.equals(this.prev.getOperation())) {
+            return this.prev;
+        }
+        return this.prev.findPrevAt(operation);
     }
 
-    public int getPriority() {
-        return this.priority;
+    public Job<T> findNext(String id, boolean self) {
+        if (self && id.equals(this.id)) {
+            return this;
+        }
+        if (this.next == null) {
+            return null;
+        }
+        return this.next.findNext(id, true);
     }
 
-    public void setPriority(int priority) {
-        this.priority = priority;
+    public Job<T> last() {
+        return this.next == null ? this : this.next.last();
     }
 
     public void updateInfo() {
@@ -246,6 +316,21 @@ public class Job<T> {
         return String.format("%s @ %s",
                 this.productName,
                 this.operation);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o != null && o instanceof Job) {
+            return this.id.equals(((Job<?>) o).getId());
+        }
+        else {
+            return false;
+        }
     }
 
     public class Strategy {

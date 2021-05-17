@@ -25,6 +25,8 @@ public class Op<T> {
 
     private final Vector<Equip<T>> equips;
 
+    private final SimInfo info;
+
     private Vector<Job<T>> jobs;
 
     private EquipSelector<T> equipSelector;
@@ -39,6 +41,7 @@ public class Op<T> {
         this.id = id;
         this.factory = factory;
         this.equips = new Vector<>();
+        this.info = new SimInfo();
         this.jobs = new Vector<>();
         this.equipSelector = new EquipSelector.Any<>();
     }
@@ -70,6 +73,10 @@ public class Op<T> {
         return new ArrayList<>(this.equips);
     }
 
+    public SimInfo getInfo() {
+        return this.info;
+    }
+
     /**
      * Returns the jobs enqueued in this operation.
      * 
@@ -77,6 +84,14 @@ public class Op<T> {
      */
     public List<Job<T>> getEnqueued() {
         return new ArrayList<>(this.jobs);
+    }
+
+    public EquipSelector<T> getEquipSelector() {
+        return this.equipSelector;
+    }
+
+    public void setEquipSelector(EquipSelector<T> equipSelector) {
+        this.equipSelector = equipSelector;
     }
 
     /**
@@ -254,11 +269,11 @@ public class Op<T> {
     }
 
     private synchronized boolean push(Job<T> job) {
-        List<String> checked = new ArrayList<>();
         List<Equip<T>> equips = this.equips.stream()
-                .filter(e -> !checked.contains(e.getId()) && !e.isLoaded())
+                .filter(e -> e.isLoadable(job))
                 .collect(Collectors.toList());
 
+        List<String> checked = new ArrayList<>();
         Equip<T> equip = this.equipSelector.select(job, equips);
         boolean pushed = false;
         while (equip != null) {
@@ -269,7 +284,7 @@ public class Op<T> {
             }
             else {
                 equips = this.equips.stream()
-                        .filter(e -> !checked.contains(e.getId()) && !e.isLoaded())
+                        .filter(e -> !checked.contains(e.getId()) && e.isLoadable(job))
                         .collect(Collectors.toList());
                 equip = this.equipSelector.select(job, equips);
             }

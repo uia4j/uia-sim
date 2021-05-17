@@ -18,11 +18,11 @@ public interface EquipSelector<T> {
     /**
      * Select jobs for a specific equipment.
      * 
-     * @param equip The requesting equipment.
-     * @param jobs The jobs can be selected.
-     * @return Selected jobs.
+     * @param job The requesting job.
+     * @param equips The equipments can be selected.
+     * @return Selected equipment.
      */
-    public Equip<T> select(Job<T> box, List<Equip<T>> equips);
+    public Equip<T> select(Job<T> job, List<Equip<T>> equips);
 
     public static class Any<T> implements EquipSelector<T> {
 

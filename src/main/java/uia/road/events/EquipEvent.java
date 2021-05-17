@@ -26,14 +26,14 @@ public class EquipEvent extends Event {
 
     private String operation;
 
-    private String box;
+    private String job;
 
-    public EquipEvent(String equip, String ch, int time, String event, String operation, String box, SimInfo info) {
+    public EquipEvent(String equip, String ch, int time, String event, String operation, String job, SimInfo info) {
         super(time, event, info);
         this.equip = equip;
         this.ch = ch;
         this.operation = operation;
-        this.box = box;
+        this.job = job;
     }
 
     public String getEquip() {
@@ -60,19 +60,20 @@ public class EquipEvent extends Event {
         this.operation = operation;
     }
 
-    public String getBox() {
-        return this.box;
+    public String getJob() {
+        return this.job;
     }
 
-    public void setBox(String box) {
-        this.box = box;
+    public void setJob(String job) {
+        this.job = job;
     }
 
     @Override
     public String toString() {
-        return String.format("%8d %-15s - %s",
-                getTime(),
-                getEvent(),
-                getBox() == null ? "" : getBox());
+        return String.format("%8d %-15s - %s %s",
+                this.time,
+                this.event,
+                this.job == null ? "" : this.job,
+                this.ch == null ? "" : this.ch);
     }
 }

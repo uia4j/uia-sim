@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import uia.cor.Yield2Way;
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.sim.Event;
@@ -16,7 +17,7 @@ import uia.sim.Processable;
  *
  * @param <T> Reference data of the job.
  */
-public class EquipMuch<T> extends Equip<T> {
+public class EquipMuchCa<T> extends Equip<T> {
 
     private final int loadPorts;
 
@@ -38,7 +39,7 @@ public class EquipMuch<T> extends Equip<T> {
      * @param loadPorts The max boxes in the equipment.
      * @param chCount The channel number.
      */
-    public EquipMuch(String id, Factory<T> factory, int loadPorts, int chCount) {
+    public EquipMuchCa(String id, Factory<T> factory, int loadPorts, int chCount) {
         super(id, factory);
         this.loadPorts = loadPorts <= 0 ? Integer.MAX_VALUE : loadPorts;
         this.chs = new ArrayList<>();
@@ -53,6 +54,18 @@ public class EquipMuch<T> extends Equip<T> {
 
     public List<Channel<T>> getChannels() {
         return this.chs;
+    }
+
+    public ChannelSelector<T> getChSelector() {
+        return this.chSelector;
+    }
+
+    public void setChSelector(ChannelSelector<T> chSelector) {
+        this.chSelector = chSelector;
+    }
+
+    public int getLoaded() {
+        return this.running.size() + this.loaded.size();
     }
 
     @Override
@@ -141,23 +154,6 @@ public class EquipMuch<T> extends Equip<T> {
             }
             else {
                 this.factory.getOperation(job.getOperation()).dequeue(job);
-                this.factory.log(new EquipEvent(
-                        getId(),
-                        null,
-                        this.factory.ticksNow(),
-                        EquipEvent.MOVE_IN,
-                        job.getOperation(),
-                        job.getProductName(),
-                        null));
-                this.factory.log(new JobEvent(
-                        job.getId(),
-                        job.getProductName(),
-                        this.factory.ticksNow(),
-                        JobEvent.MOVE_IN,
-                        job.getOperation(),
-                        getId(),
-                        this.factory.ticksNow() - job.getDispatchedTime(),
-                        job.getInfo()));
                 moveIn(job);                    // block maybe
             }
         }
@@ -218,6 +214,7 @@ public class EquipMuch<T> extends Equip<T> {
                     null,
                     null,
                     new SimInfo().setInt("idled", time)));
+            this.e10.addStandnbyTime(time);
         }
 
         // move in
@@ -226,17 +223,7 @@ public class EquipMuch<T> extends Equip<T> {
         //
         this.running.add(job);
         this.loaded.remove(job);
-
-        try {
-            // may be blocked
-            while (job.getProcessingQty() < job.getQty()) {
-                Channel<T> ch = findChannel();
-                ch.run(job);
-            }
-        }
-        catch (Exception ex) {
-
-        }
+        this.env().process(new ProcessLot(job));
     }
 
     private void moveOut(Job<T> job) {
@@ -297,17 +284,48 @@ public class EquipMuch<T> extends Equip<T> {
 
     /**
      * May be blocked.
-     * @return
+     * 
      */
-    @SuppressWarnings("unchecked")
-    private Channel<T> findChannel() {
-        Channel<T> ch = this.chSelector.select(this.chs);
-        if (ch == null) {
-            this.chNotifier = this.getFactory().getEnv().event(getId() + "_waiting_ch");
-            ch = (Channel<T>) yield(this.chNotifier);
-            this.chNotifier = null;
+    private void waitingCh(Yield2Way<Event, Object> yield) {
+        synchronized (this) {
+            if (this.chNotifier == null) {
+                this.chNotifier = this.getFactory().getEnv().event(getId() + "_waiting_ch");
+            }
         }
-        return ch;
+        yield.call(this.chNotifier);
+    }
+
+    class ProcessLot extends Processable {
+
+        private final Job<T> job;
+
+        public ProcessLot(Job<T> job) {
+            super(job.getProductName() + "_process");
+            this.job = job;
+        }
+
+        @Override
+        protected void run() {
+            // may be blocked
+            while (this.job.getProcessingQty() < this.job.getQty()) {
+                Channel<T> ch = EquipMuchCa.this.chSelector.select(EquipMuchCa.this.chs, this.job);
+                if (ch == null) {
+                    waitingCh(yield());
+                    continue;
+                }
+                try {
+                    ch.run(this.job);
+                }
+                catch (Exception e) {
+
+                }
+            }
+        }
+
+        @Override
+        protected void initial() {
+        }
+
     }
 
     class MoveOut extends Processable {
@@ -325,7 +343,7 @@ public class EquipMuch<T> extends Equip<T> {
         @Override
         protected void run() {
             yield(env().timeout(this.job.getProductName() + "_moveout_delay", this.delay));
-            EquipMuch.this.moveOut(this.job);
+            EquipMuchCa.this.moveOut(this.job);
         }
 
         @Override

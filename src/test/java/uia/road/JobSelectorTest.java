@@ -25,10 +25,10 @@ public class JobSelectorTest implements JobSelector<Domain> {
         factory.setProcessTimeCalculator((e, j) -> j.getData().pt);
 
         // build operations
-        Op<Domain> o1 = factory.createOperation("o1");
+        Op<Domain> o1 = factory.tryCreateOperation("o1");
 
         // build equipments
-        Equip<Domain> e1 = factory.createEquip("e1", 1, 1);
+        Equip<Domain> e1 = factory.tryCreateEquip("e1", 1, 1);
         e1.setJobSelector(this);
 
         // bind operations and equipments

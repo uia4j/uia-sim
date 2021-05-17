@@ -1,6 +1,7 @@
 package uia.road;
 
 import uia.cor.Yield2Way;
+import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.sim.Event;
 
@@ -17,9 +18,15 @@ public class Channel<T> {
 
     private final Equip<T> equip;
 
+    private final SimInfo info;
+
     private Job<T> job;
 
     private boolean processing;
+
+    private int batchSize;
+
+    private int compensationTime;
 
     /**
      * The constructor.
@@ -30,6 +37,28 @@ public class Channel<T> {
     public Channel(String id, Equip<T> equip) {
         this.id = id;
         this.equip = equip;
+        this.info = new SimInfo();
+        this.batchSize = 1;
+    }
+
+    public int getBatchSize() {
+        return this.batchSize;
+    }
+
+    public void setBatchSize(int batchSize) {
+        this.batchSize = Math.max(1, batchSize);
+    }
+
+    public int getCompensationTime() {
+        return this.compensationTime;
+    }
+
+    public void setCompensationTime(int compensationTime) {
+        this.compensationTime = Math.max(0, compensationTime);
+    }
+
+    public SimInfo getInfo() {
+        return this.info;
     }
 
     /**
@@ -47,20 +76,18 @@ public class Channel<T> {
      * @param job The job.
      * @throws Exception Failed to run the job.
      */
-    public void run(Job<T> job) throws Exception {
+    public synchronized boolean run(Job<T> job) throws Exception {
         if (this.job != null) {
-            throw new Exception(String.format("%s CAN NOT move in. %s is running in the %s. time:%s",
-                    job.getProductName(),
-                    this.job.getProductName(),
-                    this.id,
-                    this.equip.getFactory().getEnv().getNow()));
+            return false;
         }
 
-        this.job = job;
         this.processing = true;
-        this.equip.getFactory()
-                .getEnv()
-                .process(job.getProductName() + "_" + this.id + "_process", this::run);
+        this.job = job;
+        this.job.processing(this.batchSize);
+        this.equip.getFactory().getEnv().process(
+                job.getProductName() + "_" + this.id + "_process",
+                this::run);
+        return true;
     }
 
     protected final void run(Yield2Way<Event, Object> yield) {
@@ -71,28 +98,43 @@ public class Channel<T> {
         // process time
         int processTime = this.equip.getProcessTimeCalculator()
                 .calc(this.equip, this.job);
+        processTime += this.compensationTime + this.equip.getCompensationTime();
 
         // 1. process start
         int now1 = factory.ticksNow();
+        factory.log(new EquipEvent(
+                this.equip.getId(),
+                this.id,
+                now1,
+                EquipEvent.PROCESS_START,
+                this.job.getOperation(),
+                this.job.getProductName(),
+                this.job.getInfo()));
         factory.log(new JobEvent(
                 this.job.getId(),
                 this.job.getProductName(),
                 now1,
-                this.job.isProcessing() ? JobEvent.PROCESSING : JobEvent.PROCESS_START,
+                JobEvent.PROCESS_START,
                 this.job.getOperation(),
                 this.id,
                 now1 - this.job.getDispatchedTime(),
                 this.job.getInfo()));
-        this.job.setProcessing(true);
-        this.job.setFinished(false);
 
         // 2. processing
-        yield.call(factory.getEnv().timeout(this.job.getProductName() + "_" + this.id + "_process_end", processTime));
-        this.job.setProcessing(false);
-        this.job.setFinished(true);
+        yield.call(factory.getEnv().timeout(
+                this.job.getProductName() + "_" + this.id + "_process_end",
+                processTime));
 
         // 3. process end
         int now2 = factory.ticksNow();
+        factory.log(new EquipEvent(
+                this.equip.getId(),
+                this.id,
+                now2,
+                EquipEvent.PROCESS_END,
+                this.job.getOperation(),
+                this.job.getProductName(),
+                this.job.getInfo()));
         factory.log(new JobEvent(
                 this.job.getId(),
                 this.job.getProductName(),

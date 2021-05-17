@@ -43,7 +43,7 @@ public class Path<T> extends Processable {
             this.factory.dispatch(this.job);
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+
         }
     }
 

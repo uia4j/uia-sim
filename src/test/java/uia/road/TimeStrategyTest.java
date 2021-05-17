@@ -24,13 +24,12 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -69,13 +68,12 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -116,13 +114,12 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -160,11 +157,11 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
         e1.setStrategy(new EquipStrategy<Integer>() {
 
             @Override
@@ -177,8 +174,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
             }
 
         });
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -213,11 +209,11 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator(this);
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
         e1.setStrategy(new EquipStrategy<Integer>() {
 
             @Override
@@ -230,8 +226,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
             }
 
         });
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
@@ -276,13 +271,12 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         });
 
         // build operations
-        Op<Integer> o1 = factory.createOperation("o1");
-        Op<Integer> o2 = factory.createOperation("o2");
+        Op<Integer> o1 = factory.tryCreateOperation("o1");
+        Op<Integer> o2 = factory.tryCreateOperation("o2");
 
         // build equipments
-        Equip<Integer> e1 = factory.createEquip("e1", 1, 1);
-        Equip<Integer> e2 = factory.createEquip("e2", 1, 1);
-        e2.setWaitingMaxTime(12);
+        Equip<Integer> e1 = factory.tryCreateEquip("e1", 1, 1);
+        Equip<Integer> e2 = factory.tryCreateEquip("e2", 1, 1);
 
         // bind operations and equipments
         o1.serve(e1);
