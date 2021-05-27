@@ -1,5 +1,7 @@
 package uia.road.events;
 
+import java.util.Map;
+
 import uia.road.SimInfo;
 
 public class EquipEvent extends Event {
@@ -29,6 +31,14 @@ public class EquipEvent extends Event {
     private String job;
 
     public EquipEvent(String equip, String ch, int time, String event, String operation, String job, SimInfo info) {
+        super(time, event, info);
+        this.equip = equip;
+        this.ch = ch;
+        this.operation = operation;
+        this.job = job;
+    }
+
+    public EquipEvent(String equip, String ch, int time, String event, String operation, String job, Map<String, Object> info) {
         super(time, event, info);
         this.equip = equip;
         this.ch = ch;

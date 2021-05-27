@@ -3,6 +3,7 @@ package uia.road;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
@@ -32,7 +33,7 @@ public class EquipMuch<T> extends Equip<T> {
 
     /**
      * The constructor.
-     * 
+     *
      * @param id The equipment id.
      * @param factory The factory.
      * @param loadPorts The max boxes in the equipment.
@@ -61,6 +62,9 @@ public class EquipMuch<T> extends Equip<T> {
         if (loaded >= this.loadPorts) {
             return false;
         }
+        if (!job.getStrategy().acceptEquip(getId())) {
+            return false;
+        }
         if (isReserved(job)) {
             return true;
         }
@@ -78,9 +82,7 @@ public class EquipMuch<T> extends Equip<T> {
             if (!isLoadable(job)) {
                 return false;
             }
-            if (!job.load(getId())) {
-                return false;
-            }
+            job.setMoveInEquip(getId());
             removeReserved(job);
             this.loaded.add(job);
         }
@@ -94,7 +96,7 @@ public class EquipMuch<T> extends Equip<T> {
                 EquipEvent.MOVE_IN,
                 job.getOperation(),
                 job.getProductName(),
-                null));
+                job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -120,7 +122,7 @@ public class EquipMuch<T> extends Equip<T> {
                         EquipEvent.BUSY,
                         null,
                         null,
-                        null));
+                        (SimInfo) null));
                 waitingJobs();                  // block
                 continue;
             }
@@ -148,7 +150,7 @@ public class EquipMuch<T> extends Equip<T> {
                         EquipEvent.MOVE_IN,
                         job.getOperation(),
                         job.getProductName(),
-                        null));
+                        job.getInfo()));
                 this.factory.log(new JobEvent(
                         job.getId(),
                         job.getProductName(),
@@ -180,10 +182,19 @@ public class EquipMuch<T> extends Equip<T> {
         int delay = job.getStrategy().getMoveOut().getFrom() - this.getFactory().ticksNow();
         if (delay > 0) {
             this.factory.getEnv().process(new MoveOut(job, delay));
+            new ThreadPoolExecutor(delay, delay, delay, null, null);
         }
         else {
             moveOut(job);
         }
+    }
+
+    @Override
+    public void close() {
+        if (this.chNotifier != null) {
+            this.chNotifier.envDown();
+        }
+        super.close();
     }
 
     private Job<T> pull() {
@@ -193,7 +204,7 @@ public class EquipMuch<T> extends Equip<T> {
         }
         if (!jobs.isEmpty()) {
             Job<T> job = this.jobSelector.select(this, jobs);
-            return isLoadable(job) ? job : null;
+            return job != null && isLoadable(job) ? job : null;
         }
         else {
             return null;
@@ -202,7 +213,7 @@ public class EquipMuch<T> extends Equip<T> {
 
     /**
      * May be <b>blocked<b>.
-     * 
+     *
      * @param job The job.
      */
     private void moveIn(Job<T> job) {
@@ -254,7 +265,7 @@ public class EquipMuch<T> extends Equip<T> {
                 EquipEvent.MOVE_OUT,
                 job.getOperation(),
                 job.getProductName(),
-                null));
+                job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -263,6 +274,7 @@ public class EquipMuch<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 0,
+                job.getMoveOutTime() - job.getMoveInTime(),
                 job.getInfo()));
         if (this.running.isEmpty() && this.loaded.isEmpty()) {
             doneProductive();
@@ -273,7 +285,7 @@ public class EquipMuch<T> extends Equip<T> {
                     EquipEvent.IDLE_START,
                     null,
                     null,
-                    null));
+                    new SimInfo().setInt("idled", 0)));
         }
 
         notifyJobs();

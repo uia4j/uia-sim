@@ -33,7 +33,7 @@ public class EquipMuchCa<T> extends Equip<T> {
 
     /**
      * The constructor.
-     * 
+     *
      * @param id The equipment id.
      * @param factory The factory.
      * @param loadPorts The max boxes in the equipment.
@@ -74,6 +74,9 @@ public class EquipMuchCa<T> extends Equip<T> {
         if (loaded >= this.loadPorts) {
             return false;
         }
+        if (!job.getStrategy().acceptEquip(getId())) {
+            return false;
+        }
         if (isReserved(job)) {
             return true;
         }
@@ -91,9 +94,7 @@ public class EquipMuchCa<T> extends Equip<T> {
             if (!isLoadable(job)) {
                 return false;
             }
-            if (!job.load(getId())) {
-                return false;
-            }
+            job.setMoveInEquip(getId());
             removeReserved(job);
             this.loaded.add(job);
         }
@@ -107,7 +108,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 EquipEvent.MOVE_IN,
                 job.getOperation(),
                 job.getProductName(),
-                null));
+                job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -133,7 +134,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                         EquipEvent.BUSY,
                         null,
                         null,
-                        null));
+                        (SimInfo) null));
                 waitingJobs();                  // block
                 continue;
             }
@@ -182,6 +183,14 @@ public class EquipMuchCa<T> extends Equip<T> {
         }
     }
 
+    @Override
+    public void close() {
+        if (this.chNotifier != null) {
+            this.chNotifier.envDown();
+        }
+        super.close();
+    }
+
     private Job<T> pull() {
         ArrayList<Job<T>> jobs = new ArrayList<>();
         for (Op<T> op : this.operations) {
@@ -198,7 +207,7 @@ public class EquipMuchCa<T> extends Equip<T> {
 
     /**
      * May be <b>blocked<b>.
-     * 
+     *
      * @param job The job.
      */
     private void moveIn(Job<T> job) {
@@ -241,7 +250,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 EquipEvent.MOVE_OUT,
                 job.getOperation(),
                 job.getProductName(),
-                null));
+                job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -250,6 +259,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 0,
+                job.getMoveOutTime() - job.getMoveInTime(),
                 job.getInfo()));
         if (this.running.isEmpty() && this.loaded.isEmpty()) {
             doneProductive();
@@ -260,7 +270,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                     EquipEvent.IDLE_START,
                     null,
                     null,
-                    null));
+                    new SimInfo().setInt("idled", 0)));
         }
 
         notifyJobs();
@@ -284,7 +294,7 @@ public class EquipMuchCa<T> extends Equip<T> {
 
     /**
      * May be blocked.
-     * 
+     *
      */
     private void waitingCh(Yield2Way<Event, Object> yield) {
         synchronized (this) {

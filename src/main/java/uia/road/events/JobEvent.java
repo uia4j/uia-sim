@@ -1,5 +1,7 @@
 package uia.road.events;
 
+import java.util.Map;
+
 import uia.road.SimInfo;
 
 public class JobEvent extends Event {
@@ -34,6 +36,8 @@ public class JobEvent extends Event {
 
     private int timeIdled;
 
+    private int timeProcessed;
+
     public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, SimInfo info) {
         super(time, event, info);
         this.id = id;
@@ -41,6 +45,27 @@ public class JobEvent extends Event {
         this.operation = operation;
         this.equipment = equipment;
         this.timeIdled = timeIdled;
+        this.timeProcessed = 0;
+    }
+
+    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, int timeProcessed, SimInfo info) {
+        super(time, event, info);
+        this.id = id;
+        this.product = product;
+        this.operation = operation;
+        this.equipment = equipment;
+        this.timeIdled = timeIdled;
+        this.timeProcessed = timeProcessed;
+    }
+
+    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, int timeProcessed, Map<String, Object> info) {
+        super(time, event, info);
+        this.id = id;
+        this.product = product;
+        this.operation = operation;
+        this.equipment = equipment;
+        this.timeIdled = timeIdled;
+        this.timeProcessed = timeProcessed;
     }
 
     public String getId() {
@@ -81,6 +106,14 @@ public class JobEvent extends Event {
 
     public void setTimeIdled(int timeIdled) {
         this.timeIdled = timeIdled;
+    }
+
+    public int getTimeProcessed() {
+        return this.timeProcessed;
+    }
+
+    public void setTimeProcessed(int timeProcessed) {
+        this.timeProcessed = timeProcessed;
     }
 
     @Override

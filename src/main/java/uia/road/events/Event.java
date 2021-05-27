@@ -18,6 +18,12 @@ public abstract class Event implements Comparable<Event> {
         this.info = info == null ? null : info.toMap();
     }
 
+    protected Event(int time, String event, Map<String, Object> info) {
+        this.time = time;
+        this.event = event;
+        this.info = info;
+    }
+
     public int getTime() {
         return this.time;
     }

@@ -1,10 +1,16 @@
 package uia.road;
 
+import java.util.List;
+
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.road.events.OpEvent;
 
 public interface SimReportLogger {
+
+    public String getCriteria();
+
+    public void setCriteria(String criteria);
 
     public void printlnOpEvents(boolean group);
 
@@ -31,4 +37,10 @@ public interface SimReportLogger {
     public void log(JobEvent e);
 
     public void flush();
+
+    public List<OpEvent> getOpEvents();
+
+    public List<EquipEvent> getEquipEvents();
+
+    public List<JobEvent> getJobEvents();
 }

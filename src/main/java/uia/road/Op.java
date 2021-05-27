@@ -12,7 +12,7 @@ import uia.sim.Processable;
 
 /**
  * The operation in the factory.
- * 
+ *
  * @author Kan
  *
  * @param <T> Reference data of the job.
@@ -33,7 +33,7 @@ public class Op<T> {
 
     /**
      * The constructor.
-     * 
+     *
      * @param id The operation id.
      * @param factory The factory.
      */
@@ -48,7 +48,7 @@ public class Op<T> {
 
     /**
      * Returns the operation id.
-     * 
+     *
      * @return The operation id.
      */
     public String getId() {
@@ -57,7 +57,7 @@ public class Op<T> {
 
     /**
      * Returns the factory.
-     * 
+     *
      * @return The factory.
      */
     public Factory<T> getFactory() {
@@ -66,7 +66,7 @@ public class Op<T> {
 
     /**
      * Returns all equipments the operation serves.
-     * 
+     *
      * @return
      */
     public List<Equip<T>> getEquips() {
@@ -79,7 +79,7 @@ public class Op<T> {
 
     /**
      * Returns the jobs enqueued in this operation.
-     * 
+     *
      * @return The jobs.
      */
     public List<Job<T>> getEnqueued() {
@@ -96,7 +96,7 @@ public class Op<T> {
 
     /**
      * Serves the equipment.
-     * 
+     *
      * @param eq The equipment.
      */
     public void serve(Equip<T> eq) {
@@ -111,7 +111,7 @@ public class Op<T> {
 
     /**
      * Enqueues a box in this operation.
-     * 
+     *
      * @param job The job.
      * @param running If the job can be moved in automatically.
      */
@@ -176,7 +176,7 @@ public class Op<T> {
                     OpEvent.ENQUEUE,
                     job.getProductName(),
                     this.jobs.size(),
-                    null));
+                    job.getInfo()));
         }
         else {
             this.factory.log(new OpEvent(
@@ -185,13 +185,13 @@ public class Op<T> {
                     OpEvent.PUSH,
                     job.getProductName(),
                     this.jobs.size(),
-                    null));
+                    job.getInfo()));
         }
     }
 
     /**
      * Dequeues the jobs from the operation.
-     * 
+     *
      * @param equip The equipment.
      * @param box The box.
      * @return
@@ -207,16 +207,16 @@ public class Op<T> {
                 OpEvent.PULL,
                 job.getProductName(),
                 this.jobs.size(),
-                null));
-        if (this.jobs.isEmpty()) {
-            this.factory.log(new OpEvent(
-                    this.id,
-                    this.factory.ticksNow(),
-                    OpEvent.IDLE,
-                    null,
-                    this.jobs.size(),
-                    null));
-        }
+                job.getInfo()));
+        //if (this.jobs.isEmpty()) {
+        //    this.factory.log(new OpEvent(
+        //            this.id,
+        //            this.factory.ticksNow(),
+        //            OpEvent.IDLE,
+        //            null,
+        //            this.jobs.size(),
+        //            null));
+        //}
     }
 
     @Override
@@ -251,21 +251,21 @@ public class Op<T> {
                         OpEvent.PUSH,
                         job.getProductName(),
                         this.jobs.size(),
-                        null));
+                        job.getInfo()));
             }
             else {
                 i++;
             }
         }
-        if (this.jobs.isEmpty()) {
-            this.factory.log(new OpEvent(
-                    this.id,
-                    this.factory.ticksNow(),
-                    OpEvent.IDLE,
-                    null,
-                    this.jobs.size(),
-                    null));
-        }
+        //if (this.jobs.isEmpty()) {
+        //    this.factory.log(new OpEvent(
+        //            this.id,
+        //            this.factory.ticksNow(),
+        //            OpEvent.IDLE,
+        //            null,
+        //            this.jobs.size(),
+        //            null));
+        //}
     }
 
     private synchronized boolean push(Job<T> job) {
@@ -294,7 +294,7 @@ public class Op<T> {
 
     /**
      * A Delay enqueue process.
-     * 
+     *
      * @author Kan
      *
      */
@@ -306,7 +306,7 @@ public class Op<T> {
 
         /**
          * The constructor.
-         * 
+         *
          * @param box The box.
          * @param delay The delay time.
          */

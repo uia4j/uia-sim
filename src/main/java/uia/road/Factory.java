@@ -16,13 +16,13 @@ import uia.sim.Env;
 
 /**
  * The factory.<br>
- * 
+ *
  * <p>
  * The default values:<br>
  * 1. pathTime is 0.<br>
  * 2. timeFactor is 1000.<br>
  * </p>
- *  
+ *
  * @author Kan
  *
  * @param <T> Reference data of the job.
@@ -73,6 +73,7 @@ public class Factory<T> {
 
     public Factory(int defaultPathTime) {
         this.env = new Env();
+        this.env.setCheckPoint(1000);
         this.operations = new TreeMap<>();
         this.equips = new TreeMap<>();
         this.logger = new SimReportTextLogger(this);
@@ -126,7 +127,7 @@ public class Factory<T> {
 
     /**
      * Sets the logger.
-     * 
+     *
      * @param logger The logger.
      */
     public void setLogger(SimReportLogger logger) {
@@ -135,7 +136,7 @@ public class Factory<T> {
 
     /**
      * Returns the report logger.
-     * 
+     *
      * @return The report logger.
      */
     public SimReportLogger getLogger() {
@@ -168,7 +169,7 @@ public class Factory<T> {
 
     /**
      * Logs a an operation event.
-     * 
+     *
      * @param e An operation event.
      */
     public void log(OpEvent e) {
@@ -177,7 +178,7 @@ public class Factory<T> {
 
     /**
      * Logs a equipment event.
-     * 
+     *
      * @param e An equipment event.
      */
     public void log(EquipEvent e) {
@@ -186,7 +187,7 @@ public class Factory<T> {
 
     /**
      * Logs a job event.
-     * 
+     *
      * @param e A job event.
      */
     public void log(JobEvent e) {
@@ -195,7 +196,7 @@ public class Factory<T> {
 
     /**
      * Returns an operation in the factory.
-     * 
+     *
      * @param id The operation id.
      * @return The operation.
      */
@@ -215,7 +216,7 @@ public class Factory<T> {
 
     /**
      * Returns an equipment in the factory.
-     * 
+     *
      * @param id The equipment id.
      * @return The equipment.
      */
@@ -227,7 +228,7 @@ public class Factory<T> {
 
     /**
      * Creates an operation and add into this factory.
-     * 
+     *
      * @param id The operation id.
      * @return The operation.
      */
@@ -244,7 +245,7 @@ public class Factory<T> {
 
     /**
      * Adds an operation in the factory.
-     * 
+     *
      * @param op The operation.
      * @return True if the operation is added into this factory.
      */
@@ -261,7 +262,7 @@ public class Factory<T> {
 
     /**
      * Creates an equipment and add into this factory.
-     * 
+     *
      * @param id The equipment id.
      * @param loadPorts Number of load port.
      * @param chCount Number of the channel.
@@ -280,7 +281,7 @@ public class Factory<T> {
 
     /**
      * Adds an equipment in the factory.
-     * 
+     *
      * @param equip The equipment.
      * @return True if the equipment is added into this factory.
      */
@@ -297,7 +298,7 @@ public class Factory<T> {
 
     /**
      * Prepares a job to its operation.
-     * 
+     *
      * @param job The job.
      */
     public void prepare(Job<T> job) {
@@ -314,7 +315,7 @@ public class Factory<T> {
 
     /**
      * Dispatches a job to its operation and run.
-     * 
+     *
      * @param job The job.
      */
     public void dispatch(Job<T> job) {
@@ -345,7 +346,7 @@ public class Factory<T> {
 
     /**
      * Dispatches the job to next operation.
-     * 
+     *
      * @param doneJ The job
      */
     public void dispatchToNext(Job<T> doneJ) {
@@ -393,7 +394,7 @@ public class Factory<T> {
 
     /**
      * Starts the simulation.
-     * 
+     *
      * @param until The end time.
      * @param healthCheck The cycle time used to check if the factory is idle.
      * @return The stop time.
@@ -440,7 +441,7 @@ public class Factory<T> {
 
     /**
      * Returns the current ticks of the simulation.
-     * 
+     *
      * @return The current ticks.
      */
     public int ticksNow() {
@@ -449,7 +450,7 @@ public class Factory<T> {
 
     /**
      * Returns the ticks of a specific time.
-     * 
+     *
      * @return The ticks.
      */
     public int ticks(Date time) {
@@ -458,7 +459,7 @@ public class Factory<T> {
 
     /**
      * Returns the current time based on zero time.
-     * 
+     *
      * @return The current time.
      */
     public Date nowTime() {

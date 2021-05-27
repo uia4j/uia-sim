@@ -1,5 +1,7 @@
 package uia.road.events;
 
+import java.util.Map;
+
 import uia.road.SimInfo;
 
 public class OpEvent extends Event {
@@ -21,6 +23,13 @@ public class OpEvent extends Event {
     private int queued;
 
     public OpEvent(String operation, int time, String event, String job, int queued, SimInfo info) {
+        super(time, event, info);
+        this.operation = operation;
+        this.job = job;
+        this.queued = queued;
+    }
+
+    public OpEvent(String operation, int time, String event, String job, int queued, Map<String, Object> info) {
         super(time, event, info);
         this.operation = operation;
         this.job = job;

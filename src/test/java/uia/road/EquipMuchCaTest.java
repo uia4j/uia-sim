@@ -11,8 +11,8 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
     @Test
     public void test1() throws Exception {
         /**
-         * o1 
-         * e1   
+         * o1
+         * e1
          */
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
@@ -26,9 +26,9 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Op<Integer> o1 = factory.tryCreateOperation("o1");
         o1.serve(e1);
 
-        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 90);
+        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 90);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 80);
+        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, 80);
         p2.setQty(7);
 
         factory.prepare(p1);
@@ -43,8 +43,8 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
     @Test
     public void test2() throws Exception {
         /**
-         * o1 
-         * e1   
+         * o1
+         * e1
          */
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
@@ -58,15 +58,17 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Op<Integer> o1 = factory.tryCreateOperation("o1");
         o1.serve(e1);
 
-        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 100);
+        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 100);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 100);
+        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, 100);
         p2.setQty(7);
 
         factory.prepare(p1);
         factory.prepare(p2);
 
         factory.run(2000);
+        factory.getLogger().printlnSimpleEquipEvents();
+        factory.getLogger().printlnSimpleJobEvents();
         Assert.assertEquals(1, e1.getLoaded());
 
         factory.getLogger().printlnSimpleEquipEvents();

@@ -1,8 +1,8 @@
 package uia.road;
 
 /**
- * 
- * 
+ *
+ *
  * @author Kan
  *
  * @param <T> Reference data of the job.
@@ -45,15 +45,20 @@ public class Job<T> {
 
     private boolean engineering;
 
+    private int priority;
+
+    private String priorityInfo;
+
     /**
      * Constructor.
-     * 
+     *
      * @param id The id.
      * @param productName The product name.
      * @param operation The operation.
+     * @param priority The priority.
      * @param data The reference data.
      */
-    public Job(String id, String productName, String operation, T data) {
+    public Job(String id, String productName, String operation, int priority, T data) {
         this.id = id;
         this.productName = productName;
         this.operation = operation;
@@ -62,11 +67,13 @@ public class Job<T> {
         this.strategy = new Strategy();
         this.qty = 1;
         this.engineering = false;
+        this.priority = 1;
+        this.priorityInfo = "OK";
     }
 
     /**
      * Constructor.
-     * 
+     *
      * @param job The job
      */
     public Job(Job<T> job) {
@@ -85,6 +92,8 @@ public class Job<T> {
         this.qty = job.qty;
         this.processingQty = job.processingQty;
         this.processedQty = job.processedQty;
+        this.priority = job.priority;
+        this.priorityInfo = job.priorityInfo;
     }
 
     public String getId() {
@@ -93,7 +102,7 @@ public class Job<T> {
 
     /**
      * Returns the product name.
-     * 
+     *
      * @return The product name.
      */
     public String getProductName() {
@@ -102,7 +111,7 @@ public class Job<T> {
 
     /**
      * Returns the operation.
-     *  
+     *
      * @return The operation id.
      */
     public String getOperation() {
@@ -111,7 +120,7 @@ public class Job<T> {
 
     /**
      * Return the reference data.
-     * 
+     *
      * @return The reference data.
      */
     public T getData() {
@@ -128,7 +137,7 @@ public class Job<T> {
 
     /**
      * Returns the extra information. The information will be logged.
-     * 
+     *
      * @return The extra information.
      */
     public SimInfo getInfo() {
@@ -173,7 +182,7 @@ public class Job<T> {
 
     /**
      * Returns the time dispatching to the operation.
-     * 
+     *
      * @return The time.
      */
     public int getDispatchingTime() {
@@ -186,7 +195,7 @@ public class Job<T> {
 
     /**
      * Returns the arrival time at the operation.
-     * 
+     *
      * @return The time.
      */
     public int getDispatchedTime() {
@@ -199,6 +208,10 @@ public class Job<T> {
 
     public String getMoveInEquip() {
         return this.moveInEquip;
+    }
+
+    public void setMoveInEquip(String moveInEquip) {
+        this.moveInEquip = moveInEquip;
     }
 
     public int getMoveInTime() {
@@ -241,6 +254,22 @@ public class Job<T> {
         return this.processedQty;
     }
 
+    public int getPriority() {
+        return this.priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public String getPriorityInfo() {
+        return this.priorityInfo;
+    }
+
+    public void setPriorityInfo(String priorityInfo) {
+        this.priorityInfo = priorityInfo;
+    }
+
     public synchronized void processing(int qty) {
         this.processingQty += qty;
         if (this.processedQty >= this.qty) {
@@ -257,14 +286,6 @@ public class Job<T> {
 
     public boolean isLoaded() {
         return this.moveInEquip != null;
-    }
-
-    public synchronized boolean load(String moveInEquip) {
-        if (this.moveInEquip != null && !this.moveInEquip.equals(moveInEquip)) {
-            return false;
-        }
-        this.moveInEquip = moveInEquip;
-        return true;
     }
 
     public Job<T> findNextAt(String operation) {
@@ -335,6 +356,8 @@ public class Job<T> {
 
     public class Strategy {
 
+        private String assignedEquip;
+
         private final TimeStrategy moveIn;
 
         private final TimeStrategy moveOut;
@@ -342,6 +365,18 @@ public class Job<T> {
         public Strategy() {
             this.moveIn = new TimeStrategy();
             this.moveOut = new TimeStrategy();
+        }
+
+        public String getAssignedEquip() {
+            return this.assignedEquip;
+        }
+
+        public void setAssignedEquip(String assignedEquip) {
+            this.assignedEquip = assignedEquip;
+        }
+
+        public boolean acceptEquip(String equipId) {
+            return this.assignedEquip == null || this.assignedEquip.equals(equipId);
         }
 
         public TimeStrategy getMoveIn() {

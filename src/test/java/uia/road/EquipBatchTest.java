@@ -7,8 +7,8 @@ public class EquipBatchTest {
     @Test
     public void test1() throws Exception {
         /**
-         * o1 
-         * e1   
+         * o1
+         * e1
          */
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
@@ -20,13 +20,13 @@ public class EquipBatchTest {
         o1.serve(e1);
 
         int time = 100;
-        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), time);
+        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, time);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), time);
+        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), 1, time);
         p2.setQty(7);
-        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), time);
+        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), 1, time);
         p3.setQty(15);
-        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), time);
+        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), 1, time);
         p4.setQty(1);
 
         factory.prepare(p1);
@@ -42,8 +42,8 @@ public class EquipBatchTest {
     @Test
     public void test2() throws Exception {
         /**
-         * o1 
-         * e1   
+         * o1
+         * e1
          */
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
@@ -55,15 +55,15 @@ public class EquipBatchTest {
         o1.serve(e1);
 
         int time = 100;
-        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), time);
+        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, time);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), time);
+        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), 1, time);
         p2.setQty(7);
-        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), time);
+        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), 1, time);
         p3.setQty(15);
-        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), time);
+        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), 1, time);
         p4.setQty(1);
-        Job<Integer> p5 = new Job<>("p5", "p5", o1.getId(), time);
+        Job<Integer> p5 = new Job<>("p5", "p5", o1.getId(), 1, time);
         p5.setQty(5);
 
         factory.prepare(p1);
@@ -74,12 +74,12 @@ public class EquipBatchTest {
 
         factory.getEnv().process("", y -> {
             y.call(factory.getEnv().timeout(110));
-            Job<Integer> p6 = new Job<>("p6", "p6", o1.getId(), time);
+            Job<Integer> p6 = new Job<>("p6", "p6", o1.getId(), 1, time);
             p6.setQty(5);
             factory.dispatch(p6);
 
             y.call(factory.getEnv().timeout(60));
-            Job<Integer> p7 = new Job<>("p7", "p7", o1.getId(), time);
+            Job<Integer> p7 = new Job<>("p7", "p7", o1.getId(), 1, time);
             p5.setQty(7);
             factory.dispatch(p7);
 
@@ -93,8 +93,8 @@ public class EquipBatchTest {
     @Test
     public void test3() throws Exception {
         /**
-         * o1 
-         * e1   
+         * o1
+         * e1
          */
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
@@ -106,15 +106,15 @@ public class EquipBatchTest {
         o1.serve(e1);
 
         int time = 100;
-        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), time);
+        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, time);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), time);
+        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), 1, time);
         p2.setQty(7);
-        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), time);
+        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), 1, time);
         p3.setQty(15);
-        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), time);
+        Job<Integer> p4 = new Job<>("p4", "p4", o1.getId(), 1, time);
         p4.setQty(1);
-        Job<Integer> p5 = new Job<>("p5", "p5", o1.getId(), time);
+        Job<Integer> p5 = new Job<>("p5", "p5", o1.getId(), 1, time);
         p4.setQty(1);
 
         e1.addReserved(p5);

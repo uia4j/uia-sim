@@ -15,13 +15,15 @@ import uia.road.events.OpEvent;
 
 /**
  * Simulation report.
- * 
+ *
  * @author Kan
  *
  */
 public class SimReportTextLogger implements SimReportLogger {
 
     protected Gson gson;
+
+    protected String criteria;
 
     protected final List<OpEvent> opEvents;
 
@@ -37,6 +39,14 @@ public class SimReportTextLogger implements SimReportLogger {
         this.equipEvents = new Vector<>();
         this.jobEvents = new Vector<>();
         this.factory = factory;
+    }
+
+    public String getCriteria() {
+        return this.criteria;
+    }
+
+    public void setCriteria(String criteria) {
+        this.criteria = criteria;
     }
 
     @Override
@@ -184,6 +194,21 @@ public class SimReportTextLogger implements SimReportLogger {
 
     @Override
     public void flush() {
+    }
+
+    @Override
+    public List<OpEvent> getOpEvents() {
+        return this.opEvents;
+    }
+
+    @Override
+    public List<EquipEvent> getEquipEvents() {
+        return this.equipEvents;
+    }
+
+    @Override
+    public List<JobEvent> getJobEvents() {
+        return this.jobEvents;
     }
 
     private void println(Event l) {

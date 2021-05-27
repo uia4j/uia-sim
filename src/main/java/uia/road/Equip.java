@@ -11,7 +11,7 @@ import uia.sim.Processable;
 
 /**
  * The abstract equipment.
- * 
+ *
  * @author Kan
  *
  * @param <T> Reference data of the job.
@@ -46,7 +46,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * The constructor.
-     * 
+     *
      * @param id The equipment id.
      * @param factory The factory.
      */
@@ -63,7 +63,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Returns the factory.
-     * 
+     *
      * @return The factory.
      */
     public Factory<T> getFactory() {
@@ -72,7 +72,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Returns the operations the equipment handles.
-     * 
+     *
      * @return The operations.
      */
     public List<Op<T>> getOperations() {
@@ -141,7 +141,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Returns the job selector.
-     * 
+     *
      * @return The job selector.
      */
     public JobSelector<T> getJobSelector() {
@@ -154,7 +154,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Sets the job selector.
-     * 
+     *
      * @param jobSelector The job selector.
      */
     public void setJobSelector(JobSelector<T> jobSelector) {
@@ -177,7 +177,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Serves the operation.
-     * 
+     *
      * @param operation The operations.
      */
     public void serve(Op<T> operation) {
@@ -192,7 +192,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Tests if the equipment is loadable.
-     * 
+     *
      * @param job A job.
      * @return True if the equipment is loadable.
      */
@@ -200,19 +200,22 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     /**
      * Tests if the equipment is idle.
-     * 
+     *
      * @return True if the equipment is idle.
      */
     public abstract boolean isIdle();
 
     /**
      * Loads a job into the equipment.
-     * 
+     *
      * @param job A job.
      */
     public abstract boolean load(Job<T> job);
 
     public void close() {
+        if (this.jobNotifier != null) {
+            this.jobNotifier.envDown();
+        }
         if (this.isIdle()) {
             doneStandby();
         }

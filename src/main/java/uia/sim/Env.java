@@ -67,6 +67,8 @@ public class Env {
 
     private boolean parallel;
 
+    private int checkPoint;
+
     static {
         UUID.randomUUID();
     }
@@ -106,9 +108,11 @@ public class Env {
         this.id = id;
         this.jobs = new PriorityBlockingQueue<>();
         this.executor = Executors.newFixedThreadPool(1);
+        this.listener = new EnvListenerAdapter();
         this.now = Math.max(0, initialTime);
         this.initialTime = this.now;
         this.parallel = false;
+        this.checkPoint = 5000;
     }
 
     /**
@@ -118,6 +122,14 @@ public class Env {
      */
     public String getId() {
         return this.id;
+    }
+
+    public int getCheckPoint() {
+        return this.checkPoint;
+    }
+
+    public void setCheckPoint(int checkPoint) {
+        this.checkPoint = Math.max(checkPoint, 100);
     }
 
     public boolean isParallel() {
@@ -143,7 +155,7 @@ public class Env {
      * @param listener The environment listener.
      */
     public void setListener(EnvListener listener) {
-        this.listener = listener;
+        this.listener = listener == null ? new EnvListenerAdapter() : listener;
     }
 
     /**
@@ -377,25 +389,27 @@ public class Env {
                 ? this::stepParallel
                 : this::stepOne;
         try {
-            long check = 5000;
+            long check = this.checkPoint;
             while (!this.jobs.isEmpty()) {
                 c += step.get();
                 if (c >= check) {
-                    System.out.println(String.format("run: %s steps", c));
-                    check += 5000;
+                    raiseRunning(this.now, c + " steps");
+                    check += this.checkPoint;
                 }
             }
-            System.out.println(String.format("run: %s steps", c));
+            raiseDone(this.now, c + " steps");
             logger.debug("==== end ====");
         }
         catch (Throwable ex) {
-            System.out.println(String.format("run: %s steps, throw %s", c, ex.getMessage()));
+            raiseDone(this.now, c + " steps, throw " + ex.getMessage());
             logger.debug(String.format("==== end(%s) ====", ex.getMessage()));
         }
 
         while (!this.jobs.isEmpty()) {
             this.jobs.poll().event.envDown();
         }
+
+        this.executor.shutdownNow();
         return this.now;
     }
 
@@ -419,19 +433,19 @@ public class Env {
                 ? this::stepParallel
                 : this::stepOne;
         try {
-            long check = 5000;
+            long check = this.checkPoint;
             while (this.now < until && !this.jobs.isEmpty()) {
                 c += step.get();
                 if (c >= check) {
-                    System.out.println(String.format("run: %s steps", c));
-                    check += 5000;
+                    raiseRunning(this.now, c + " steps");
+                    check += this.checkPoint;
                 }
             }
-            System.out.println(String.format("run: %s steps", c));
+            raiseDone(this.now, c + " steps");
             logger.info("==== end ====");
         }
         catch (Throwable ex) {
-            System.out.println(String.format("run: %s steps, throw %s", c, ex.getMessage()));
+            raiseDone(this.now, c + " steps, throw " + ex.getMessage());
             logger.debug(String.format("==== end(%s) ====", ex.getMessage()));
         }
 
@@ -446,6 +460,8 @@ public class Env {
                 ex2.printStackTrace();
             }
         }
+
+        this.executor.shutdownNow();
         return this.now;
     }
 
@@ -456,35 +472,8 @@ public class Env {
     }
 
     /**
-     * Raises a 'Process Done' information to the listener.
-     *
-     * @param time The time.
-     * @param processId The process id.
-     * @param event The event.
-     */
-    public void raiseProcessDone(int time, String processId, Event event) {
-        if (this.listener != null) {
-            this.listener.stepDone(time, processId, event.forLog());
-            this.executor.submit(() -> this.listener.stepDone(time, processId, event.forLog()));
-        }
-    }
-
-    /**
-     * Raises a 'Process Failed' information to the listener.
-     *
-     * @param time The time.
-     * @param processId The process id.
-     * @param event The event.
-     */
-    public void raiseProcessFailed(int time, String processId, Event event) {
-        if (this.listener != null) {
-            this.executor.submit(() -> this.listener.stepFailed(time, processId, event.forLog()));
-        }
-    }
-
-    /**
      * Checks the first job.
-     * 
+     *
      * @return The first job.
      */
     public Job seeFirstJob() {
@@ -500,6 +489,17 @@ public class Env {
     protected int step() throws RuntimeException {
         return stepOne();
         // return stepParallel();
+    }
+
+    /**
+     * Generates next sequence number.
+     *
+     * @return The sequence number.
+     */
+    protected int genSeq() {
+        synchronized (this.jobs) {
+            return ++this.seqNo;
+        }
     }
 
     private int stepOne() throws RuntimeException {
@@ -566,15 +566,12 @@ public class Env {
         return jobs.size();
     }
 
-    /**
-     * Generates next sequence number.
-     *
-     * @return The sequence number.
-     */
-    protected int genSeq() {
-        synchronized (this.jobs) {
-            return ++this.seqNo;
-        }
+    private void raiseRunning(int time, String message) {
+        this.executor.submit(() -> this.listener.running(time, message));
+    }
+
+    private void raiseDone(int time, String message) {
+        this.executor.submit(() -> this.listener.done(time, message));
     }
 
     private void stopSim(Event event) {

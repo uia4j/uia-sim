@@ -172,7 +172,7 @@ public class Process extends Event {
         while (next) {
             if (!event.isOk()) {
                 event.defused();
-                this.env.raiseProcessFailed(this.env.getNow(), getId(), event);
+                // this.env.raiseProcessFailed(this.env.getNow(), getId(), event);
 
                 // 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
                 if (event.getValue() == null) {
@@ -187,7 +187,7 @@ public class Process extends Event {
                 }
             }
             else {
-                this.env.raiseProcessDone(this.env.getNow(), getId(), event);
+                // this.env.raiseProcessDone(this.env.getNow(), getId(), event);
 
                 // 回傳  event.value 給前一次的 yield，並檢查是否有新的 yield。
                 next = this.taskGen.next(event.getValue());
