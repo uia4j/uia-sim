@@ -38,7 +38,7 @@ public class Channel<T> {
         this.id = id;
         this.equip = equip;
         this.info = new SimInfo();
-        this.batchSize = 1;
+        this.batchSize = 0;
     }
 
     public int getBatchSize() {
@@ -46,7 +46,7 @@ public class Channel<T> {
     }
 
     public void setBatchSize(int batchSize) {
-        this.batchSize = Math.max(1, batchSize);
+        this.batchSize = Math.max(0, batchSize);
     }
 
     public int getCompensationTime() {
@@ -83,7 +83,7 @@ public class Channel<T> {
 
         this.processing = true;
         this.job = job;
-        this.job.processing(this.batchSize);
+        this.job.processing(this.batchSize <= 0 ? job.getQty() : this.batchSize);
         this.equip.getFactory().getEnv().process(
                 job.getProductName() + "_" + this.id + "_process",
                 this::run);

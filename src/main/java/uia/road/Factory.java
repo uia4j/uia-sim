@@ -77,6 +77,7 @@ public class Factory<T> {
         this.operations = new TreeMap<>();
         this.equips = new TreeMap<>();
         this.logger = new SimReportTextLogger(this);
+        this.processTimeCalculator = new ProcessTimeCalculator.Simple<T>(300);
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
         this.timeType = TimeType.SEC;
         this.zeroTime = new Date();

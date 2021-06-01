@@ -173,7 +173,7 @@ public class EquipMuch<T> extends Equip<T> {
                 this.chNotifier = null;
             }
 
-            job.processed(1);
+            job.processed(channel.getBatchSize() <= 0 ? job.getQty() : channel.getBatchSize());
             if (!job.isFinished()) {
                 return;
             }

@@ -31,7 +31,9 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
 
         // p1 (o1->02)
         Job<Integer> p1o1 = new Job<>("1", "p1", o1.getId(), 1, 100);
+        p1o1.setQty(3);
         Job<Integer> p1o2 = new Job<>("2", "p1", o2.getId(), 1, 50);
+        p1o2.setQty(3);
         p1o1.setNext(p1o2);
 
         // p2 (o1->02)
