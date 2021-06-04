@@ -30,6 +30,8 @@ public class EquipEvent extends Event {
 
     private String job;
 
+    private int qty;
+
     public EquipEvent(String equip, String ch, int time, String event, String operation, String job, SimInfo info) {
         super(time, event, info);
         this.equip = equip;
@@ -38,12 +40,22 @@ public class EquipEvent extends Event {
         this.job = job;
     }
 
-    public EquipEvent(String equip, String ch, int time, String event, String operation, String job, Map<String, Object> info) {
+    public EquipEvent(String equip, String ch, int time, String event, String operation, String job, int qty, SimInfo info) {
         super(time, event, info);
         this.equip = equip;
         this.ch = ch;
         this.operation = operation;
         this.job = job;
+        this.qty = qty;
+    }
+
+    public EquipEvent(String equip, String ch, int time, String event, String operation, String job, int qty, Map<String, Object> info) {
+        super(time, event, info);
+        this.equip = equip;
+        this.ch = ch;
+        this.operation = operation;
+        this.job = job;
+        this.qty = qty;
     }
 
     public String getEquip() {
@@ -76,6 +88,14 @@ public class EquipEvent extends Event {
 
     public void setJob(String job) {
         this.job = job;
+    }
+
+    public int getQty() {
+        return this.qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
     }
 
     @Override

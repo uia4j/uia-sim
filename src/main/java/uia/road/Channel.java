@@ -28,6 +28,8 @@ public class Channel<T> {
 
     private int compensationTime;
 
+    private int runningQty;
+
     /**
      * The constructor.
      *
@@ -83,7 +85,7 @@ public class Channel<T> {
 
         this.processing = true;
         this.job = job;
-        this.job.processing(this.batchSize <= 0 ? job.getQty() : this.batchSize);
+        this.runningQty = this.job.processing(this.batchSize <= 0 ? job.getQty() : this.batchSize);
         this.equip.getFactory().getEnv().process(
                 job.getProductName() + "_" + this.id + "_process",
                 this::run);
@@ -91,6 +93,8 @@ public class Channel<T> {
     }
 
     protected final void run(Yield2Way<Event, Object> yield) {
+        int qty = this.runningQty;
+
         this.job.updateInfo();
         Factory<T> factory = this.equip.getFactory();
 
@@ -109,12 +113,14 @@ public class Channel<T> {
                 EquipEvent.PROCESS_START,
                 this.job.getOperation(),
                 this.job.getProductName(),
+                qty,
                 this.job.getInfo()));
         factory.log(new JobEvent(
                 this.job.getId(),
                 this.job.getProductName(),
                 now1,
                 JobEvent.PROCESS_START,
+                qty,
                 this.job.getOperation(),
                 this.id,
                 now1 - this.job.getDispatchedTime(),
@@ -134,12 +140,14 @@ public class Channel<T> {
                 EquipEvent.PROCESS_END,
                 this.job.getOperation(),
                 this.job.getProductName(),
+                qty,
                 this.job.getInfo()));
         factory.log(new JobEvent(
                 this.job.getId(),
                 this.job.getProductName(),
                 now2,
                 JobEvent.PROCESS_END,
+                qty,
                 this.job.getOperation(),
                 this.id,
                 0,

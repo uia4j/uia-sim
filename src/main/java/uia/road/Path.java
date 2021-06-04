@@ -4,7 +4,7 @@ import uia.road.events.JobEvent;
 import uia.sim.Processable;
 
 /**
- * 
+ *
  * @author Kan
  *
  * @param <T> Reference data of the job.
@@ -33,6 +33,7 @@ public class Path<T> extends Processable {
                 this.job.getProductName(),
                 now,
                 JobEvent.DISPATCHING,
+                this.job.getQty(),
                 this.job.getOperation(),
                 null,
                 0,

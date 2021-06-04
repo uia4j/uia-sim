@@ -270,11 +270,17 @@ public class Job<T> {
         this.priorityInfo = priorityInfo;
     }
 
-    public synchronized void processing(int qty) {
+    public synchronized int processing(int qty) {
+        int r = this.qty - this.processingQty;
         this.processingQty += qty;
         if (this.processedQty >= this.qty) {
             this.processedQty = this.qty;
+            return r;
         }
+        else {
+            return qty;
+        }
+
     }
 
     public synchronized void processed(int qty) {

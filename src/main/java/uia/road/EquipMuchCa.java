@@ -39,8 +39,8 @@ public class EquipMuchCa<T> extends Equip<T> {
      * @param loadPorts The max boxes in the equipment.
      * @param chCount The channel number.
      */
-    public EquipMuchCa(String id, Factory<T> factory, int loadPorts, int chCount) {
-        super(id, factory);
+    public EquipMuchCa(String id, Factory<T> factory, int loadPorts, int chCount, boolean enabled) {
+        super(id, factory, enabled);
         this.loadPorts = loadPorts <= 0 ? Integer.MAX_VALUE : loadPorts;
         this.chs = new ArrayList<>();
         for (int i = 1, c = Math.max(1, chCount); i <= c; i++) {
@@ -69,6 +69,11 @@ public class EquipMuchCa<T> extends Equip<T> {
     }
 
     @Override
+    public int getLoadable() {
+        return this.loadPorts - this.loaded.size() - this.running.size() - getReservedNumber();
+    }
+
+    @Override
     public boolean isLoadable(Job<T> job) {
         int loaded = this.loaded.size() + this.running.size();
         if (loaded >= this.loadPorts) {
@@ -91,7 +96,7 @@ public class EquipMuchCa<T> extends Equip<T> {
     @Override
     public boolean load(Job<T> job) {
         synchronized (this) {
-            if (!isLoadable(job)) {
+            if (!isEnabled() || !isLoadable(job)) {
                 return false;
             }
             job.setMoveInEquip(getId());
@@ -108,12 +113,14 @@ public class EquipMuchCa<T> extends Equip<T> {
                 EquipEvent.MOVE_IN,
                 job.getOperation(),
                 job.getProductName(),
+                job.getQty(),
                 job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
                 JobEvent.MOVE_IN,
+                job.getQty(),
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
@@ -256,6 +263,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getProductName(),
                 now,
                 JobEvent.MOVE_OUT,
+                job.getQty(),
                 job.getOperation(),
                 getId(),
                 0,
@@ -285,6 +293,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                     job.getProductName(),
                     this.factory.ticksNow(),
                     JobEvent.HOLD,
+                    job.getQty(),
                     job.getOperation(),
                     getId(),
                     0,

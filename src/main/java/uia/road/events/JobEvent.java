@@ -38,7 +38,9 @@ public class JobEvent extends Event {
 
     private int timeProcessed;
 
-    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, SimInfo info) {
+    private int qty;
+
+    public JobEvent(String id, String product, int time, String event, int qty, String operation, String equipment, int timeIdled, SimInfo info) {
         super(time, event, info);
         this.id = id;
         this.product = product;
@@ -46,9 +48,10 @@ public class JobEvent extends Event {
         this.equipment = equipment;
         this.timeIdled = timeIdled;
         this.timeProcessed = 0;
+        this.qty = qty;
     }
 
-    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, int timeProcessed, SimInfo info) {
+    public JobEvent(String id, String product, int time, String event, int qty, String operation, String equipment, int timeIdled, int timeProcessed, SimInfo info) {
         super(time, event, info);
         this.id = id;
         this.product = product;
@@ -56,9 +59,10 @@ public class JobEvent extends Event {
         this.equipment = equipment;
         this.timeIdled = timeIdled;
         this.timeProcessed = timeProcessed;
+        this.qty = qty;
     }
 
-    public JobEvent(String id, String product, int time, String event, String operation, String equipment, int timeIdled, int timeProcessed, Map<String, Object> info) {
+    public JobEvent(String id, String product, int time, String event, int qty, String operation, String equipment, int timeIdled, int timeProcessed, Map<String, Object> info) {
         super(time, event, info);
         this.id = id;
         this.product = product;
@@ -66,6 +70,7 @@ public class JobEvent extends Event {
         this.equipment = equipment;
         this.timeIdled = timeIdled;
         this.timeProcessed = timeProcessed;
+        this.qty = qty;
     }
 
     public String getId() {
@@ -114,6 +119,14 @@ public class JobEvent extends Event {
 
     public void setTimeProcessed(int timeProcessed) {
         this.timeProcessed = timeProcessed;
+    }
+
+    public int getQty() {
+        return this.qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
     }
 
     @Override

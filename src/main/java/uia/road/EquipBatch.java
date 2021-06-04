@@ -39,8 +39,8 @@ public class EquipBatch<T> extends Equip<T> {
      * @param factory The factory.
      * @param numCh The number of channels.
      */
-    public EquipBatch(String id, Factory<T> factory, int numCh) {
-        super(id, factory);
+    public EquipBatch(String id, Factory<T> factory, int numCh, boolean enabled) {
+        super(id, factory, enabled);
         this.chs = new ArrayList<>();
         for (int i = 1; i <= numCh; i++) {
             Channel<T> ch = new Channel<>(id + "_ch" + i, this);
@@ -50,6 +50,11 @@ public class EquipBatch<T> extends Equip<T> {
         this.running = new Vector<>();
         this.chSelector = new ChannelSelector.Any<>();
         this.moveInNow = false;
+    }
+
+    @Override
+    public int getLoadable() {
+        return this.chs.size() - this.loaded.size() - getReservedNumber();
     }
 
     @Override
@@ -74,7 +79,7 @@ public class EquipBatch<T> extends Equip<T> {
     @Override
     public boolean load(Job<T> job) {
         synchronized (this) {
-            if (!isLoadable(job)) {
+            if (!isEnabled() || !isLoadable(job)) {
                 return false;
             }
             job.setMoveInEquip(getId());
@@ -91,12 +96,14 @@ public class EquipBatch<T> extends Equip<T> {
                 EquipEvent.MOVE_IN,
                 job.getOperation(),
                 job.getProductName(),
+                job.getQty(),
                 job.getInfo()));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
                 JobEvent.MOVE_IN,
+                job.getQty(),
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
@@ -146,12 +153,14 @@ public class EquipBatch<T> extends Equip<T> {
                         EquipEvent.MOVE_IN,
                         job.getOperation(),
                         job.getProductName(),
+                        job.getQty(),
                         job.getInfo()));
                 this.factory.log(new JobEvent(
                         job.getId(),
                         job.getProductName(),
                         this.factory.ticksNow(),
                         JobEvent.MOVE_IN,
+                        job.getQty(),
                         job.getOperation(),
                         getId(),
                         this.factory.ticksNow() - job.getDispatchedTime(),
@@ -250,6 +259,7 @@ public class EquipBatch<T> extends Equip<T> {
                 job.getProductName(),
                 now,
                 JobEvent.MOVE_OUT,
+                job.getQty(),
                 job.getOperation(),
                 getId(),
                 0,
@@ -266,6 +276,7 @@ public class EquipBatch<T> extends Equip<T> {
                     job.getProductName(),
                     this.factory.ticksNow(),
                     JobEvent.HOLD,
+                    job.getQty(),
                     job.getOperation(),
                     getId(),
                     0,

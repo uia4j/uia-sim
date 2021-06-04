@@ -13,7 +13,7 @@ public class EquipBatchTest {
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
-        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4);
+        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);
 
         Op<Integer> o1 = factory.tryCreateOperation("o1");
@@ -48,7 +48,7 @@ public class EquipBatchTest {
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
-        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4);
+        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);
 
         Op<Integer> o1 = factory.tryCreateOperation("o1");
@@ -99,7 +99,7 @@ public class EquipBatchTest {
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
-        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4);
+        EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);
 
         Op<Integer> o1 = factory.tryCreateOperation("o1");

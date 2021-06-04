@@ -270,10 +270,23 @@ public class Factory<T> {
      * @return The equipment.
      */
     public Equip<T> tryCreateEquip(String id, int loadPorts, int chCount) {
+        return tryCreateEquip(id, loadPorts, chCount, true);
+    }
+
+    /**
+     * Creates an equipment and add into this factory.
+     *
+     * @param id The equipment id.
+     * @param loadPorts Number of load port.
+     * @param chCount Number of the channel.
+     * @param enabled Enabled or not.
+     * @return The equipment.
+     */
+    public Equip<T> tryCreateEquip(String id, int loadPorts, int chCount, boolean enabled) {
         synchronized (this.equips) {
             Equip<T> eq = this.equips.get(id);
             if (eq == null) {
-                eq = new EquipMuch<>(id, this, loadPorts, chCount);
+                eq = new EquipMuch<>(id, this, loadPorts, chCount, enabled);
                 this.equips.put(eq.getId(), eq);
             }
             return eq;
@@ -358,6 +371,7 @@ public class Factory<T> {
                     doneJ.getProductName(),
                     ticksNow(),
                     JobEvent.DONE,
+                    doneJ.getQty(),
                     null,
                     null,
                     0,
@@ -416,7 +430,10 @@ public class Factory<T> {
             op.preload();
         }
         for (Equip<T> equip : this.equips.values()) {
-            this.env.process(equip);
+            // TODO: control internal
+            if (equip.isEnabled()) {
+                this.env.process(equip);
+            }
         }
 
         if (healthCheck > 0) {

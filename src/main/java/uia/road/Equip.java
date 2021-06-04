@@ -50,14 +50,14 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      * @param id The equipment id.
      * @param factory The factory.
      */
-    protected Equip(String id, Factory<T> factory) {
+    protected Equip(String id, Factory<T> factory, boolean enabled) {
         super(id);
         this.factory = factory;
         this.operations = new Vector<>();
         this.info = new SimInfo();
         this.e10 = new E10();
         this.jobSelector = new JobSelector.Any<>();
-        this.enabled = true;
+        this.enabled = enabled;
         this.reserved = new Vector<>();
     }
 
@@ -109,7 +109,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     public boolean addReserved(Job<T> job) {
         synchronized (this) {
-            if (!isLoadable(job)) {
+            if (!isEnabled() || !isLoadable(job)) {
                 return false;
             }
             this.reserved.add(job.getId());
@@ -189,6 +189,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
             operation.serve(this);
         }
     }
+
+    public abstract int getLoadable();
 
     /**
      * Tests if the equipment is loadable.

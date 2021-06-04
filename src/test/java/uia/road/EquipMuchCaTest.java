@@ -17,7 +17,7 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
-        EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2);
+        EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2, true);
         e1.getChannels().get(0).getInfo().setString("p", "p1");
         e1.getChannels().get(1).getInfo().setString("p", "p2");
         e1.setChSelector(this);
@@ -49,7 +49,7 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Factory<Integer> factory = new Factory<>();
         factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
 
-        EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2);
+        EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2, true);
         e1.getChannels().get(0).getInfo().setString("p", "p1");
         e1.getChannels().get(1).getInfo().setString("p", "p1");
         e1.setChSelector(this);

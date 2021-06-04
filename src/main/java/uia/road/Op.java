@@ -129,6 +129,7 @@ public class Op<T> {
                     job.getProductName(),
                     now,
                     JobEvent.QT_PENDING,
+                    job.getQty(),
                     this.id,
                     null,
                     0,
@@ -152,6 +153,7 @@ public class Op<T> {
                     job.getProductName(),
                     now,
                     JobEvent.HOLD,
+                    job.getQty(),
                     this.id,
                     null,
                     0,
@@ -164,6 +166,7 @@ public class Op<T> {
                 job.getProductName(),
                 now,
                 JobEvent.DISPATCHED,
+                job.getQty(),
                 this.id,
                 null,
                 0,
@@ -270,7 +273,7 @@ public class Op<T> {
 
     private synchronized boolean push(Job<T> job) {
         List<Equip<T>> equips = this.equips.stream()
-                .filter(e -> e.isLoadable(job))
+                .filter(e -> e.isEnabled() && e.isLoadable(job))
                 .collect(Collectors.toList());
 
         List<String> checked = new ArrayList<>();
@@ -284,7 +287,7 @@ public class Op<T> {
             }
             else {
                 equips = this.equips.stream()
-                        .filter(e -> !checked.contains(e.getId()) && e.isLoadable(job))
+                        .filter(e -> !checked.contains(e.getId()) && e.isEnabled() && e.isLoadable(job))
                         .collect(Collectors.toList());
                 equip = this.equipSelector.select(job, equips);
             }
