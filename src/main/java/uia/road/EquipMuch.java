@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
+import uia.road.helpers.JobSelector.CandidateInfo;
 import uia.sim.Event;
 import uia.sim.Processable;
 
@@ -83,6 +84,7 @@ public class EquipMuch<T> extends Equip<T> {
 
     @Override
     public boolean load(Job<T> job) {
+        boolean empty = this.loaded.isEmpty() && this.running.isEmpty();
         synchronized (this) {
             if (!isEnabled() || !isLoadable(job)) {
                 return false;
@@ -94,6 +96,17 @@ public class EquipMuch<T> extends Equip<T> {
         notifyJobs();
 
         int now = this.factory.ticksNow();
+        if (empty) {
+            int time = doneStandby();
+            this.factory.log(new EquipEvent(
+                    getId(),
+                    null,
+                    now,
+                    EquipEvent.IDLE_END,
+                    null,
+                    null,
+                    new SimInfo().setInt("idled", time)));
+        }
         this.factory.log(new EquipEvent(
                 getId(),
                 null,
@@ -146,10 +159,19 @@ public class EquipMuch<T> extends Equip<T> {
 
             Job<T> job = pull();
             if (job == null) {
+                this.factory.log(new EquipEvent(
+                        getId(),
+                        null,
+                        this.factory.ticksNow(),
+                        EquipEvent.PULL_EMPTY,
+                        "*",
+                        getJobsInOperations().toString(),
+                        0,
+                        (SimInfo) null));
                 waitingJobs();                  // block
             }
             else {
-                this.factory.getOperation(job.getOperation()).dequeue(job);
+                this.factory.getOperation(job.getOperation()).dequeue(job, getId());
                 this.factory.log(new EquipEvent(
                         getId(),
                         null,
@@ -206,13 +228,15 @@ public class EquipMuch<T> extends Equip<T> {
         super.close();
     }
 
-    private Job<T> pull() {
-        ArrayList<Job<T>> jobs = new ArrayList<>();
+    private synchronized Job<T> pull() {
+        final Vector<Job<T>> jobs = new Vector<>();
         for (Op<T> op : this.operations) {
-            jobs.addAll(op.getEnqueued());
+            op.getEnqueued().forEach(j -> jobs.add(j));
         }
         if (!jobs.isEmpty()) {
-            Job<T> job = this.jobSelector.select(this, jobs);
+            CandidateInfo<T> ci = this.jobSelector.select(this, jobs);
+            logDeny(ci.getIgnore());
+            Job<T> job = ci.getSelected();
             return job != null && isLoadable(job) ? job : null;
         }
         else {
@@ -226,22 +250,7 @@ public class EquipMuch<T> extends Equip<T> {
      * @param job The job.
      */
     private void moveIn(Job<T> job) {
-        int now = this.factory.ticksNow();
-
-        if (this.running.isEmpty()) {
-            int time = doneStandby();
-            this.factory.log(new EquipEvent(
-                    getId(),
-                    null,
-                    now,
-                    EquipEvent.IDLE_END,
-                    null,
-                    null,
-                    new SimInfo().setInt("idled", time)));
-        }
-
-        // move in
-        job.setMoveInTime(now);
+        job.setMoveInTime(this.factory.ticksNow());
         updateStrategy(job, EquipEvent.MOVE_IN);
         //
         this.running.add(job);

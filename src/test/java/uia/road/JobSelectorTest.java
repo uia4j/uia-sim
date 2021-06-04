@@ -59,13 +59,13 @@ public class JobSelectorTest implements JobSelector<Domain> {
     }
 
     @Override
-    public synchronized Job<Domain> select(Equip<Domain> equip, List<Job<Domain>> jobs) {
+    public synchronized CandidateInfo<Domain> select(Equip<Domain> equip, List<Job<Domain>> jobs) {
         Collections.sort(jobs, (a, b) -> a.getData().priority - b.getData().priority);
         for (Job<Domain> job : jobs) {
             if (!job.isLoaded()) {
-                return job;
+                return new CandidateInfo<>(job, jobs);
             }
         }
-        return null;
+        return new CandidateInfo<>(null, jobs);
     }
 }

@@ -1,8 +1,10 @@
 package uia.road;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import uia.road.events.EquipEvent;
 import uia.road.helpers.EquipStrategy;
 import uia.road.helpers.JobSelector;
 import uia.road.helpers.ProcessTimeCalculator;
@@ -43,6 +45,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     private Vector<String> reserved;
 
     private int compensationTime;
+
+    private String pushInfo;
 
     /**
      * The constructor.
@@ -175,6 +179,14 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.strategy = strategy;
     }
 
+    public String getPushInfo() {
+        return this.pushInfo;
+    }
+
+    public void setPushInfo(String pushInfo) {
+        this.pushInfo = pushInfo;
+    }
+
     /**
      * Serves the operation.
      *
@@ -239,6 +251,28 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         else {
             return false;
         }
+    }
+
+    protected void logDeny(List<Job<T>> ignore) {
+        int now = this.factory.ticksNow();
+        for (Job<T> job : ignore) {
+            this.factory.log(new EquipEvent(
+                    getId(),
+                    null,
+                    now,
+                    EquipEvent.DENY,
+                    job.getOperation(),
+                    job.getProductName(),
+                    new SimInfo().addString("ignore", job.getPriorityInfo())));
+        }
+    }
+
+    protected List<String> getJobsInOperations() {
+        ArrayList<String> jobs = new ArrayList<>();
+        for (Op<T> op : this.operations) {
+            op.getEnqueued().forEach(j -> jobs.add(j.getProductName()));
+        }
+        return jobs;
     }
 
     protected void waitingJobs() {

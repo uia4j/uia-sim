@@ -20,20 +20,24 @@ public class OpEvent extends Event {
 
     private String job;
 
+    private String equipment;
+
     private int queued;
 
-    public OpEvent(String operation, int time, String event, String job, int queued, SimInfo info) {
+    public OpEvent(String operation, int time, String event, String job, int queued, String equipment, SimInfo info) {
         super(time, event, info);
         this.operation = operation;
         this.job = job;
         this.queued = queued;
+        this.equipment = equipment;
     }
 
-    public OpEvent(String operation, int time, String event, String job, int queued, Map<String, Object> info) {
+    public OpEvent(String operation, int time, String event, String job, int queued, String equipment, Map<String, Object> info) {
         super(time, event, info);
         this.operation = operation;
         this.job = job;
         this.queued = queued;
+        this.equipment = equipment;
     }
 
     public String getOperation() {
@@ -60,11 +64,20 @@ public class OpEvent extends Event {
         this.queued = queued;
     }
 
+    public String getEquipment() {
+        return this.equipment;
+    }
+
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
+    }
+
     @Override
     public String toString() {
-        return String.format("%8d %-15s - %s",
+        return String.format("%8d %-15s - %s %s",
                 getTime(),
                 getEvent(),
-                getJob() == null ? "" : getJob());
+                getJob() == null ? "" : getJob(),
+                getEquipment() == null ? "" : "@ " + getEquipment());
     }
 }

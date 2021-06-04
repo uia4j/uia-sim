@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.road.events.OpEvent;
 import uia.road.helpers.EquipSelector;
+import uia.road.helpers.EquipSelector.CandidateInfo;
 import uia.sim.Processable;
 
 /**
@@ -84,6 +86,7 @@ public class Op<T> {
      */
     public List<Job<T>> getEnqueued() {
         return new ArrayList<>(this.jobs);
+
     }
 
     public EquipSelector<T> getEquipSelector() {
@@ -113,9 +116,9 @@ public class Op<T> {
      * Enqueues a box in this operation.
      *
      * @param job The job.
-     * @param running If the job can be moved in automatically.
+     * @param forceToPush Force to push to the equipment.
      */
-    public void enqueue(Job<T> job, boolean push) {
+    public void enqueue(Job<T> job, boolean forceToPush) {
         int now = this.factory.ticksNow();
         job.setDispatchedTime(now);
         job.updateInfo();
@@ -140,6 +143,7 @@ public class Op<T> {
                     job.getProductName(),
                     OpEvent.QT_PENDING,
                     this.jobs.size(),
+                    null,
                     job.getInfo()));
             this.factory.getEnv().process(new DelayEnqueue(job, from - now));
             return;
@@ -171,7 +175,7 @@ public class Op<T> {
                 null,
                 0,
                 job.getInfo()));
-        if (!push || !push(job)) {
+        if (!forceToPush || !push(job)) {
             this.jobs.add(job);
             this.factory.log(new OpEvent(
                     this.id,
@@ -179,15 +183,7 @@ public class Op<T> {
                     OpEvent.ENQUEUE,
                     job.getProductName(),
                     this.jobs.size(),
-                    job.getInfo()));
-        }
-        else {
-            this.factory.log(new OpEvent(
-                    this.id,
-                    now,
-                    OpEvent.PUSH,
-                    job.getProductName(),
-                    this.jobs.size(),
+                    null,
                     job.getInfo()));
         }
     }
@@ -199,7 +195,7 @@ public class Op<T> {
      * @param box The box.
      * @return
      */
-    public void dequeue(Job<T> job) {
+    public void dequeue(Job<T> job, String by) {
         if (!this.jobs.remove(job)) {
             return;
         }
@@ -210,6 +206,7 @@ public class Op<T> {
                 OpEvent.PULL,
                 job.getProductName(),
                 this.jobs.size(),
+                by,
                 job.getInfo()));
         //if (this.jobs.isEmpty()) {
         //    this.factory.log(new OpEvent(
@@ -248,13 +245,6 @@ public class Op<T> {
             Job<T> job = this.jobs.get(i);
             if (push(job)) {
                 this.jobs.remove(job);
-                this.factory.log(new OpEvent(
-                        this.id,
-                        this.factory.ticksNow(),
-                        OpEvent.PUSH,
-                        job.getProductName(),
-                        this.jobs.size(),
-                        job.getInfo()));
             }
             else {
                 i++;
@@ -275,24 +265,24 @@ public class Op<T> {
         List<Equip<T>> equips = this.equips.stream()
                 .filter(e -> e.isEnabled() && e.isLoadable(job))
                 .collect(Collectors.toList());
-
-        List<String> checked = new ArrayList<>();
-        Equip<T> equip = this.equipSelector.select(job, equips);
-        boolean pushed = false;
-        while (equip != null) {
-            checked.add(equip.getId());
+        CandidateInfo<T> ci = this.equipSelector.select(job, equips);
+        int now = this.factory.ticksNow();
+        for (Equip<T> equip : ci.getIgnore()) {
+            this.factory.log(new OpEvent(
+                    getId(),
+                    now,
+                    EquipEvent.DENY,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    equip.getId(),
+                    new SimInfo().addString("ignore", equip.getPushInfo())));
+        }
+        for (Equip<T> equip : ci.getPassed()) {
             if (equip.load(job)) {
-                pushed = true;
-                equip = null;
-            }
-            else {
-                equips = this.equips.stream()
-                        .filter(e -> !checked.contains(e.getId()) && e.isEnabled() && e.isLoadable(job))
-                        .collect(Collectors.toList());
-                equip = this.equipSelector.select(job, equips);
+                return true;
             }
         }
-        return pushed;
+        return false;
     }
 
     /**

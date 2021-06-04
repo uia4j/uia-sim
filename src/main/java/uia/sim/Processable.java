@@ -98,7 +98,7 @@ public abstract class Processable {
      * @return The time.
      */
     protected int now() {
-        return this.env.getNow();
+        return this.env == null ? 0 : this.env.getNow();
     }
 
     /**
