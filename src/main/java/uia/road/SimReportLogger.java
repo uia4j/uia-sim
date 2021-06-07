@@ -8,10 +8,6 @@ import uia.road.events.OpEvent;
 
 public interface SimReportLogger {
 
-    public String getCriteria();
-
-    public void setCriteria(String criteria);
-
     public void printlnOpEvents(boolean group);
 
     public void printlnOpEvents(String id);

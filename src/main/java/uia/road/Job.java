@@ -49,6 +49,8 @@ public class Job<T> {
 
     private String priorityInfo;
 
+    private int index;
+
     /**
      * Constructor.
      *
@@ -94,6 +96,7 @@ public class Job<T> {
         this.processedQty = job.processedQty;
         this.priority = job.priority;
         this.priorityInfo = job.priorityInfo;
+        this.index = job.index;
     }
 
     public String getId() {
@@ -236,6 +239,14 @@ public class Job<T> {
 
     public void setQty(int qty) {
         this.qty = Math.max(1, qty);
+    }
+
+    public int getIndex() {
+        return this.index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public boolean isEngineering() {

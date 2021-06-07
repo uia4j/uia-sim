@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Vector;
 
 import uia.road.events.EquipEvent;
+import uia.road.events.JobEvent;
 import uia.road.helpers.EquipStrategy;
 import uia.road.helpers.JobSelector;
 import uia.road.helpers.ProcessTimeCalculator;
@@ -256,6 +257,10 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     protected void logDeny(List<Job<T>> ignore) {
         int now = this.factory.ticksNow();
         for (Job<T> job : ignore) {
+            if (job == null) {
+                continue;
+            }
+
             this.factory.log(new EquipEvent(
                     getId(),
                     null,
@@ -263,7 +268,18 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
                     EquipEvent.DENY,
                     job.getOperation(),
                     job.getProductName(),
-                    new SimInfo().addString("ignore", job.getPriorityInfo())));
+                    new SimInfo().setString("ignore", job.getPriorityInfo())));
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    now,
+                    EquipEvent.DENY,
+                    job.getQty(),
+                    job.getOperation(),
+                    getId(),
+                    0,
+                    0,
+                    job.getInfo().setString("ignore", job.getPriorityInfo())));
         }
     }
 

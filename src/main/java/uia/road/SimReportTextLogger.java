@@ -23,8 +23,6 @@ public class SimReportTextLogger implements SimReportLogger {
 
     protected Gson gson;
 
-    protected String criteria;
-
     protected final List<OpEvent> opEvents;
 
     protected final List<EquipEvent> equipEvents;
@@ -39,14 +37,6 @@ public class SimReportTextLogger implements SimReportLogger {
         this.equipEvents = new Vector<>();
         this.jobEvents = new Vector<>();
         this.factory = factory;
-    }
-
-    public String getCriteria() {
-        return this.criteria;
-    }
-
-    public void setCriteria(String criteria) {
-        this.criteria = criteria;
     }
 
     @Override

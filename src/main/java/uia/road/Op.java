@@ -29,9 +29,11 @@ public class Op<T> {
 
     private final SimInfo info;
 
-    private Vector<Job<T>> jobs;
+    private final Vector<Job<T>> jobs;
 
     private EquipSelector<T> equipSelector;
+
+    private int index;
 
     /**
      * The constructor.
@@ -121,6 +123,7 @@ public class Op<T> {
     public void enqueue(Job<T> job, boolean forceToPush) {
         int now = this.factory.ticksNow();
         job.setDispatchedTime(now);
+        job.setIndex(this.index++);
         job.updateInfo();
 
         // move in time control: pending
@@ -175,7 +178,9 @@ public class Op<T> {
                 null,
                 0,
                 job.getInfo()));
-        if (!forceToPush || !push(job)) {
+
+        Equip<T> eq = forceToPush ? push(job) : null;
+        if (eq == null) {
             this.jobs.add(job);
             this.factory.log(new OpEvent(
                     this.id,
@@ -184,6 +189,16 @@ public class Op<T> {
                     job.getProductName(),
                     this.jobs.size(),
                     null,
+                    job.getInfo()));
+        }
+        else {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    this.factory.ticksNow(),
+                    OpEvent.PUSH,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    eq.getId(),
                     job.getInfo()));
         }
     }
@@ -197,6 +212,14 @@ public class Op<T> {
      */
     public void dequeue(Job<T> job, String by) {
         if (!this.jobs.remove(job)) {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    this.factory.ticksNow(),
+                    OpEvent.PULL,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    by,
+                    job.getInfo()));
             return;
         }
 
@@ -243,8 +266,17 @@ public class Op<T> {
         int i = 0;
         while (i < this.jobs.size()) {
             Job<T> job = this.jobs.get(i);
-            if (push(job)) {
+            Equip<T> eq = push(job);
+            if (eq != null) {
                 this.jobs.remove(job);
+                this.factory.log(new OpEvent(
+                        this.id,
+                        this.factory.ticksNow(),
+                        OpEvent.PUSH,
+                        job.getProductName(),
+                        this.jobs.size(),
+                        eq.getId(),
+                        job.getInfo()));
             }
             else {
                 i++;
@@ -261,7 +293,7 @@ public class Op<T> {
         //}
     }
 
-    private synchronized boolean push(Job<T> job) {
+    private synchronized Equip<T> push(Job<T> job) {
         List<Equip<T>> equips = this.equips.stream()
                 .filter(e -> e.isEnabled() && e.isLoadable(job))
                 .collect(Collectors.toList());
@@ -275,14 +307,14 @@ public class Op<T> {
                     job.getProductName(),
                     this.jobs.size(),
                     equip.getId(),
-                    new SimInfo().addString("ignore", equip.getPushInfo())));
+                    new SimInfo().setString("ignore", equip.getPushInfo())));
         }
         for (Equip<T> equip : ci.getPassed()) {
             if (equip.load(job)) {
-                return true;
+                return equip;
             }
         }
-        return false;
+        return null;
     }
 
     /**
