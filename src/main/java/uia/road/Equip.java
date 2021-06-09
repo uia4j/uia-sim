@@ -268,18 +268,18 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
                     EquipEvent.DENY,
                     job.getOperation(),
                     job.getProductName(),
-                    new SimInfo().setString("ignore", job.getPriorityInfo())));
+                    new SimInfo().setString("ignore", job.getDenyInfo())));
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
                     now,
-                    EquipEvent.DENY,
+                    JobEvent.DENY,
                     job.getQty(),
                     job.getOperation(),
                     getId(),
                     0,
                     0,
-                    job.getInfo().setString("ignore", job.getPriorityInfo())));
+                    job.getInfo()).deny(job.getDenyCode(), job.getDenyInfo()));
         }
     }
 

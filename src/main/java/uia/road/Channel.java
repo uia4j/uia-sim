@@ -123,7 +123,7 @@ public class Channel<T> {
                 qty,
                 this.job.getOperation(),
                 this.id,
-                now1 - this.job.getDispatchedTime(),
+                now1 - this.job.getMoveInTime(),
                 this.job.getInfo()));
 
         // 2. processing

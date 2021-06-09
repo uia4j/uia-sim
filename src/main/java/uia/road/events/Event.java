@@ -12,6 +12,10 @@ public abstract class Event implements Comparable<Event> {
 
     protected Map<String, Object> info;
 
+    private String denyCode;
+
+    private String denyInfo;
+
     protected Event(int time, String event, SimInfo info) {
         this.time = time;
         this.event = event;
@@ -38,6 +42,22 @@ public abstract class Event implements Comparable<Event> {
 
     public void setInfo(Map<String, Object> info) {
         this.info = info;
+    }
+
+    public String getDenyCode() {
+        return this.denyCode;
+    }
+
+    public void setDenyCode(String denyCode) {
+        this.denyCode = denyCode;
+    }
+
+    public String getDenyInfo() {
+        return this.denyInfo;
+    }
+
+    public void setDenyInfo(String denyInfo) {
+        this.denyInfo = denyInfo;
     }
 
     @Override

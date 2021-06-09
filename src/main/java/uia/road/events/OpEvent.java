@@ -16,6 +16,8 @@ public class OpEvent extends Event {
 
     public static final String PULL = "PULL";
 
+    public static final String DENY = "DENY";
+
     private String operation;
 
     private String job;
@@ -70,6 +72,12 @@ public class OpEvent extends Event {
 
     public void setEquipment(String equipment) {
         this.equipment = equipment;
+    }
+
+    public OpEvent deny(String code, String info) {
+        setDenyCode(code);
+        setDenyInfo(info);
+        return this;
     }
 
     @Override

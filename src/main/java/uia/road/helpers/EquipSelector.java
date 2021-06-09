@@ -1,6 +1,6 @@
 package uia.road.helpers;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import uia.road.Equip;
@@ -29,9 +29,9 @@ public interface EquipSelector<T> {
         @Override
         public CandidateInfo<T> select(Job<T> job, List<Equip<T>> equips) {
             if (equips.isEmpty()) {
-                return new CandidateInfo<>(null, equips);
+                return new CandidateInfo<>(null, equips, Collections.emptyList());
             }
-            return new CandidateInfo<>(equips.get(0), equips);
+            return new CandidateInfo<>(equips.get(0), equips, Collections.emptyList());
         }
     }
 
@@ -42,12 +42,6 @@ public interface EquipSelector<T> {
         private final List<Equip<T>> passed;
 
         private final List<Equip<T>> ignore;
-
-        public CandidateInfo(Equip<T> selected, List<Equip<T>> passed) {
-            this.selected = selected;
-            this.passed = passed;
-            this.ignore = new ArrayList<>();
-        }
 
         public CandidateInfo(Equip<T> selected, List<Equip<T>> passed, List<Equip<T>> ignore) {
             this.selected = selected;

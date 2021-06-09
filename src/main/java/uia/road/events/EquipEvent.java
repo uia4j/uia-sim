@@ -102,6 +102,12 @@ public class EquipEvent extends Event {
         this.qty = qty;
     }
 
+    public EquipEvent deny(String code, String info) {
+        setDenyCode(code);
+        setDenyInfo(info);
+        return this;
+    }
+
     @Override
     public String toString() {
         return String.format("%8d %-15s - %s %s",

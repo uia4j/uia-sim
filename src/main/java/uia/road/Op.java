@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
-import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.road.events.OpEvent;
 import uia.road.helpers.EquipSelector;
@@ -231,15 +230,6 @@ public class Op<T> {
                 this.jobs.size(),
                 by,
                 job.getInfo()));
-        //if (this.jobs.isEmpty()) {
-        //    this.factory.log(new OpEvent(
-        //            this.id,
-        //            this.factory.ticksNow(),
-        //            OpEvent.IDLE,
-        //            null,
-        //            this.jobs.size(),
-        //            null));
-        //}
     }
 
     @Override
@@ -303,7 +293,7 @@ public class Op<T> {
             this.factory.log(new OpEvent(
                     getId(),
                     now,
-                    EquipEvent.DENY,
+                    OpEvent.DENY,
                     job.getProductName(),
                     this.jobs.size(),
                     equip.getId(),

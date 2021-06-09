@@ -26,6 +26,8 @@ public class JobEvent extends Event {
 
     public static final String DONE = "DONE";
 
+    public static final String DENY = "DENY";
+
     private String id;
 
     private String product;
@@ -127,6 +129,12 @@ public class JobEvent extends Event {
 
     public void setQty(int qty) {
         this.qty = qty;
+    }
+
+    public JobEvent deny(String code, String info) {
+        setDenyCode(code);
+        setDenyInfo(info);
+        return this;
     }
 
     @Override

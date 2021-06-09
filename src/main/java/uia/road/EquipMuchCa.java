@@ -176,8 +176,8 @@ public class EquipMuchCa<T> extends Equip<T> {
                         null,
                         this.factory.ticksNow(),
                         EquipEvent.PULL_EMPTY,
-                        "*",
-                        getJobsInOperations().toString(),
+                        null,
+                        null,
                         0,
                         (SimInfo) null));
                 waitingJobs();                  // block
@@ -252,6 +252,7 @@ public class EquipMuchCa<T> extends Equip<T> {
 
     private void moveOut(Job<T> job) {
         int now = this.getFactory().ticksNow();
+        int ct = now - job.getMoveInTime();
 
         // move out
         job.setMoveOutTime(now);
@@ -265,7 +266,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 EquipEvent.MOVE_OUT,
                 job.getOperation(),
                 job.getProductName(),
-                job.getInfo()));
+                job.getInfo().setInt("ct", ct)));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -275,7 +276,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 0,
-                job.getMoveOutTime() - job.getMoveInTime(),
+                ct,
                 job.getInfo()));
         if (this.running.isEmpty() && this.loaded.isEmpty()) {
             doneProductive();
