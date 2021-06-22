@@ -5,13 +5,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SimInfo {
 
-    private Map<String, Object> info;
+    private final ConcurrentHashMap<String, Object> info;
 
     public SimInfo() {
-        this.info = new TreeMap<>();
+        this.info = new ConcurrentHashMap<>();
     }
 
     public SimInfo setBoolean(String key, boolean value) {
