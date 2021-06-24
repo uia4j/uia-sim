@@ -253,6 +253,7 @@ public class EquipMuchCa<T> extends Equip<T> {
     private void moveOut(Job<T> job) {
         int now = this.getFactory().ticksNow();
         int ct = now - job.getMoveInTime();
+        setLastProcessedTicks(now);
 
         // move out
         job.setMoveOutTime(now);
@@ -283,7 +284,7 @@ public class EquipMuchCa<T> extends Equip<T> {
             this.factory.log(new EquipEvent(
                     getId(),
                     null,
-                    this.factory.ticksNow(),
+                    now,
                     EquipEvent.IDLE_START,
                     null,
                     null,
@@ -300,7 +301,7 @@ public class EquipMuchCa<T> extends Equip<T> {
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
-                    this.factory.ticksNow(),
+                    now,
                     JobEvent.HOLD,
                     job.getQty(),
                     job.getOperation(),

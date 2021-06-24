@@ -71,7 +71,7 @@ public class Job<T> {
         this.strategy = new Strategy();
         this.qty = 1;
         this.engineering = false;
-        this.priority = 1;
+        this.priority = priority;
         this.denyInfo = "OK";
     }
 

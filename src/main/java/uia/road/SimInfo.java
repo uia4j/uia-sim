@@ -26,7 +26,7 @@ public class SimInfo {
     }
 
     public SimInfo setString(String key, String value) {
-        this.info.put(key, value);
+        this.info.put(key, value == null ? "" : value);
         return this;
     }
 

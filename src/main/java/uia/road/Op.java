@@ -121,7 +121,9 @@ public class Op<T> {
      */
     public void enqueue(Job<T> job, boolean forceToPush) {
         int now = this.factory.ticksNow();
-        job.setDispatchedTime(now);
+        if (job.getDispatchedTime() >= 0) {
+            job.setDispatchedTime(now);
+        }
         job.setIndex(this.index++);
         job.updateInfo();
 

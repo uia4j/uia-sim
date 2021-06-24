@@ -41,6 +41,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private boolean enabled;
 
+    private String status;
+
     private int timeTag;
 
     private Vector<String> reserved;
@@ -48,6 +50,12 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     private int compensationTime;
 
     private String pushInfo;
+
+    private int lastProcessedTicks;
+
+    private int idleMax;
+
+    private Event idleTimeout;
 
     /**
      * The constructor.
@@ -75,6 +83,14 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         return this.factory;
     }
 
+    public String getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     /**
      * Returns the operations the equipment handles.
      *
@@ -90,6 +106,22 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     public E10 getE10() {
         return this.e10;
+    }
+
+    public int getLastProcessedTicks() {
+        return this.lastProcessedTicks;
+    }
+
+    public void setLastProcessedTicks(int lastProcessedTicks) {
+        this.lastProcessedTicks = lastProcessedTicks;
+    }
+
+    public int getIdleMax() {
+        return this.idleMax;
+    }
+
+    public void setIdleMax(int idleMax) {
+        this.idleMax = idleMax;
     }
 
     public String getArea() {
@@ -338,6 +370,12 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.timeTag = now();
         this.e10.addScheduledDownTime(time);
         return time;
+    }
+
+    protected void idle() {
+        if (this.idleMax > 0) {
+            this.idleTimeout = this.env().timeout(getId() + "_idle_timeout", this.idleMax);
+        }
     }
 
     @Override
