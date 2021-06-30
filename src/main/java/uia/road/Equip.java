@@ -41,6 +41,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private boolean enabled;
 
+    private boolean scheduledDown;
+
     private String status;
 
     private int timeTag;
@@ -271,6 +273,19 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         }
     }
 
+    public boolean isScheduledUp() {
+        return this.scheduledDown;
+    }
+
+    public boolean isScheduledDown() {
+        if (this.idleMax > 0) {
+            return this.scheduledDown || this.factory.ticksNow() >= (this.lastProcessedTicks + this.idleMax);
+        }
+        else {
+            return this.scheduledDown;
+        }
+    }
+
     @Override
     public int hashCode() {
         return this.getId().hashCode();
@@ -362,20 +377,12 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         int time = now() - this.timeTag;
         this.timeTag = now();
         this.e10.addProductiveTime(time);
-        return time;
-    }
 
-    protected int doneScheduledDowned() {
-        int time = now() - this.timeTag;
-        this.timeTag = now();
-        this.e10.addScheduledDownTime(time);
-        return time;
-    }
+        //if (this.idleMax > 0) {
+        //    this.idleTimeout = this.env().timeout(getId() + "_idle_timeout", this.idleMax);
+        //}
 
-    protected void idle() {
-        if (this.idleMax > 0) {
-            this.idleTimeout = this.env().timeout(getId() + "_idle_timeout", this.idleMax);
-        }
+        return time;
     }
 
     @Override
