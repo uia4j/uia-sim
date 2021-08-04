@@ -85,10 +85,20 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         return this.factory;
     }
 
+    /**
+     * Returns the status.
+     *
+     * @return The status.
+     */
     public String getStatus() {
         return this.status;
     }
 
+    /**
+     * Sets the status.
+     *
+     * @param status The status.
+     */
     public void setStatus(String status) {
         this.status = status;
     }
@@ -254,6 +264,10 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      */
     public abstract boolean isIdle();
 
+    public abstract List<Job<T>> getLoadedJobs();
+
+    public abstract List<Job<T>> getRunningJobs();
+
     /**
      * Loads a job into the equipment.
      *
@@ -278,7 +292,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     }
 
     public boolean isScheduledDown() {
-        if (this.idleMax > 0) {
+        if (this.getLoadedJobs().isEmpty() && this.getRunningJobs().isEmpty() && this.idleMax > 0) {
             return this.scheduledDown || this.factory.ticksNow() >= (this.lastProcessedTicks + this.idleMax);
         }
         else {

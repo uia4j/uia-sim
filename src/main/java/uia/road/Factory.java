@@ -3,6 +3,7 @@ package uia.road;
 import java.util.Date;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 import uia.road.events.EquipEvent;
@@ -77,7 +78,6 @@ public class Factory<T> {
         this.operations = new TreeMap<>();
         this.equips = new TreeMap<>();
         this.logger = new SimReportTextLogger(this);
-        this.processTimeCalculator = new ProcessTimeCalculator.Simple<T>(300);
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
         this.timeType = TimeType.SEC;
         this.zeroTime = new Date();
@@ -208,11 +208,11 @@ public class Factory<T> {
     }
 
     public Set<String> getOperations() {
-        return this.operations.keySet();
+        return new TreeSet<>(this.operations.keySet());
     }
 
     public Set<String> getEquips() {
-        return this.equips.keySet();
+        return new TreeSet<>(this.equips.keySet());
     }
 
     /**
@@ -473,6 +473,10 @@ public class Factory<T> {
      */
     public int ticks(Date time) {
         return (int) ((time.getTime() - this.zeroTime.getTime()) / this.timeType.factor);
+    }
+
+    public Date ticksTime(int ticks) {
+        return new Date(this.zeroTime.getTime() + ticks * this.timeType.factor);
     }
 
     /**

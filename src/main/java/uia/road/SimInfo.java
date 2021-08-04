@@ -52,7 +52,9 @@ public class SimInfo {
             v = new ArrayList<String>();
             this.info.put(key, v);
         }
-        ((List<String>) v).add(value);
+        if (value != null) {
+            ((List<String>) v).add(value);
+        }
         return this;
     }
 
@@ -63,7 +65,9 @@ public class SimInfo {
             v = new ArrayList<String>();
             this.info.put(key, v);
         }
-        ((List<String>) v).addAll(values);
+        if (values != null) {
+            ((List<String>) v).addAll(values);
+        }
         return this;
     }
 
@@ -74,7 +78,9 @@ public class SimInfo {
             v = new ArrayList<Object>();
             this.info.put(key, v);
         }
-        ((List<Object>) v).add(value);
+        if (value != null) {
+            ((List<Object>) v).add(value);
+        }
         return this;
     }
 
@@ -85,7 +91,9 @@ public class SimInfo {
             v = new ArrayList<T>();
             this.info.put(key, v);
         }
-        ((List<T>) v).addAll(values);
+        if (values != null) {
+            ((List<T>) v).addAll(values);
+        }
         return this;
     }
 

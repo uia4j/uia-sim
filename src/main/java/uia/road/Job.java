@@ -1,5 +1,7 @@
 package uia.road;
 
+import java.util.function.Function;
+
 /**
  *
  *
@@ -336,14 +338,50 @@ public class Job<T> {
         return this.prev.findPrevAt(operation);
     }
 
-    public Job<T> findNext(String id, boolean self) {
+    public Job<T> findNextJob(String id, boolean self) {
         if (self && id.equals(this.id)) {
             return this;
         }
         if (this.next == null) {
             return null;
         }
-        return this.next.findNext(id, true);
+        return this.next.findNextJob(id, true);
+    }
+
+    public Job<T> findPrevJob(String id, boolean self) {
+        if (self && id.equals(this.id)) {
+            return this;
+        }
+        if (this.prev == null) {
+            return null;
+        }
+        return this.prev.findPrevJob(id, true);
+    }
+
+    public Job<T> findNext(Function<Job<T>, Boolean> finder, boolean self) {
+        if (self && finder.apply(this)) {
+            return this;
+        }
+        if (this.next == null) {
+            return null;
+        }
+        if (finder.apply(this.next)) {
+            return this.next;
+        }
+        return this.next.findNext(finder, true);
+    }
+
+    public Job<T> findPrev(Function<Job<T>, Boolean> finder, boolean self) {
+        if (self && finder.apply(this)) {
+            return this;
+        }
+        if (this.prev == null) {
+            return null;
+        }
+        if (finder.apply(this.prev)) {
+            return this.prev;
+        }
+        return this.prev.findPrev(finder, true);
     }
 
     public Job<T> last() {

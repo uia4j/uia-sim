@@ -73,6 +73,16 @@ public class EquipBatch<T> extends Equip<T> {
     }
 
     @Override
+    public List<Job<T>> getLoadedJobs() {
+        return this.loaded;
+    }
+
+    @Override
+    public List<Job<T>> getRunningJobs() {
+        return this.running;
+    }
+
+    @Override
     public boolean isIdle() {
         return this.running.isEmpty();
     }
