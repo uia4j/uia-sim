@@ -49,6 +49,8 @@ public class Job<T> {
 
     private int priority;
 
+    private String priorityInfo;
+
     private String denyCode;
 
     private String denyInfo;
@@ -99,6 +101,7 @@ public class Job<T> {
         this.processingQty = job.processingQty;
         this.processedQty = job.processedQty;
         this.priority = job.priority;
+        this.priorityInfo = job.priorityInfo;
         this.denyCode = job.denyCode;
         this.denyInfo = job.denyInfo;
         this.index = job.index;
@@ -278,6 +281,14 @@ public class Job<T> {
         this.priority = priority;
     }
 
+    public String getPriorityInfo() {
+        return this.priorityInfo;
+    }
+
+    public void setPriorityInfo(String priorityInfo) {
+        this.priorityInfo = priorityInfo;
+    }
+
     public String getDenyCode() {
         return this.denyCode;
     }
@@ -291,7 +302,7 @@ public class Job<T> {
     }
 
     public void setDenyInfo(String denyInfo) {
-        this.denyInfo = denyInfo;
+        this.denyInfo = denyInfo == null ? "OK" : denyInfo;
     }
 
     public synchronized int processing(int qty) {

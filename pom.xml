@@ -52,4 +52,11 @@
 			</plugin>
 		</plugins>
 	</build>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>HTKS</id>
+			<url>http://10.160.1.56:17002/repository/sapme4j-snapshots/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

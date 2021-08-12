@@ -45,6 +45,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private String status;
 
+    private String statusInfo;
+
     private int timeTag;
 
     private Vector<String> reserved;
@@ -101,6 +103,14 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      */
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getStatusInfo() {
+        return this.statusInfo;
+    }
+
+    public void setStatusInfo(String statusInfo) {
+        this.statusInfo = statusInfo;
     }
 
     /**
@@ -285,10 +295,6 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         else {
             doneProductive();
         }
-    }
-
-    public boolean isScheduledUp() {
-        return this.scheduledDown;
     }
 
     public boolean isScheduledDown() {

@@ -457,7 +457,7 @@ public class Env {
 
             }
             catch (Throwable ex2) {
-                ex2.printStackTrace();
+
             }
         }
 
@@ -466,9 +466,14 @@ public class Env {
     }
 
     public void stop() {
-        Event stopEvent = event("stop");
-        stopEvent.addCallable(this::stopSim);
-        schedule(stopEvent, PriorityType.URGENT, 0);
+        while (!this.jobs.isEmpty()) {
+            try {
+                this.jobs.poll().event.envDown();
+            }
+            catch (Throwable ex) {
+
+            }
+        }
     }
 
     /**

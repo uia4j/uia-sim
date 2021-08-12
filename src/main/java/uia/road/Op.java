@@ -205,6 +205,72 @@ public class Op<T> {
     }
 
     /**
+     * Enqueues a box in this operation.
+     *
+     * @param job The job.
+     * @param forceToPush Force to push to the equipment.
+     */
+    public void enqueueNoDelay(Job<T> job, boolean forceToPush) {
+        int now = this.factory.ticksNow();
+        if (job.getDispatchedTime() >= 0) {
+            job.setDispatchedTime(now);
+        }
+        job.setIndex(this.index++);
+        job.updateInfo();
+
+        // move in time control: hold
+        int to = job.getStrategy().getMoveIn().getTo();
+        if (now > to) {
+            // hold
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    now,
+                    JobEvent.HOLD,
+                    job.getQty(),
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()));
+            return;
+        }
+        // dispatched
+        this.factory.log(new JobEvent(
+                job.getId(),
+                job.getProductName(),
+                now,
+                JobEvent.DISPATCHED,
+                job.getQty(),
+                this.id,
+                null,
+                0,
+                job.getInfo()));
+
+        Equip<T> eq = forceToPush ? push(job) : null;
+        if (eq == null) {
+            this.jobs.add(job);
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    OpEvent.ENQUEUE,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    null,
+                    job.getInfo()));
+        }
+        else {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    this.factory.ticksNow(),
+                    OpEvent.PUSH,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    eq.getId(),
+                    job.getInfo()));
+        }
+    }
+
+    /**
      * Dequeues the jobs from the operation.
      *
      * @param equip The equipment.

@@ -328,6 +328,23 @@ public class Factory<T> {
     }
 
     /**
+     * Prepares a job to its operation.
+     *
+     * @param job The job.
+     */
+    public void prepareNoDelay(Job<T> job) {
+        Op<T> op = null;
+        synchronized (this.operations) {
+            op = this.operations.get(job.getOperation());
+            if (op == null) {
+                op = new Op<T>(job.getOperation(), this);
+                this.operations.put(op.getId(), op);
+            }
+        }
+        op.enqueueNoDelay(job, false);
+    }
+
+    /**
      * Dispatches a job to its operation and run.
      *
      * @param job The job.
@@ -342,6 +359,23 @@ public class Factory<T> {
             }
         }
         op.enqueue(job, true);
+    }
+
+    /**
+     * Dispatches a job to its operation and run.
+     *
+     * @param job The job.
+     */
+    public void dispatchNoDelay(Job<T> job) {
+        Op<T> op = null;
+        synchronized (this.operations) {
+            op = this.operations.get(job.getOperation());
+            if (op == null) {
+                op = new Op<T>(job.getOperation(), this);
+                this.operations.put(op.getId(), op);
+            }
+        }
+        op.enqueueNoDelay(job, true);
     }
 
     /**
@@ -457,6 +491,20 @@ public class Factory<T> {
         }
     }
 
+    public void stop() {
+        try {
+            for (Equip<T> eq : this.equips.values()) {
+                eq.close();
+            }
+        }
+        catch (Exception ex) {
+
+        }
+        finally {
+            this.env.stop();
+        }
+    }
+
     /**
      * Returns the current ticks of the simulation.
      *
@@ -472,7 +520,9 @@ public class Factory<T> {
      * @return The ticks.
      */
     public int ticks(Date time) {
-        return (int) ((time.getTime() - this.zeroTime.getTime()) / this.timeType.factor);
+        return time == null
+                ? 0
+                : (int) ((time.getTime() - this.zeroTime.getTime()) / this.timeType.factor);
     }
 
     public Date ticksTime(int ticks) {

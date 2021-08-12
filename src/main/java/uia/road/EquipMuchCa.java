@@ -12,7 +12,7 @@ import uia.sim.Event;
 import uia.sim.Processable;
 
 /**
- * The equipment with multiple channels.
+ * The equipment with multiple channels and channel selector.
  *
  * @author Kan
  *
