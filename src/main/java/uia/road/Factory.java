@@ -526,7 +526,7 @@ public class Factory<T> {
     }
 
     public Date ticksTime(int ticks) {
-        return new Date(this.zeroTime.getTime() + ticks * this.timeType.factor);
+        return new Date(this.zeroTime.getTime() + (long) ticks * this.timeType.factor);
     }
 
     /**
@@ -535,6 +535,6 @@ public class Factory<T> {
      * @return The current time.
      */
     public Date nowTime() {
-        return new Date(this.zeroTime.getTime() + ticksNow() * this.timeType.factor);
+        return new Date(this.zeroTime.getTime() + (long) ticksNow() * this.timeType.factor);
     }
 }
