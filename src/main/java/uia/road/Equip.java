@@ -134,6 +134,11 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         return this.lastProcessedTicks;
     }
 
+    /**
+     * Sets the last executed time of the task on this equipment, including PM, process, etc.
+     *
+     * @param lastProcessedTicks The last executed time of the task.
+     */
     public void setLastProcessedTicks(int lastProcessedTicks) {
         this.lastProcessedTicks = lastProcessedTicks;
     }
