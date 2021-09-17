@@ -18,7 +18,7 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
         Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 4);
         o1.serve(e1);
 
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 100);
         p1.setQty(5);
@@ -45,7 +45,7 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
         Equip<Integer> e1 = factory.tryCreateEquip("e1", 2, 2);
         o1.serve(e1);
 
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, 100);
         p1.setQty(1);
@@ -82,7 +82,7 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
         });
         o1.serve(e1);
 
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, 100);
         p1.setQty(5);
@@ -95,7 +95,7 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
     }
 
     @Override
-    public int calc(Equip<Integer> equip, Job<Integer> job) {
-        return job.getData().intValue();
+    public TimeInfo calc(Equip<Integer> equip, Job<Integer> job) {
+        return new TimeInfo(job.getData().intValue());
     }
 }

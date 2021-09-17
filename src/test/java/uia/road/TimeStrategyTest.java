@@ -296,7 +296,7 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
     }
 
     @Override
-    public int calc(Equip<Integer> equip, Job<Integer> job) {
-        return job.getData().intValue();
+    public TimeInfo calc(Equip<Integer> equip, Job<Integer> job) {
+        return new TimeInfo(job.getData().intValue());
     }
 }

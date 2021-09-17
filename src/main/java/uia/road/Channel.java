@@ -101,7 +101,7 @@ public class Channel<T> {
         // current operation
         // process time
         int processTime = this.equip.getProcessTimeCalculator()
-                .calc(this.equip, this.job);
+                .calc(this.equip, this.job).total;
         processTime += this.compensationTime + this.equip.getCompensationTime();
 
         // 1. process start

@@ -2,6 +2,8 @@ package uia.road;
 
 import org.junit.Test;
 
+import uia.road.helpers.ProcessTimeCalculator.TimeInfo;
+
 public class EquipBatchTest {
 
     @Test
@@ -11,7 +13,7 @@ public class EquipBatchTest {
          * e1
          */
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);
@@ -46,7 +48,7 @@ public class EquipBatchTest {
          * e1
          */
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);
@@ -97,7 +99,7 @@ public class EquipBatchTest {
          * e1
          */
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         EquipBatch<Integer> e1 = new EquipBatch<>("e1", factory, 4, true);
         factory.tryAddEquip(e1);

@@ -27,7 +27,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
         o2.serve(e3);
 
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         // p1 (o1->02)
         Job<Integer> p1o1 = new Job<>("1", "p1", o1.getId(), 1, 100);
@@ -61,7 +61,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
          */
 
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         // build operations
         Op<Integer> o1 = factory.tryCreateOperation("o1");
@@ -211,7 +211,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
          */
 
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         // build operations
         Op<Integer> o1 = factory.tryCreateOperation("o1");
@@ -253,7 +253,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
          */
 
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         // build operations
         Op<Integer> o1 = factory.tryCreateOperation("o1");
@@ -288,7 +288,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
     }
 
     @Override
-    public int calc(Equip<Integer> equip, Job<Integer> job) {
-        return job.getData().intValue();
+    public TimeInfo calc(Equip<Integer> equip, Job<Integer> job) {
+        return new TimeInfo(job.getData().intValue());
     }
 }
