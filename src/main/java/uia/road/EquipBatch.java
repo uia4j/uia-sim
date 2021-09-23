@@ -120,7 +120,7 @@ public class EquipBatch<T> extends Equip<T> {
                 job.getOperation(),
                 job.getProductName(),
                 job.getQty(),
-                job.getInfo()));
+                job.getInfo().setInt("ct", job.getPredictProcessTime())));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -130,7 +130,7 @@ public class EquipBatch<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo()));
+                job.getInfo().setInt("ct", job.getPredictProcessTime())));
         return true;
     }
 
@@ -186,7 +186,7 @@ public class EquipBatch<T> extends Equip<T> {
                         job.getOperation(),
                         job.getProductName(),
                         job.getQty(),
-                        job.getInfo()));
+                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
                 this.factory.log(new JobEvent(
                         job.getId(),
                         job.getProductName(),
@@ -196,7 +196,7 @@ public class EquipBatch<T> extends Equip<T> {
                         job.getOperation(),
                         getId(),
                         this.factory.ticksNow() - job.getDispatchedTime(),
-                        job.getInfo()));
+                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
                 this.loaded.add(job);
                 if (this.loaded.size() >= this.chs.size()) {
                     this.moveInNow = true;

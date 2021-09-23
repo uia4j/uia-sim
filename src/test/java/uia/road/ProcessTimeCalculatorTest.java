@@ -2,6 +2,8 @@ package uia.road;
 
 import org.junit.Test;
 
+import uia.road.helpers.ProcessTimeCalculator.TimeInfo;
+
 public class ProcessTimeCalculatorTest {
 
     @Test
@@ -15,7 +17,7 @@ public class ProcessTimeCalculatorTest {
 
         Factory<Integer> factory = new Factory<>();
         // global process time calculator
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> TimeInfo.create(j.getData().intValue()));
         factory.setPathTimeCalculator((f, t) -> {
             if ("o2".equals(t.getId())) {
                 return 10;
@@ -34,7 +36,7 @@ public class ProcessTimeCalculatorTest {
         Equip<Integer> e3 = factory.tryCreateEquip("e3", 1, 1);
 
         // custom process time calculator
-        e2.setProcessTimeCalculator((e, j) -> j.getData().intValue() * 2);
+        e2.setProcessTimeCalculator((e, j) -> TimeInfo.create(j.getData().intValue() * 2));
 
         // bind operations and equipments
         o1.serve(e1);

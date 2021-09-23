@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import uia.road.JobSelectorTest.Domain;
 import uia.road.helpers.JobSelector;
+import uia.road.helpers.ProcessTimeCalculator.TimeInfo;
 
 public class JobSelectorTest implements JobSelector<Domain> {
 
@@ -22,7 +23,7 @@ public class JobSelectorTest implements JobSelector<Domain> {
 
         Factory<Domain> factory = new Factory<>(10);
         // global process time calculator
-        factory.setProcessTimeCalculator((e, j) -> j.getData().pt);
+        factory.setProcessTimeCalculator((e, j) -> TimeInfo.create(j.getData().pt));
 
         // build operations
         Op<Domain> o1 = factory.tryCreateOperation("o1");

@@ -57,6 +57,8 @@ public class Job<T> {
 
     private int index;
 
+    private int predictProcessTime;
+
     /**
      * Constructor.
      *
@@ -105,6 +107,7 @@ public class Job<T> {
         this.denyCode = job.denyCode;
         this.denyInfo = job.denyInfo;
         this.index = job.index;
+        this.predictProcessTime = job.predictProcessTime;
     }
 
     public String getId() {
@@ -303,6 +306,14 @@ public class Job<T> {
 
     public void setDenyInfo(String denyInfo) {
         this.denyInfo = denyInfo == null ? "OK" : denyInfo;
+    }
+
+    public int getPredictProcessTime() {
+        return this.predictProcessTime;
+    }
+
+    public void setPredictProcessTime(int predictProcessTime) {
+        this.predictProcessTime = predictProcessTime;
     }
 
     public synchronized int processing(int qty) {

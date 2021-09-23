@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
+import uia.road.helpers.ProcessTimeCalculator.TimeInfo;
+
 public class EquipMuchCaTest implements ChannelSelector<Integer> {
 
     @Test
@@ -15,7 +17,7 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
          * e1
          */
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> TimeInfo.create(j.getData().intValue()));
 
         EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2, true);
         e1.getChannels().get(0).getInfo().setString("p", "p1");
@@ -47,7 +49,7 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
          * e1
          */
         Factory<Integer> factory = new Factory<>();
-        factory.setProcessTimeCalculator((e, j) -> j.getData().intValue());
+        factory.setProcessTimeCalculator((e, j) -> TimeInfo.create(j.getData().intValue()));
 
         EquipMuchCa<Integer> e1 = new EquipMuchCa<>("e1", factory, 2, 2, true);
         e1.getChannels().get(0).getInfo().setString("p", "p1");

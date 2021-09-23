@@ -35,6 +35,10 @@ public interface ProcessTimeCalculator<T> {
 
         public final int nextAllowed;
 
+        public static TimeInfo create(int total) {
+            return new TimeInfo(total);
+        }
+
         public TimeInfo(int total) {
             this.total = total;
             this.nextAllowed = total;

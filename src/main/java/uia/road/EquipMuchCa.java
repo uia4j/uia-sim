@@ -137,7 +137,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getOperation(),
                 job.getProductName(),
                 job.getQty(),
-                job.getInfo()));
+                job.getInfo().setInt("ct", job.getPredictProcessTime())));
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
@@ -147,7 +147,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo()));
+                job.getInfo().setInt("ct", job.getPredictProcessTime())));
         return true;
     }
 
