@@ -144,8 +144,8 @@ public class Op<T> {
             this.factory.log(new OpEvent(
                     this.id,
                     now,
-                    job.getProductName(),
                     OpEvent.QT_PENDING,
+                    job.getProductName(),
                     this.jobs.size(),
                     null,
                     job.getInfo()));
