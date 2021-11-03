@@ -125,8 +125,10 @@ public class EquipMuch<T> extends Equip<T> {
                 job.getOperation(),
                 job.getProductName(),
                 job.getQty(),
-                job.getInfo().setInt("ct", job.getPredictProcessTime())));
-        this.factory.log(new JobEvent(
+                job.getInfo()
+                        .setInt("ct", job.getPredictProcessTime())
+                        .setInt("running", this.loaded.size() + this.running.size())));
+        JobEvent je = new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
@@ -135,7 +137,9 @@ public class EquipMuch<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                job.getInfo().setInt("ct", job.getPredictProcessTime()));
+        je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+        this.factory.log(je);
         return true;
     }
 
@@ -154,16 +158,15 @@ public class EquipMuch<T> extends Equip<T> {
                         null,
                         (SimInfo) null));
                 waitingJobs();                  // block
-                continue;
             }
 
             // move in from load ports.
             if (!this.loaded.isEmpty()) {
-                Object[] objs = this.loaded.toArray();
+                Object[] objs = this.loaded.toArray(new Object[0]);
+                this.loaded.clear();
                 for (Object obj : objs) {
                     moveIn((Job<T>) obj);       // block maybe
                 }
-                this.loaded.clear();
                 continue;
             }
 
@@ -190,8 +193,10 @@ public class EquipMuch<T> extends Equip<T> {
                         job.getOperation(),
                         job.getProductName(),
                         job.getQty(),
-                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
-                this.factory.log(new JobEvent(
+                        job.getInfo()
+                                .setInt("ct", job.getPredictProcessTime())
+                                .setInt("running", this.loaded.size() + this.running.size())));
+                JobEvent je = new JobEvent(
                         job.getId(),
                         job.getProductName(),
                         this.factory.ticksNow(),
@@ -200,21 +205,28 @@ public class EquipMuch<T> extends Equip<T> {
                         job.getOperation(),
                         getId(),
                         this.factory.ticksNow() - job.getDispatchedTime(),
-                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                        job.getInfo().setInt("ct", job.getPredictProcessTime()));
+                je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+                this.factory.log(je);
                 moveIn(job);                    // block maybe
             }
         }
     }
 
     @Override
-    public void processEnded(Channel<T> channel, Job<T> job) {
+    public void processEnded(Channel<T> channel, Job<T> job, int qty) {
         synchronized (this) {
-            if (this.chNotifier != null) {
-                this.chNotifier.succeed(channel);
-                this.chNotifier = null;
+            if (channel != null) {
+                if (this.chNotifier != null) {
+                    this.chNotifier.succeed(channel);
+                    this.chNotifier = null;
+                }
+                job.processed(Math.max(qty, channel.getBatchSize()));
+            }
+            else {
+                job.processed(qty);
             }
 
-            job.processed(channel.getBatchSize() <= 0 ? job.getQty() : channel.getBatchSize());
             if (!job.isFinished()) {
                 return;
             }
@@ -259,26 +271,33 @@ public class EquipMuch<T> extends Equip<T> {
      *
      * @param job The job.
      */
-    private void moveIn(Job<T> job) {
+    private void moveIn(final Job<T> job) {
+        job.setRunning(true);
         job.setMoveInTime(this.factory.ticksNow());
         updateStrategy(job, EquipEvent.MOVE_IN);
-        //
-        this.running.add(job);
-        this.loaded.remove(job);
 
+        //
         try {
-            // may be blocked
-            while (job.getProcessingQty() < job.getQty()) {
-                Channel<T> ch = findChannel();
-                ch.run(job);
+            this.loaded.remove(job);
+            if (job.getProcessingQty() >= job.getQty()) {
+                processEnded(null, job, job.getQty());
+            }
+            else {
+                this.running.add(job);
+                // may be blocked
+                while (job.getProcessingQty() < job.getQty()) {
+                    Channel<T> ch = findChannel(job);
+                    ch.run(job);
+                }
             }
         }
         catch (Exception ex) {
-
         }
     }
 
     private void moveOut(Job<T> job) {
+        this.running.remove(job);
+
         int now = this.getFactory().ticksNow();
         int ct = now - job.getMoveInTime();
         setLastProcessedTicks(now);
@@ -287,7 +306,6 @@ public class EquipMuch<T> extends Equip<T> {
         job.setMoveOutTime(now);
         updateStrategy(job, EquipEvent.MOVE_OUT);
 
-        this.running.remove(job);
         this.factory.log(new EquipEvent(
                 getId(),
                 null,
@@ -344,10 +362,18 @@ public class EquipMuch<T> extends Equip<T> {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Channel<T> findChannel() {
+    private Channel<T> findChannel(final Job<T> job) {
         Channel<T> ch = this.chSelector.select(this.chs);
         if (ch == null) {
             this.chNotifier = this.getFactory().getEnv().event(getId() + "_waiting_ch");
+            this.factory.log(new EquipEvent(
+                    getId(),
+                    null,
+                    this.getFactory().ticksNow(),
+                    EquipEvent.WAITING_CH,
+                    job.getOperation(),
+                    job.getProductName(),
+                    job.getInfo()));
             ch = (Channel<T>) yield(this.chNotifier);
             this.chNotifier = null;
         }

@@ -40,12 +40,12 @@ public interface ProcessTimeCalculator<T> {
         }
 
         public TimeInfo(int total) {
-            this.total = total;
+            this.total = Math.max(60, total);
             this.nextAllowed = total;
         }
 
         public TimeInfo(int total, int nextAllowed) {
-            this.total = total;
+            this.total = Math.max(60, total);
             this.nextAllowed = nextAllowed;
         }
     }

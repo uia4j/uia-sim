@@ -59,6 +59,8 @@ public class Job<T> {
 
     private int predictProcessTime;
 
+    private boolean running;
+
     /**
      * Constructor.
      *
@@ -79,6 +81,7 @@ public class Job<T> {
         this.engineering = false;
         this.priority = priority;
         this.denyInfo = "OK";
+        this.running = false;
     }
 
     /**
@@ -108,10 +111,19 @@ public class Job<T> {
         this.denyInfo = job.denyInfo;
         this.index = job.index;
         this.predictProcessTime = job.predictProcessTime;
+        this.running = job.running;
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public boolean isRunning() {
+        return this.running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     /**
@@ -318,22 +330,21 @@ public class Job<T> {
 
     public synchronized int processing(int qty) {
         int r = this.qty - this.processingQty;
-        this.processingQty += qty;
-        if (this.processedQty >= this.qty) {
-            this.processedQty = this.qty;
+        if (qty <= 0 || qty >= r) {
+            this.processingQty = this.qty;
             return r;
         }
         else {
+            this.processingQty += qty;
             return qty;
         }
 
     }
 
     public synchronized void processed(int qty) {
-        this.processedQty += qty;
-        if (this.processedQty >= this.qty) {
-            this.processedQty = this.qty;
-        }
+        this.processedQty = qty <= 0
+                ? this.qty
+                : Math.min(this.processedQty + qty, this.qty);
     }
 
     public boolean isLoaded() {

@@ -121,7 +121,7 @@ public class EquipBatch<T> extends Equip<T> {
                 job.getProductName(),
                 job.getQty(),
                 job.getInfo().setInt("ct", job.getPredictProcessTime())));
-        this.factory.log(new JobEvent(
+        JobEvent je = new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
@@ -130,7 +130,9 @@ public class EquipBatch<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                job.getInfo().setInt("ct", job.getPredictProcessTime()));
+        je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+        this.factory.log(je);
         return true;
     }
 
@@ -187,7 +189,7 @@ public class EquipBatch<T> extends Equip<T> {
                         job.getProductName(),
                         job.getQty(),
                         job.getInfo().setInt("ct", job.getPredictProcessTime())));
-                this.factory.log(new JobEvent(
+                JobEvent je = new JobEvent(
                         job.getId(),
                         job.getProductName(),
                         this.factory.ticksNow(),
@@ -196,7 +198,9 @@ public class EquipBatch<T> extends Equip<T> {
                         job.getOperation(),
                         getId(),
                         this.factory.ticksNow() - job.getDispatchedTime(),
-                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                        job.getInfo().setInt("ct", job.getPredictProcessTime()));
+                je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+                this.factory.log(je);
                 this.loaded.add(job);
                 if (this.loaded.size() >= this.chs.size()) {
                     this.moveInNow = true;
@@ -206,9 +210,9 @@ public class EquipBatch<T> extends Equip<T> {
     }
 
     @Override
-    public void processEnded(Channel<T> channel, Job<T> job) {
+    public void processEnded(Channel<T> channel, Job<T> job, int qty) {
         synchronized (this) {
-            job.processed(job.getQty());
+            job.processed(qty);
             moveOut(job);
         }
     }

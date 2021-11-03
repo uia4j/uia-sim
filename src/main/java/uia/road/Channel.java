@@ -30,6 +30,8 @@ public class Channel<T> {
 
     private int runningQty;
 
+    private int maxProcessTime;
+
     /**
      * The constructor.
      *
@@ -41,6 +43,15 @@ public class Channel<T> {
         this.equip = equip;
         this.info = new SimInfo();
         this.batchSize = 0;
+        this.maxProcessTime = 43200;
+    }
+
+    public int getMaxProcessTime() {
+        return this.maxProcessTime;
+    }
+
+    public void setMaxProcessTime(int maxProcessTime) {
+        this.maxProcessTime = Math.max(60, maxProcessTime);
     }
 
     public int getBatchSize() {
@@ -93,7 +104,7 @@ public class Channel<T> {
     }
 
     protected final void run(Yield2Way<Event, Object> yield) {
-        int qty = this.runningQty;
+        final int qty = this.runningQty;
 
         this.job.updateInfo();
         Factory<T> factory = this.equip.getFactory();
@@ -102,7 +113,8 @@ public class Channel<T> {
         // process time
         int processTime = this.equip.getProcessTimeCalculator()
                 .calc(this.equip, this.job).total;
-        processTime += this.compensationTime + this.equip.getCompensationTime();
+        processTime += (this.compensationTime + this.equip.getCompensationTime());
+        processTime = Math.min(Math.max(60, processTime), this.maxProcessTime);
 
         // 1. process start
         int now1 = factory.ticksNow();
@@ -124,6 +136,7 @@ public class Channel<T> {
                 this.job.getOperation(),
                 this.id,
                 now1 - this.job.getMoveInTime(),
+                processTime,
                 this.job.getInfo()));
 
         // 2. processing
@@ -155,7 +168,7 @@ public class Channel<T> {
         Job<T> job = this.job;
         this.job = null;
         this.processing = false;
-        this.equip.processEnded(this, job);
+        this.equip.processEnded(this, job, qty);
     }
 
     @Override

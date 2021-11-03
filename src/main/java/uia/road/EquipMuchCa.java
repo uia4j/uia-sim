@@ -138,7 +138,7 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getProductName(),
                 job.getQty(),
                 job.getInfo().setInt("ct", job.getPredictProcessTime())));
-        this.factory.log(new JobEvent(
+        JobEvent je = new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
@@ -147,7 +147,9 @@ public class EquipMuchCa<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                job.getInfo().setInt("ct", job.getPredictProcessTime()));
+        je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+        this.factory.log(je);
         return true;
     }
 
@@ -200,14 +202,16 @@ public class EquipMuchCa<T> extends Equip<T> {
     }
 
     @Override
-    public void processEnded(Channel<T> channel, Job<T> job) {
+    public void processEnded(Channel<T> channel, Job<T> job, int qty) {
         synchronized (this) {
-            if (this.chNotifier != null) {
-                this.chNotifier.succeed(channel);
-                this.chNotifier = null;
-            }
+            if (channel != null) {
+                if (this.chNotifier != null) {
+                    this.chNotifier.succeed(channel);
+                    this.chNotifier = null;
+                }
 
-            job.processed(channel.getBatchSize() <= 0 ? job.getQty() : channel.getBatchSize());
+                job.processed(Math.max(qty, channel.getBatchSize()));
+            }
             if (!job.isFinished()) {
                 return;
             }
@@ -331,6 +335,14 @@ public class EquipMuchCa<T> extends Equip<T> {
                 this.chNotifier = this.getFactory().getEnv().event(getId() + "_waiting_ch");
             }
         }
+        this.factory.log(new EquipEvent(
+                getId(),
+                null,
+                this.getFactory().ticksNow(),
+                EquipEvent.WAITING_CH,
+                null,
+                null,
+                new SimInfo()));
         yield.call(this.chNotifier);
     }
 

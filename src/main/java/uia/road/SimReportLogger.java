@@ -32,7 +32,7 @@ public interface SimReportLogger {
 
     public void log(JobEvent e);
 
-    public void flush();
+    public void flush(String name);
 
     public List<OpEvent> getOpEvents();
 

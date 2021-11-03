@@ -183,7 +183,7 @@ public class SimReportTextLogger implements SimReportLogger {
     }
 
     @Override
-    public void flush() {
+    public void flush(String name) {
     }
 
     @Override

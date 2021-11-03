@@ -38,6 +38,8 @@ public class JobEvent extends Event {
 
     private int timeIdled;
 
+    private int timeDispatching;
+
     private int timeProcessed;
 
     private int qty;
@@ -129,6 +131,14 @@ public class JobEvent extends Event {
 
     public void setQty(int qty) {
         this.qty = qty;
+    }
+
+    public int getTimeDispatching() {
+        return this.timeDispatching;
+    }
+
+    public void setTimeDispatching(int timeDispatching) {
+        this.timeDispatching = timeDispatching;
     }
 
     public JobEvent deny(String code, String info) {

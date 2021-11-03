@@ -22,6 +22,8 @@ public class EquipEvent extends Event {
 
     public static final String BUSY = "BUSY";
 
+    public static final String WAITING_CH = "WAITING_CH";
+
     public static final String PULL_EMPTY = "PULL_EMPTY";
 
     public static final String DENY = "DENY";

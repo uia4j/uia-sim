@@ -138,7 +138,7 @@ public class EquipSeq<T> extends Equip<T> {
                 job.getProductName(),
                 job.getQty(),
                 job.getInfo().setInt("ct", job.getPredictProcessTime())));
-        this.factory.log(new JobEvent(
+        JobEvent je = new JobEvent(
                 job.getId(),
                 job.getProductName(),
                 now,
@@ -147,7 +147,9 @@ public class EquipSeq<T> extends Equip<T> {
                 job.getOperation(),
                 getId(),
                 now - job.getDispatchedTime(),
-                job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                job.getInfo().setInt("ct", job.getPredictProcessTime()));
+        je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+        this.factory.log(je);
         return true;
     }
 
@@ -200,14 +202,14 @@ public class EquipSeq<T> extends Equip<T> {
     }
 
     @Override
-    public void processEnded(Channel<T> channel, Job<T> job) {
+    public void processEnded(Channel<T> channel, Job<T> job, int qty) {
         synchronized (this) {
             if (this.chNotifier != null) {
                 this.chNotifier.succeed(channel);
                 this.chNotifier = null;
             }
 
-            job.processed(channel.getBatchSize() <= 0 ? job.getQty() : channel.getBatchSize());
+            job.processed(Math.max(qty, channel.getBatchSize()));
             if (!job.isFinished()) {
                 return;
             }
