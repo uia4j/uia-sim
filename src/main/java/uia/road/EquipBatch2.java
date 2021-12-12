@@ -1,10 +1,8 @@
 package uia.road;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import uia.cor.Yield2Way;
 import uia.road.events.EquipEvent;
 import uia.road.events.JobEvent;
 import uia.road.helpers.JobSelector.CandidateInfo;
@@ -12,17 +10,15 @@ import uia.sim.Event;
 import uia.sim.Processable;
 
 /**
- * The equipment with multiple channels and channel selector.
+ * The equipment with multiple channels.
  *
  * @author Kan
  *
  * @param <T> Reference data of the job.
  */
-public class EquipSeq<T> extends Equip<T> {
+public class EquipBatch2<T> extends Equip<T> {
 
-    private final int loadPorts;
-
-    private final ArrayList<Channel<T>> chs;
+    private final Channel<T> ch;
 
     private final List<Job<T>> loaded;
 
@@ -32,52 +28,36 @@ public class EquipSeq<T> extends Equip<T> {
 
     private ChannelSelector<T> chSelector;
 
+    private Event forceToMoveIn;
+
+    private boolean moveInNow;
+
+    private int batchSize;
+
     /**
      * The constructor.
      *
      * @param id The equipment id.
      * @param factory The factory.
-     * @param loadPorts The max boxes in the equipment.
-     * @param chCount The channel number.
+     * @param numCh The number of channels.
      */
-    public EquipSeq(String id, Factory<T> factory, int loadPorts, int chCount, boolean enabled, int firstStepTime) {
+    public EquipBatch2(String id, Factory<T> factory, int batchSize, boolean enabled) {
         super(id, factory, enabled);
-        this.loadPorts = loadPorts <= 0 ? Integer.MAX_VALUE : loadPorts;
-        this.chs = new ArrayList<>();
-        for (int i = 1, c = Math.max(1, chCount); i <= c; i++) {
-            Channel<T> ch = new ChannelSeq<>(id + "_ch" + i, this, firstStepTime);
-            this.chs.add(ch);
-        }
+        this.ch = new ChannelSimple<>(id + "_ch1", this);
         this.loaded = new Vector<>();
         this.running = new Vector<>();
         this.chSelector = new ChannelSelector.Any<>();
-    }
-
-    public List<Channel<T>> getChannels() {
-        return this.chs;
-    }
-
-    public ChannelSelector<T> getChSelector() {
-        return this.chSelector;
-    }
-
-    public void setChSelector(ChannelSelector<T> chSelector) {
-        this.chSelector = chSelector;
-    }
-
-    public int getLoaded() {
-        return this.running.size() + this.loaded.size();
+        this.moveInNow = false;
     }
 
     @Override
     public int getLoadable() {
-        return this.loadPorts - this.loaded.size() - this.running.size() - getReservedNumber();
+        return this.batchSize - this.loaded.size() - getReservedNumber();
     }
 
     @Override
     public boolean isLoadable(Job<T> job) {
-        int loaded = this.loaded.size() + this.running.size();
-        if (loaded >= this.loadPorts) {
+        if (!this.running.isEmpty()) {
             return false;
         }
         if (!job.getStrategy().acceptEquip(getId())) {
@@ -86,7 +66,7 @@ public class EquipSeq<T> extends Equip<T> {
         if (isReserved(job)) {
             return true;
         }
-        return loaded + getReservedNumber() < this.loadPorts;
+        return this.loaded.size() + getReservedNumber() < this.batchSize;
     }
 
     @Override
@@ -153,12 +133,10 @@ public class EquipSeq<T> extends Equip<T> {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void run() {
         while (yield().isAlive()) {
-            // check if full loaded
-            if (this.running.size() >= this.loadPorts) {
+            if (this.running.size() > 0) {
                 this.factory.log(new EquipEvent(
                         getId(),
                         null,
@@ -171,13 +149,13 @@ public class EquipSeq<T> extends Equip<T> {
                 continue;
             }
 
-            // move in from load ports.
-            if (!this.loaded.isEmpty()) {
-                Object[] objs = this.loaded.toArray();
-                for (Object obj : objs) {
-                    moveIn((Job<T>) obj);       // block maybe
+            if (this.loaded.size() >= this.batchSize || this.moveInNow) {
+                this.moveInNow = false;
+                int batchSize = Math.min(this.batchSize, this.loaded.size());
+                for (int b = 0; b < batchSize; b++) {
+                    Job<T> job = this.loaded.remove(0);
+                    moveIn(job);
                 }
-                this.loaded.clear();
                 continue;
             }
 
@@ -192,11 +170,38 @@ public class EquipSeq<T> extends Equip<T> {
                         null,
                         0,
                         (SimInfo) null));
+                if (this.forceToMoveIn == null) {
+                    this.factory.getEnv().process(new ForceToMoveIn(60));
+                }
                 waitingJobs();                  // block
             }
             else {
                 this.factory.getOperation(job.getOperation()).dequeue(job, getId());
-                moveIn(job);                    // block maybe
+                this.factory.log(new EquipEvent(
+                        getId(),
+                        null,
+                        this.factory.ticksNow(),
+                        EquipEvent.MOVE_IN,
+                        job.getOperation(),
+                        job.getProductName(),
+                        job.getQty(),
+                        job.getInfo().setInt("ct", job.getPredictProcessTime())));
+                JobEvent je = new JobEvent(
+                        job.getId(),
+                        job.getProductName(),
+                        this.factory.ticksNow(),
+                        JobEvent.MOVE_IN,
+                        job.getQty(),
+                        job.getOperation(),
+                        getId(),
+                        this.factory.ticksNow() - job.getDispatchedTime(),
+                        job.getInfo().setInt("ct", job.getPredictProcessTime()));
+                je.setTimeDispatching(job.getDispatchedTime() - job.getDispatchingTime());
+                this.factory.log(je);
+                this.loaded.add(job);
+                if (this.loaded.size() >= this.batchSize) {
+                    this.moveInNow = true;
+                }
             }
         }
     }
@@ -204,22 +209,7 @@ public class EquipSeq<T> extends Equip<T> {
     @Override
     public void processEnded(Channel<T> channel, Job<T> job, int qty) {
         synchronized (this) {
-            if (this.chNotifier != null) {
-                this.chNotifier.succeed(channel);
-                this.chNotifier = null;
-            }
-
-            job.processed(Math.max(qty, channel.getBatchSize()));
-            if (!job.isFinished()) {
-                return;
-            }
-        }
-
-        int delay = job.getStrategy().getMoveOut().getFrom() - this.getFactory().ticksNow();
-        if (delay > 0) {
-            this.factory.getEnv().process(new MoveOut(job, delay));
-        }
-        else {
+            job.processed(qty);
             moveOut(job);
         }
     }
@@ -259,7 +249,13 @@ public class EquipSeq<T> extends Equip<T> {
         //
         this.running.add(job);
         this.loaded.remove(job);
-        this.env().process(new ProcessLot(job));
+
+        try {
+            this.ch.run(job);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void moveOut(Job<T> job) {
@@ -291,19 +287,6 @@ public class EquipSeq<T> extends Equip<T> {
                 0,
                 ct,
                 job.getInfo()));
-        if (this.running.isEmpty() && this.loaded.isEmpty()) {
-            doneProductive();
-            this.factory.log(new EquipEvent(
-                    getId(),
-                    null,
-                    now,
-                    EquipEvent.IDLE_START,
-                    null,
-                    null,
-                    new SimInfo().setInt("idled", 0)));
-        }
-
-        notifyJobs();
 
         if (job.getStrategy().getMoveOut().checkTo() && now > job.getStrategy().getMoveOut().getTo()) {
             job.updateInfo();
@@ -322,52 +305,21 @@ public class EquipSeq<T> extends Equip<T> {
             job.setMoveInEquip(getId());
             this.factory.dispatchToNext(job);
         }
-    }
 
-    /**
-     * May be blocked.
-     *
-     */
-    private void waitingCh(Yield2Way<Event, Object> yield) {
-        synchronized (this) {
-            if (this.chNotifier == null) {
-                this.chNotifier = this.getFactory().getEnv().event(getId() + "_waiting_ch");
-            }
+        if (this.running.isEmpty()) {
+            notifyJobs();
         }
-        yield.call(this.chNotifier);
-    }
-
-    class ProcessLot extends Processable {
-
-        private final Job<T> job;
-
-        public ProcessLot(Job<T> job) {
-            super(job.getProductName() + "_process");
-            this.job = job;
+        if (this.running.isEmpty() && this.loaded.isEmpty()) {
+            doneProductive();
+            this.factory.log(new EquipEvent(
+                    getId(),
+                    null,
+                    now,
+                    EquipEvent.IDLE_START,
+                    null,
+                    null,
+                    new SimInfo().setInt("idled", 0)));
         }
-
-        @Override
-        protected void run() {
-            // may be blocked
-            while (this.job.getProcessingQty() < this.job.getQty()) {
-                Channel<T> ch = EquipSeq.this.chSelector.select(EquipSeq.this.chs, this.job);
-                if (ch == null) {
-                    waitingCh(yield());
-                    continue;
-                }
-                try {
-                    ch.run(this.job);
-                }
-                catch (Exception e) {
-
-                }
-            }
-        }
-
-        @Override
-        protected void initial() {
-        }
-
     }
 
     class MoveOut extends Processable {
@@ -385,7 +337,36 @@ public class EquipSeq<T> extends Equip<T> {
         @Override
         protected void run() {
             yield(env().timeout(this.job.getProductName() + "_moveout_delay", this.delay));
-            EquipSeq.this.moveOut(this.job);
+            EquipBatch2.this.moveOut(this.job);
+        }
+
+        @Override
+        protected void initial() {
+        }
+
+    }
+
+    class ForceToMoveIn extends Processable {
+
+        private final int delay;
+
+        public ForceToMoveIn(int delay) {
+            super("_forceMoveIn");
+            this.delay = delay;
+        }
+
+        @Override
+        protected void run() {
+            try {
+                EquipBatch2.this.forceToMoveIn = env().timeout(getId(), this.delay);
+                yield(EquipBatch2.this.forceToMoveIn);
+            }
+            catch (Exception ex) {
+
+            }
+            EquipBatch2.this.moveInNow = true;
+            EquipBatch2.this.forceToMoveIn = null;
+            EquipBatch2.this.notifyJobs();
         }
 
         @Override

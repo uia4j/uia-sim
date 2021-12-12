@@ -30,4 +30,13 @@ public class TimeStrategy {
     public void setTo(int to) {
         this.to = Math.min(this.to, to);
     }
+
+    public boolean checkTo() {
+        return this.to < Integer.MAX_VALUE;
+    }
+
+    public void reset() {
+        this.from = 0;
+        this.to = Integer.MAX_VALUE;
+    }
 }

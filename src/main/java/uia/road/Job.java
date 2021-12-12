@@ -2,6 +2,8 @@ package uia.road;
 
 import java.util.function.Function;
 
+import uia.sim.Processable;
+
 /**
  *
  *
@@ -20,6 +22,8 @@ public class Job<T> {
     private final T data;
 
     private String area;
+
+    private int denyCount;
 
     private final SimInfo info;
 
@@ -159,6 +163,14 @@ public class Job<T> {
 
     public void setArea(String area) {
         this.area = area;
+    }
+
+    public boolean forceDispatch() {
+        return this.denyCount >= 20;
+    }
+
+    public void deny() {
+        this.denyCount++;
     }
 
     /**
@@ -450,6 +462,29 @@ public class Job<T> {
         }
         else {
             return false;
+        }
+    }
+
+    public class Jump extends Processable {
+
+        private final Factory<T> factory;
+
+        private final int after;
+
+        protected Jump(Factory<T> factory, int after) {
+            super(Job.this.getId() + "_jump");
+            this.factory = factory;
+            this.after = after;
+        }
+
+        @Override
+        protected void run() {
+            yield(env().timeout(this.after));
+            this.factory.dispatchToNext(Job.this);
+        }
+
+        @Override
+        protected void initial() {
         }
     }
 

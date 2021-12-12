@@ -45,7 +45,7 @@ public class EquipMuch<T> extends Equip<T> {
         this.loadPorts = loadPorts <= 0 ? Integer.MAX_VALUE : loadPorts;
         this.chs = new ArrayList<>();
         for (int i = 1, c = Math.max(1, chCount); i <= c; i++) {
-            Channel<T> ch = new Channel<>(id + "_ch" + i, this);
+            Channel<T> ch = new ChannelSimple<>(id + "_ch" + i, this);
             this.chs.add(ch);
         }
         this.loaded = new Vector<>();
@@ -89,7 +89,7 @@ public class EquipMuch<T> extends Equip<T> {
 
     @Override
     public boolean isIdle() {
-        return this.running.isEmpty();
+        return this.loaded.isEmpty() && this.running.isEmpty();
     }
 
     @Override
@@ -339,21 +339,22 @@ public class EquipMuch<T> extends Equip<T> {
 
         notifyJobs();
 
-        if (now <= job.getStrategy().getMoveOut().getTo()) {
-            this.factory.dispatchToNext(job);
-        }
-        else {
+        if (job.getStrategy().getMoveOut().checkTo() && now > job.getStrategy().getMoveOut().getTo()) {
             job.updateInfo();
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
                     now,
-                    JobEvent.HOLD,
+                    JobEvent.QT_HOLD,
                     job.getQty(),
                     job.getOperation(),
                     getId(),
                     0,
                     job.getInfo()));
+        }
+        else {
+            job.setMoveInEquip(getId());
+            this.factory.dispatchToNext(job);
         }
     }
 

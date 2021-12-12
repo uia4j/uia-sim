@@ -1,5 +1,6 @@
 package uia.road;
 
+import java.util.Date;
 import java.util.List;
 
 import uia.road.events.EquipEvent;
@@ -32,11 +33,19 @@ public interface SimReportLogger {
 
     public void log(JobEvent e);
 
-    public void flush(String name);
-
     public List<OpEvent> getOpEvents();
 
     public List<EquipEvent> getEquipEvents();
 
     public List<JobEvent> getJobEvents();
+
+    public void flush(String name);
+
+    public void setEndTime(Date endTime);
+
+    public Date getEndTime();
+
+    public void setTotal(int total);
+
+    public int getTotal();
 }

@@ -6,6 +6,8 @@ import uia.road.SimInfo;
 
 public abstract class Event implements Comparable<Event> {
 
+    public static final String ERROR = "ERROR";
+
     protected final int time;
 
     protected final String event;

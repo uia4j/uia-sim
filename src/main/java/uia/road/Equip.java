@@ -122,14 +122,29 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         return this.operations;
     }
 
+    /**
+     * Returns the information.
+     *
+     * @return The information.
+     */
     public SimInfo getInfo() {
         return this.info;
     }
 
+    /**
+     * Returns the E10 data.
+     *
+     * @return The E10 data.
+     */
     public E10 getE10() {
         return this.e10;
     }
 
+    /**
+     * Returns the last executed time of the task on this equipment.
+     *
+     * @return The last executed time of the task on this equipment.
+     */
     public int getLastProcessedTicks() {
         return this.lastProcessedTicks;
     }
@@ -214,6 +229,10 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     public boolean isEnabled() {
         return this.enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = true;
     }
 
     /**
@@ -302,7 +321,14 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         }
     }
 
+    /**
+     * 检查是否预约 Schedule Down 或最后作业时间超时。
+     *
+     * @return True 当预约 Schedule Down 或最后作业时间超时。
+     */
     public boolean isScheduledDown() {
+        // 如果没有任何作业载入
+        // 如果最后作业时间超时
         if (this.getLoadedJobs().isEmpty() && this.getRunningJobs().isEmpty() && this.idleMax > 0) {
             return this.scheduledDown || this.factory.ticksNow() >= (this.lastProcessedTicks + this.idleMax);
         }

@@ -24,7 +24,11 @@ public class JobEvent extends Event {
 
     public static final String HOLD = "HOLD";
 
+    public static final String QT_HOLD = "QT_HOLD";
+
     public static final String DONE = "DONE";
+
+    public static final String FORCE_JUMP = "FORCE_JUMP";
 
     public static final String DENY = "DENY";
 

@@ -61,7 +61,7 @@ public interface JobSelector<T> {
         }
 
         public Job<T> getSelected() {
-            return selected;
+            return this.selected;
         }
 
         public void setSelected(Job<T> selected) {

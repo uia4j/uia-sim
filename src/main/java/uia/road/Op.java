@@ -113,6 +113,35 @@ public class Op<T> {
         }
     }
 
+    public synchronized boolean forceToNext(int waitAfter) {
+        if (this.jobs.isEmpty()) {
+            return false;
+        }
+        int now = this.factory.ticksNow();
+        List<Job<T>> nexts = new ArrayList<>();
+        for (Job<T> job : this.jobs) {
+            if (job.getDispatchedTime() + waitAfter <= now) {
+                nexts.add(job);
+                this.factory.log(new JobEvent(
+                        job.getId(),
+                        job.getProductName(),
+                        now,
+                        JobEvent.FORCE_JUMP,
+                        job.getQty(),
+                        job.getOperation(),
+                        null,
+                        0,
+                        job.getInfo()));
+                this.factory.dispatchToNext(job);
+            }
+        }
+        for (Job<T> job : nexts) {
+            this.jobs.remove(job);
+        }
+        nexts.clear();
+        return true;
+    }
+
     /**
      * Enqueues a box in this operation.
      *
@@ -134,7 +163,7 @@ public class Op<T> {
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
-                    now,
+                    job.getDispatchedTime(),
                     JobEvent.QT_PENDING,
                     job.getQty(),
                     this.id,
@@ -154,12 +183,12 @@ public class Op<T> {
         }
         // move in time control: hold
         int to = job.getStrategy().getMoveIn().getTo();
-        if (now > to) {
+        if (job.getStrategy().getMoveIn().checkTo() && now > to) {
             // hold
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
-                    now,
+                    job.getDispatchedTime(),
                     JobEvent.HOLD,
                     job.getQty(),
                     this.id,
@@ -172,7 +201,7 @@ public class Op<T> {
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
-                now,
+                job.getDispatchedTime(),
                 JobEvent.DISPATCHED,
                 job.getQty(),
                 this.id,
@@ -195,7 +224,7 @@ public class Op<T> {
         else {
             this.factory.log(new OpEvent(
                     this.id,
-                    this.factory.ticksNow(),
+                    now,
                     OpEvent.PUSH,
                     job.getProductName(),
                     this.jobs.size(),
@@ -220,12 +249,12 @@ public class Op<T> {
 
         // move in time control: hold
         int to = job.getStrategy().getMoveIn().getTo();
-        if (now > to) {
+        if (job.getStrategy().getMoveIn().checkTo() && now > to) {
             // hold
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
-                    now,
+                    job.getDispatchedTime(),
                     JobEvent.HOLD,
                     job.getQty(),
                     this.id,
@@ -238,7 +267,7 @@ public class Op<T> {
         this.factory.log(new JobEvent(
                 job.getId(),
                 job.getProductName(),
-                now,
+                job.getDispatchedTime(),
                 JobEvent.DISPATCHED,
                 job.getQty(),
                 this.id,
@@ -261,7 +290,7 @@ public class Op<T> {
         else {
             this.factory.log(new OpEvent(
                     this.id,
-                    this.factory.ticksNow(),
+                    now,
                     OpEvent.PUSH,
                     job.getProductName(),
                     this.jobs.size(),
@@ -352,27 +381,41 @@ public class Op<T> {
     }
 
     private synchronized Equip<T> push(Job<T> job) {
-        List<Equip<T>> equips = this.equips.stream()
-                .filter(e -> e.isEnabled() && e.isLoadable(job))
-                .collect(Collectors.toList());
-        CandidateInfo<T> ci = this.equipSelector.select(job, equips);
         int now = this.factory.ticksNow();
-        for (Equip<T> equip : ci.getIgnore()) {
+        try {
+            List<Equip<T>> equips = this.equips.stream()
+                    .filter(e -> e.isEnabled() && e.isLoadable(job))
+                    .collect(Collectors.toList());
+            CandidateInfo<T> ci = this.equipSelector.select(job, equips);
+            for (Equip<T> equip : ci.getIgnore()) {
+                this.factory.log(new OpEvent(
+                        getId(),
+                        now,
+                        OpEvent.DENY,
+                        job.getProductName(),
+                        this.jobs.size(),
+                        equip.getId(),
+                        new SimInfo().setString("ignore", equip.getPushInfo())));
+            }
+            for (Equip<T> equip : ci.getPassed()) {
+                if (equip.load(job)) {
+                    return equip;
+                }
+            }
+            return null;
+        }
+        catch (Exception ex) {
             this.factory.log(new OpEvent(
                     getId(),
                     now,
-                    OpEvent.DENY,
+                    OpEvent.ERROR,
                     job.getProductName(),
                     this.jobs.size(),
-                    equip.getId(),
-                    new SimInfo().setString("ignore", equip.getPushInfo())));
+                    null,
+                    new SimInfo().setString("ignore", ex.getMessage())));
+            ex.printStackTrace();
+            return null;
         }
-        for (Equip<T> equip : ci.getPassed()) {
-            if (equip.load(job)) {
-                return equip;
-            }
-        }
-        return null;
     }
 
     /**

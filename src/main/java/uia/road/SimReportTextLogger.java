@@ -1,6 +1,7 @@
 package uia.road;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -217,5 +218,23 @@ public class SimReportTextLogger implements SimReportLogger {
 
     private int sort(Event e1, Event e2) {
         return e1.getTime() - e2.getTime();
+    }
+
+    @Override
+    public void setEndTime(Date endTime) {
+    }
+
+    @Override
+    public Date getEndTime() {
+        return null;
+    }
+
+    @Override
+    public void setTotal(int total) {
+    }
+
+    @Override
+    public int getTotal() {
+        return 0;
     }
 }

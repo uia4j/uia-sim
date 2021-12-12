@@ -68,6 +68,10 @@ public class Factory<T> {
 
     private TimeType timeType;
 
+    private DispatchStrategy<T> dispStrategy;
+
+    private TreeSet<String> products;
+
     public Factory() {
         this(0);
     }
@@ -81,6 +85,8 @@ public class Factory<T> {
         this.pathTimeCalculator = new PathTimeCalculator.Simple<T>(defaultPathTime);
         this.timeType = TimeType.SEC;
         this.zeroTime = new Date();
+        this.dispStrategy = new DispatchStrategy.Same<>();
+        this.products = new TreeSet<>();
     }
 
     public Env getEnv() {
@@ -122,7 +128,6 @@ public class Factory<T> {
                     .findAny()
                     .isPresent();
         }
-        // bug: if job in path?
         return idle;
     }
 
@@ -166,6 +171,14 @@ public class Factory<T> {
 
     public void setPathTimeCalculator(PathTimeCalculator<T> pathTimeCalculator) {
         this.pathTimeCalculator = pathTimeCalculator;
+    }
+
+    public DispatchStrategy<T> getDispStrategy() {
+        return this.dispStrategy;
+    }
+
+    public void setDispStrategy(DispatchStrategy<T> dispStrategy) {
+        this.dispStrategy = dispStrategy;
     }
 
     /**
@@ -324,6 +337,7 @@ public class Factory<T> {
                 this.operations.put(op.getId(), op);
             }
         }
+        this.products.add(job.getProductName());
         op.enqueue(job, false);
     }
 
@@ -341,6 +355,7 @@ public class Factory<T> {
                 this.operations.put(op.getId(), op);
             }
         }
+        this.products.add(job.getProductName());
         op.enqueueNoDelay(job, false);
     }
 
@@ -358,6 +373,7 @@ public class Factory<T> {
                 this.operations.put(op.getId(), op);
             }
         }
+        this.products.add(job.getProductName());
         op.enqueue(job, true);
     }
 
@@ -375,6 +391,7 @@ public class Factory<T> {
                 this.operations.put(op.getId(), op);
             }
         }
+        this.products.add(job.getProductName());
         op.enqueueNoDelay(job, true);
     }
 
@@ -389,6 +406,7 @@ public class Factory<T> {
         if (eq == null) {
             return false;
         }
+        this.products.add(job.getProductName());
         return eq.load(job);
     }
 
@@ -398,8 +416,10 @@ public class Factory<T> {
      * @param doneJ The job
      */
     public void dispatchToNext(Job<T> doneJ) {
+        this.dispStrategy.replan(doneJ);
         Job<T> nextJ = doneJ.getNext();
         if (nextJ == null) {
+            this.products.remove(doneJ.getProductName());
             this.log(new JobEvent(
                     doneJ.getId(),
                     doneJ.getProductName(),
@@ -483,6 +503,48 @@ public class Factory<T> {
 
         try {
             return this.env.run(until);
+        }
+        finally {
+            for (Equip<T> eq : this.equips.values()) {
+                eq.close();
+            }
+        }
+    }
+
+    public void runCrazy(final int timeForceToNext, final int checkCycle) throws Exception {
+        runCrazy(timeForceToNext, checkCycle, 86400 * 60);
+    }
+
+    public void runCrazy(final int timeForceToNext, final int checkCycle, int dead) throws Exception {
+        if (this.equips.isEmpty()) {
+            return;
+        }
+        if (this.processTimeCalculator == null) {
+            throw new NullPointerException("No process time calculator. Set it up first.");
+        }
+
+        if (this.zeroTime == null) {
+            this.zeroTime = new Date();
+        }
+        for (Op<T> op : this.operations.values()) {
+            op.preload();
+        }
+        for (Equip<T> equip : this.equips.values()) {
+            equip.setEnabled(true);
+            this.env.process(equip);
+        }
+
+        this.env.process("forceToNext", y2 -> {
+            while (!this.products.isEmpty() && ticksNow() < dead) {
+                y2.call(this.env.timeout("forceToNext", checkCycle));
+                for (Op<T> op : this.operations.values()) {
+                    op.forceToNext(timeForceToNext);
+                }
+            }
+        });
+
+        try {
+            this.env.run();
         }
         finally {
             for (Equip<T> eq : this.equips.values()) {
