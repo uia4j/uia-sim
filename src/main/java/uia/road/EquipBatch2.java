@@ -51,6 +51,10 @@ public class EquipBatch2<T> extends Equip<T> {
     }
 
     @Override
+    public void unlimit() {
+    }
+
+    @Override
     public int getLoadable() {
         return this.batchSize - this.loaded.size() - getReservedNumber();
     }

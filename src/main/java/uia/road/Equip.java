@@ -309,6 +309,8 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
      */
     public abstract boolean load(Job<T> job);
 
+    public abstract void unlimit();
+
     public void close() {
         if (this.jobNotifier != null) {
             this.jobNotifier.envDown();

@@ -20,13 +20,13 @@ import uia.sim.Processable;
  */
 public class EquipMuch<T> extends Equip<T> {
 
-    private final int loadPorts;
-
-    private final ArrayList<Channel<T>> chs;
-
     private final List<Job<T>> loaded;
 
     private final List<Job<T>> running;
+
+    private int loadPorts;
+
+    private ArrayList<Channel<T>> chs;
 
     private Event chNotifier;
 
@@ -55,6 +55,27 @@ public class EquipMuch<T> extends Equip<T> {
 
     public List<Channel<T>> getChannels() {
         return this.chs;
+    }
+
+    public synchronized void forPacking() {
+        if (this.loadPorts >= 10000) {
+            return;
+        }
+
+        this.loadPorts = 10000;
+        for (int i = this.chs.size(); i <= 10000; i++) {
+            Channel<T> ch = new ChannelSimple<>(this.getId() + "_ch" + i, this);
+            this.chs.add(ch);
+        }
+    }
+
+    @Override
+    public void unlimit() {
+        this.loadPorts = 1000;
+        while (this.chs.size() < this.loadPorts) {
+            Channel<T> ch = new ChannelSimple<>(getId() + "_ch" + this.chs.size() + 1, this);
+            this.chs.add(ch);
+        }
     }
 
     @Override
