@@ -65,6 +65,8 @@ public class Job<T> {
 
     private boolean running;
 
+    private int seqNo;
+
     /**
      * Constructor.
      *
@@ -401,6 +403,14 @@ public class Job<T> {
             return null;
         }
         return this.prev.findPrevJob(id, true);
+    }
+
+    public int getSeqNo() {
+        return this.seqNo;
+    }
+
+    public void setSeqNo(int seqNo) {
+        this.seqNo = seqNo;
     }
 
     public Job<T> findNext(Function<Job<T>, Boolean> finder, boolean self) {

@@ -28,6 +28,8 @@ public class EquipEvent extends Event {
 
     public static final String DENY = "DENY";
 
+    public static final String UPDATE = "UPDATE";
+
     private String equip;
 
     private String ch;

@@ -39,4 +39,10 @@ public class TimeStrategy {
         this.from = 0;
         this.to = Integer.MAX_VALUE;
     }
+
+    public int remain(int now) {
+        return this.to < Integer.MAX_VALUE
+                ? this.to - now
+                : Integer.MAX_VALUE;
+    }
 }

@@ -484,10 +484,7 @@ public class Factory<T> {
             op.preload();
         }
         for (Equip<T> equip : this.equips.values()) {
-            // TODO: control internal
-            if (equip.isEnabled()) {
-                this.env.process(equip);
-            }
+            this.env.process(equip);
         }
 
         if (healthCheck > 0) {

@@ -39,7 +39,7 @@ public interface SimReportLogger {
 
     public List<JobEvent> getJobEvents();
 
-    public void flush(String name);
+    public String flush(String name);
 
     public void setEndTime(Date endTime);
 
