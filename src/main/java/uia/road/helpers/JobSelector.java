@@ -29,6 +29,10 @@ public interface JobSelector<T> {
 
         @Override
         public CandidateInfo<T> select(Equip<T> equip, List<Job<T>> jobs) {
+            if (!equip.isEnabled()) {
+                return new CandidateInfo<>(null, jobs);
+            }
+
             ArrayList<Job<T>> data = new ArrayList<>(jobs);
             Collections.shuffle(data);
             for (Job<T> job : data) {

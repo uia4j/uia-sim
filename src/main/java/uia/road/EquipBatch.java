@@ -230,6 +230,10 @@ public class EquipBatch<T> extends Equip<T> {
     }
 
     private synchronized Job<T> pull() {
+        if (!isEnabled()) {
+            return null;
+        }
+
         final Vector<Job<T>> jobs = new Vector<>();
         for (Op<T> op : this.operations) {
             op.getEnqueued().forEach(j -> jobs.add(j));

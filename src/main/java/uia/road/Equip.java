@@ -232,7 +232,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
     }
 
     public void setEnabled(boolean enabled) {
-        this.enabled = true;
+        this.enabled = enabled;
     }
 
     /**
