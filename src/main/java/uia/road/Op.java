@@ -176,6 +176,7 @@ public class Op<T> {
                     OpEvent.QT_PENDING,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     null,
                     job.getInfo()));
             this.factory.getEnv().process(new DelayEnqueue(job, from - now));
@@ -218,6 +219,7 @@ public class Op<T> {
                     OpEvent.ENQUEUE,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     null,
                     job.getInfo()));
         }
@@ -228,6 +230,7 @@ public class Op<T> {
                     OpEvent.PUSH,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     eq.getId(),
                     job.getInfo()));
         }
@@ -284,6 +287,7 @@ public class Op<T> {
                     OpEvent.ENQUEUE,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     null,
                     job.getInfo()));
         }
@@ -294,6 +298,7 @@ public class Op<T> {
                     OpEvent.PUSH,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     eq.getId(),
                     job.getInfo()));
         }
@@ -314,6 +319,7 @@ public class Op<T> {
                     OpEvent.PULL,
                     job.getProductName(),
                     this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     by,
                     job.getInfo()));
             return;
@@ -325,6 +331,7 @@ public class Op<T> {
                 OpEvent.PULL,
                 job.getProductName(),
                 this.jobs.size(),
+                this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                 by,
                 job.getInfo()));
     }
@@ -362,6 +369,7 @@ public class Op<T> {
                         OpEvent.PUSH,
                         job.getProductName(),
                         this.jobs.size(),
+                        this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                         eq.getId(),
                         job.getInfo()));
             }
@@ -382,6 +390,7 @@ public class Op<T> {
 
     private synchronized Equip<T> push(Job<T> job) {
         int now = this.factory.ticksNow();
+        int qty = this.jobs.stream().mapToInt(j -> j.getQty()).sum();
         try {
             List<Equip<T>> equips = this.equips.stream()
                     .filter(e -> e.isEnabled() && e.isLoadable(job))
@@ -394,6 +403,7 @@ public class Op<T> {
                         OpEvent.DENY,
                         job.getProductName(),
                         this.jobs.size(),
+                        qty,
                         equip.getId(),
                         new SimInfo().setString("ignore", equip.getPushInfo())));
             }
@@ -411,6 +421,7 @@ public class Op<T> {
                     OpEvent.ERROR,
                     job.getProductName(),
                     this.jobs.size(),
+                    qty,
                     null,
                     new SimInfo().setString("ignore", ex.getMessage())));
             ex.printStackTrace();

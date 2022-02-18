@@ -26,20 +26,24 @@ public class OpEvent extends Event {
 
     private int queued;
 
-    public OpEvent(String operation, int time, String event, String job, int queued, String equipment, SimInfo info) {
+    private int qty;
+
+    public OpEvent(String operation, int time, String event, String job, int queued, int qty, String equipment, SimInfo info) {
         super(time, event, info);
         this.operation = operation;
         this.job = job;
         this.queued = queued;
         this.equipment = equipment;
+        this.qty = qty;
     }
 
-    public OpEvent(String operation, int time, String event, String job, int queued, String equipment, Map<String, Object> info) {
+    public OpEvent(String operation, int time, String event, String job, int queued, int qty, String equipment, Map<String, Object> info) {
         super(time, event, info);
         this.operation = operation;
         this.job = job;
         this.queued = queued;
         this.equipment = equipment;
+        this.qty = qty;
     }
 
     public String getOperation() {
@@ -64,6 +68,14 @@ public class OpEvent extends Event {
 
     public void setQueued(int queued) {
         this.queued = queued;
+    }
+
+    public int getQty() {
+        return this.qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
     }
 
     public String getEquipment() {
