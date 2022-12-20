@@ -405,7 +405,7 @@ public class Op<T> {
                         this.jobs.size(),
                         qty,
                         equip.getId(),
-                        new SimInfo().setString("ignore", equip.getPushInfo())));
+                        new SimInfo().setString("ignore", equip.getPriorityInfo())));
             }
             for (Equip<T> equip : ci.getPassed()) {
                 if (equip.load(job)) {

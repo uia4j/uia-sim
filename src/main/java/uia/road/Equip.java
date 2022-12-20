@@ -53,7 +53,9 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private int compensationTime;
 
-    private String pushInfo;
+    private int priority;
+
+    private String priorityInfo;
 
     private int lastProcessedTicks;
 
@@ -76,6 +78,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.jobSelector = new JobSelector.Any<>();
         this.enabled = enabled;
         this.reserved = new Vector<>();
+        this.priority = 1;
     }
 
     /**
@@ -258,12 +261,20 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.strategy = strategy;
     }
 
-    public String getPushInfo() {
-        return this.pushInfo;
+    public int getPriority() {
+        return this.priority;
     }
 
-    public void setPushInfo(String pushInfo) {
-        this.pushInfo = pushInfo;
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public String getPriorityInfo() {
+        return this.priorityInfo;
+    }
+
+    public void setPriorityInfo(String priorityInfo) {
+        this.priorityInfo = priorityInfo;
     }
 
     /**
