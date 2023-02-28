@@ -14,7 +14,6 @@ public class EnvListenerAdapter implements EnvListener {
 
     @Override
     public void init(String message) {
-        System.out.println(String.format("init: %s", message));
     }
 
     @Override
@@ -24,7 +23,6 @@ public class EnvListenerAdapter implements EnvListener {
 
     @Override
     public void done(int time, String message) {
-        System.out.println(String.format("done: %s", message));
     }
 
 }

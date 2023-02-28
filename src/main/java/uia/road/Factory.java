@@ -313,6 +313,10 @@ public class Factory<T> {
      * @return True if the equipment is added into this factory.
      */
     public Equip<T> tryAddEquip(Equip<T> equip) {
+        if (equip == null) {
+            return null;
+        }
+
         synchronized (this.equips) {
             Equip<T> selected = this.equips.get(equip.getId());
             if (selected == null) {
