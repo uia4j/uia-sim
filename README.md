@@ -10,7 +10,7 @@ DESim4J is a Java port of [SimPy](https://simpy.readthedocs.io/en/latest/), __pr
 
 DESim4J aims to port the concepts used in SimPy to the Java world. Because there is no `yield` keyword in Java, the framework also implements a __yield-like__ API in package `uia.cor` to meet some coroutine scenarios.
 
-The [ROAD](https://github.com/gazer2kanlin/uia-road) is a sub-project that build a abstract simulator of the manufacturing factory.
+The [ROAD](https://github.com/uia4j/uia-road) is a sub-project that build a abstract simulator of the manufacturing factory.
 
 [API](https://uia4j.github.io/uia-sim/index.html)
 
@@ -107,6 +107,64 @@ public class Yield2WayTest {
 4. `gen.next()` - Ask if there is a new value or not and __release step 1__ at the same time.
 5. `int v = yield.call(i++)` - Get the result passed by `gen.send(i * i)`.
 
+### Class Diagram
+
+```mermaid
+classDiagram
+    Generator~T, R~ --> Yield~T, R~
+    Consumer <-- Yield~T, R~
+    Consumer ..> Yield~T, R~
+    Yield~T, R~ <-- Yieldable~T, R~
+
+    Generator: +next() boolean
+    Generator: +next(R rValue) boolean
+    Generator: +getValue() T
+    Yield: +call(T tValue)
+    Yield: +send(R rValue)
+    Yield: +next(boolean stop) boolean
+    Yield: +getValue() T
+    Consumer: +accept(Yield~T, R~ y)
+    Yieldable: #run()
+```
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    Controller --) Yieldable: new()
+    Controller ->> +Yield: accept()
+    Yield -->> +Generator: new()
+    Yield --) -Controller: generator
+
+    Yield ->> Yieldable: run()
+    loop
+        Yieldable ->> +Yield: call(T)
+        note right of Yieldable: send a value to the Controller
+        Yield ->> Yield: notifyAll()
+        note over Yield: notify Step-14 to get next value
+        Yield --) Yield: wait()
+        Yield --) -Yieldable: 
+        note over Yield: wait Step-12 to notify
+    end
+
+    loop
+        Controller ->> Generator: next()
+        Generator ->> +Yield: next()
+        Yield ->> Yield: notifyAll()
+        note over Yield: notify Step-9 to build next value
+        Yield --) Yield: wait()
+        Yield --) -Generator: 
+        note over Yield: wait Step-7 to notify
+        Controller ->> Generator: T getValue()
+        Generator ->> +Yield: T getValue()
+        Yield --) -Generator: value
+        note right of Controller: get last value from the Generator
+    end    
+
+```
+
+
 ## package uia.sim
 The package is core framework of __process-based discrete event simulation__.
 
@@ -114,6 +172,55 @@ Some documents
 
 * [Core Design](CORE-SIM.md)
 * [Examples](CORE-SIM-EXAMPLES.md)
+
+### Core Concept
+
+1. Create a event stream
+
+    ```mermaid
+    flowchart LR;
+        id1[[*E00]]-->E20;
+        E20-->E50;
+        E50-->E90;
+    ```
+
+2. Execute head event E00, and create a new event E55. The event stream becomes
+
+    ```mermaid
+    flowchart LR;
+        id1[[*E20]]-->E50;
+        E50-->id2([E55]);
+        id2([E55])-->E90;
+    ```
+
+3. Execute head event E20, and create a new event E53. The event stream becomes
+
+    ```mermaid
+    flowchart LR;
+        id1[[*E50]]-->id2([E53]);
+        id2([E53])-->id3([E55]);
+        id3([E55])-->E90;
+    ```
+
+2. Execute all events with ordering.
+
+    ```mermaid
+    flowchart LR;
+        id1[[*E53]]-->id2([E55]);
+        id2([E55])-->E90;
+    ```
+
+    ```mermaid
+    flowchart LR;
+        id1[[*E55]]-->E90;
+    ```
+    
+    ```mermaid
+    flowchart LR;
+        id1[[*E90]];
+    ```
+
+## Test Case
 
 Below is a Java test case compares with Python version.
 
