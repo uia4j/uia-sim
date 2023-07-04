@@ -30,15 +30,15 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
         // p1 (o1->02)
-        Job<Integer> p1o1 = new Job<>("1", "p1", o1.getId(), 1, 100);
+        Job<Integer> p1o1 = new Job<>("1", "p1", o1.getId(), 1, null, 100);
         p1o1.setQty(3);
-        Job<Integer> p1o2 = new Job<>("2", "p1", o2.getId(), 1, 50);
+        Job<Integer> p1o2 = new Job<>("2", "p1", o2.getId(), 1, null, 50);
         p1o2.setQty(3);
         p1o1.setNext(p1o2);
 
         // p2 (o1->02)
-        Job<Integer> p2o1 = new Job<>("1", "p2", o1.getId(), 1, 90);
-        Job<Integer> p2o2 = new Job<>("2", "p2", o2.getId(), 1, 110);
+        Job<Integer> p2o1 = new Job<>("1", "p2", o1.getId(), 1, null, 90);
+        Job<Integer> p2o2 = new Job<>("2", "p2", o2.getId(), 1, null, 110);
         p2o1.setNext(p2o2);
 
         factory.prepare(p1o1);  // p1 at o1
@@ -81,13 +81,13 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         o3.serve(e4);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 100);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 50);
-        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, 150);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 100);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 50);
+        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, null, 150);
         j1a.setNext(j1b).setNext(j1c);
-        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, 100);
-        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, 60);
-        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, 150);
+        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, null, 100);
+        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, null, 60);
+        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, null, 150);
         j2a.setNext(j2b).setNext(j2c);
 
         factory.prepare(j1a);
@@ -131,13 +131,13 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         o3.serve(e4);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 100);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 50);
-        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, 150);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 100);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 50);
+        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, null, 150);
         j1a.setNext(j1b).setNext(j1c);
-        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, 100);
-        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, 250);  // cause eq4 idle 50s
-        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, 150);
+        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, null, 100);
+        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, null, 250);  // cause eq4 idle 50s
+        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, null, 150);
         j2a.setNext(j2b).setNext(j2c);
 
         factory.prepare(j1a);
@@ -181,13 +181,13 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
         o3.serve(e4);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 100);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 200);
-        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, 150);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 100);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 200);
+        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, null, 150);
         j1a.setNext(j1b).setNext(j1c);
-        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, 50);
-        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, 350);  // late at op3
-        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, 150);
+        Job<Integer> j2a = new Job<>("1", "job2", o1.getId(), 1, null, 50);
+        Job<Integer> j2b = new Job<>("2", "job2", o2.getId(), 1, null, 350);  // late at op3
+        Job<Integer> j2c = new Job<>("3", "job2", o3.getId(), 1, null, 150);
         j2a.setNext(j2b).setNext(j2c);
 
         factory.dispatch(j2a, e1.getId());          // block job1, release job1 at 50
@@ -228,7 +228,7 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
 
         // build jobs
         for (int i = 1; i < 10; i++) {
-            factory.prepare(new Job<>("p" + i, "p" + i, o1.getId(), 1, 100));
+            factory.prepare(new Job<>("p" + i, "p" + i, o1.getId(), 1, null, 100));
         }
         factory.run(1000);
         //
@@ -275,10 +275,10 @@ public class FactroyTest implements ProcessTimeCalculator<Integer> {
 
         // build jobs
         for (int i = 1; i < 10; i++) {
-            factory.prepare(new Job<>("a" + i, "a" + i, o1.getId(), 1, 50));
+            factory.prepare(new Job<>("a" + i, "a" + i, o1.getId(), 1, null, 50));
         }
         for (int i = 1; i < 10; i++) {
-            factory.prepare(new Job<>("b" + i, "b" + i, o2.getId(), 1, 50));
+            factory.prepare(new Job<>("b" + i, "b" + i, o2.getId(), 1, null, 50));
         }
         factory.run(1000);
         //

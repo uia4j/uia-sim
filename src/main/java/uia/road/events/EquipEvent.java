@@ -4,30 +4,72 @@ import java.util.Map;
 
 import uia.road.SimInfo;
 
+/**
+ * The event on the equipment.
+ *
+ * @author Kan
+ *
+ */
 public class EquipEvent extends Event {
 
+    /**
+     * Event: move in the product.
+     */
     public static final String MOVE_IN = "MOVE_IN";
 
+    /**
+     * Event: start the process.
+     */
     public static final String PROCESS_START = "PROCESS_START";
 
+    /**
+     * Event: processing the product.
+     */
     public static final String PROCESSING = "PROCESSING";
 
+    /**
+     * Event: complete the process.
+     */
     public static final String PROCESS_END = "PROCESS_END";
 
+    /**
+     * Event: move out the product.
+     */
     public static final String MOVE_OUT = "MOVE_OUT";
 
+    /**
+     * Event: start to idle.
+     */
     public static final String IDLE_START = "IDLE_START";
 
+    /**
+     * Event: finish from idle.
+     */
     public static final String IDLE_END = "IDLE_END";
 
+    /**
+     * Event: busy.
+     */
     public static final String BUSY = "BUSY";
 
+    /**
+     * Event: wait the channel available.
+     */
     public static final String WAITING_CH = "WAITING_CH";
 
+    /**
+     * Event: pull nothing from operations.
+     */
     public static final String PULL_EMPTY = "PULL_EMPTY";
 
+    /**
+     * Event: deny to process a product.
+     */
     public static final String DENY = "DENY";
 
+    /**
+     * Event: update
+     */
     public static final String UPDATE = "UPDATE";
 
     private String equip;

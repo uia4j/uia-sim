@@ -20,9 +20,9 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
 
         factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
-        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 100);
+        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, null, 100);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, 100);
+        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, null, 100);
         p2.setQty(7);
 
         factory.prepare(p1);
@@ -47,11 +47,11 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
 
         factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
-        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, 100);
+        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, null, 100);
         p1.setQty(1);
-        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), 1, 100);
+        Job<Integer> p2 = new Job<>("p2", "p2", o1.getId(), 1, null, 100);
         p2.setQty(1);
-        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), 1, 100);
+        Job<Integer> p3 = new Job<>("p3", "p3", o1.getId(), 1, null, 100);
         p2.setQty(1);
 
         factory.prepare(p1);
@@ -84,7 +84,7 @@ public class EquipMuchTest implements ProcessTimeCalculator<Integer> {
 
         factory.setProcessTimeCalculator((e, j) -> new TimeInfo(j.getData().intValue()));
 
-        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, 100);
+        Job<Integer> p1 = new Job<>("p1", "p1", o1.getId(), 1, null, 100);
         p1.setQty(5);
 
         factory.prepare(p1);

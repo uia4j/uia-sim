@@ -15,15 +15,15 @@ public class Job<T> {
 
     private final String id;
 
+    private final int hotLevel;
+
+    private final String hotReason;
+
     private final String productName;
 
     private final String operation;
 
     private final T data;
-
-    private String area;
-
-    private int denyCount;
 
     private final SimInfo info;
 
@@ -57,7 +57,7 @@ public class Job<T> {
 
     private String denyCode;
 
-    private String denyInfo;
+    private int denyCount;
 
     private int index;
 
@@ -67,17 +67,35 @@ public class Job<T> {
 
     private int seqNo;
 
+    private String area;
+
     /**
      * Constructor.
      *
      * @param id The id.
      * @param productName The product name.
      * @param operation The operation.
-     * @param priority The priority.
+     * @param hotLevel The hot level.
      * @param data The reference data.
      */
-    public Job(String id, String productName, String operation, int priority, T data) {
+    public Job(String id, String productName, String operation, int hotLevel, T data) {
+        this(id, productName, operation, hotLevel, null, data);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param id The id.
+     * @param productName The product name.
+     * @param operation The operation.
+     * @param hotLevel The hot level.
+     * @param hotReason The hot reason.
+     * @param data The reference data.
+     */
+    public Job(String id, String productName, String operation, int hotLevel, String hotReason, T data) {
         this.id = id;
+        this.hotLevel = hotLevel;
+        this.hotReason = hotReason;
         this.productName = productName;
         this.operation = operation;
         this.data = data;
@@ -85,8 +103,8 @@ public class Job<T> {
         this.strategy = new Strategy();
         this.qty = 1;
         this.engineering = false;
-        this.priority = priority;
-        this.denyInfo = "OK";
+        this.priority = hotLevel;
+        this.priorityInfo = hotReason;
         this.running = false;
     }
 
@@ -97,10 +115,11 @@ public class Job<T> {
      */
     public Job(Job<T> job) {
         this.id = job.id;
+        this.hotLevel = job.hotLevel;
+        this.hotReason = job.hotReason;
         this.productName = job.productName;
         this.operation = job.operation;
         this.data = job.data;
-        this.area = job.area;
         this.info = job.info;
         this.strategy = job.strategy;
         this.dispatchingTime = job.dispatchingTime;
@@ -114,14 +133,24 @@ public class Job<T> {
         this.priority = job.priority;
         this.priorityInfo = job.priorityInfo;
         this.denyCode = job.denyCode;
-        this.denyInfo = job.denyInfo;
+        this.denyCount = job.denyCount;
         this.index = job.index;
         this.predictProcessTime = job.predictProcessTime;
         this.running = job.running;
+        this.seqNo = job.seqNo;
+        this.area = job.area;
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public int getHotLevel() {
+        return this.hotLevel;
+    }
+
+    public String getHotReason() {
+        return this.hotReason;
     }
 
     public boolean isRunning() {
@@ -326,13 +355,9 @@ public class Job<T> {
         this.denyCode = denyCode;
     }
 
-    public String getDenyInfo() {
-        return this.denyInfo;
-    }
-
-    public void setDenyInfo(String denyInfo) {
-        this.denyInfo = denyInfo == null ? "OK" : denyInfo;
-    }
+    //public String getDenyInfo() {
+    //    return this.priorityInfo == null ? "OK" : this.priorityInfo;
+    //}
 
     public int getPredictProcessTime() {
         return this.predictProcessTime;
@@ -441,6 +466,12 @@ public class Job<T> {
 
     public Job<T> last() {
         return this.next == null ? this : this.next.last();
+    }
+
+    public void rebase() {
+        this.priority = this.hotLevel;
+        this.priorityInfo = this.hotReason;
+        this.denyCode = null;
     }
 
     public void updateInfo() {

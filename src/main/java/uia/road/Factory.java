@@ -340,9 +340,9 @@ public class Factory<T> {
                 op = new Op<T>(job.getOperation(), this);
                 this.operations.put(op.getId(), op);
             }
+            op.enqueue(job, false);
         }
         this.products.add(job.getProductName());
-        op.enqueue(job, false);
     }
 
     /**

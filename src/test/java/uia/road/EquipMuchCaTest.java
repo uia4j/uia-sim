@@ -28,9 +28,9 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Op<Integer> o1 = factory.tryCreateOperation("o1");
         o1.serve(e1);
 
-        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 90);
+        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, null, 90);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, 80);
+        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, null, 80);
         p2.setQty(7);
 
         factory.prepare(p1);
@@ -60,9 +60,9 @@ public class EquipMuchCaTest implements ChannelSelector<Integer> {
         Op<Integer> o1 = factory.tryCreateOperation("o1");
         o1.serve(e1);
 
-        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, 100);
+        Job<Integer> p1 = new Job<>("1", "p1", o1.getId(), 1, null, 100);
         p1.setQty(5);
-        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, 100);
+        Job<Integer> p2 = new Job<>("1", "p2", o1.getId(), 1, null, 100);
         p2.setQty(7);
 
         factory.prepare(p1);

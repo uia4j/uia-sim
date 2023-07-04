@@ -44,9 +44,9 @@ public class ProcessTimeCalculatorTest {
         o3.serve(e3);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 100);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 100);
-        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, 100);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 100);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 100);
+        Job<Integer> j1c = new Job<>("3", "job1", o3.getId(), 1, null, 100);
         j1a.setNext(j1b).setNext(j1c);
 
         factory.prepare(j1a);

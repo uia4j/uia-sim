@@ -1,6 +1,7 @@
 package uia.road;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
@@ -61,8 +62,6 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
 
     private int idleMax;
 
-    private Event idleTimeout;
-
     /**
      * The constructor.
      *
@@ -78,6 +77,10 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         this.jobSelector = new JobSelector.Any<>();
         this.enabled = enabled;
         this.reserved = new Vector<>();
+        this.priority = 1;
+    }
+
+    public void rebase() {
         this.priority = 1;
     }
 
@@ -379,7 +382,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
                     EquipEvent.DENY,
                     job.getOperation(),
                     job.getProductName(),
-                    new SimInfo().setString("ignore", job.getDenyInfo())));
+                    new SimInfo().setString("ignore", job.getPriorityInfo())));
             this.factory.log(new JobEvent(
                     job.getId(),
                     job.getProductName(),
@@ -390,7 +393,7 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
                     getId(),
                     0,
                     0,
-                    job.getInfo()).deny(job.getDenyCode(), job.getDenyInfo()));
+                    job.getInfo()).deny(job.getDenyCode(), job.getPriorityInfo()));
         }
     }
 
@@ -441,15 +444,60 @@ public abstract class Equip<T> extends Processable implements ChannelListener<T>
         int time = now() - this.timeTag;
         this.timeTag = now();
         this.e10.addProductiveTime(time);
-
-        //if (this.idleMax > 0) {
-        //    this.idleTimeout = this.env().timeout(getId() + "_idle_timeout", this.idleMax);
-        //}
-
         return time;
     }
 
     @Override
     protected void initial() {
+    }
+
+    public static class Die<T> extends Equip<T> {
+
+        protected Die(Factory<T> factory) {
+            super("DIE", factory, false);
+        }
+
+        @Override
+        public void processEnded(Channel<T> channl, Job<T> job, int qty) {
+        }
+
+        @Override
+        public int getLoadable() {
+            return 0;
+        }
+
+        @Override
+        public boolean isLoadable(Job<T> job) {
+            return false;
+        }
+
+        @Override
+        public boolean isIdle() {
+            return false;
+        }
+
+        @Override
+        public List<Job<T>> getLoadedJobs() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Job<T>> getRunningJobs() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public boolean load(Job<T> job) {
+            return false;
+        }
+
+        @Override
+        public void unlimit() {
+        }
+
+        @Override
+        protected void run() {
+        }
+
     }
 }

@@ -4,6 +4,12 @@ import java.util.Map;
 
 import uia.road.SimInfo;
 
+/**
+ * The event on the operation.
+ *
+ * @author Kan
+ *
+ */
 public class OpEvent extends Event {
 
     public static final String IDLE = "IDLE";

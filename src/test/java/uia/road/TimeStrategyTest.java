@@ -36,8 +36,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 10);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 10);
         j1a.setNext(j1b);
 
         // control move in/out
@@ -80,8 +80,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 20);
         j1a.setNext(j1b);
 
         // control move in
@@ -126,8 +126,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 20);
         j1a.setNext(j1b);
 
         // legal before 15
@@ -181,8 +181,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 10);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 10);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);
@@ -233,8 +233,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 20);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);
@@ -283,8 +283,8 @@ public class TimeStrategyTest implements ProcessTimeCalculator<Integer> {
         o2.serve(e2);
 
         // build jobs
-        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, 10);
-        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, 20);
+        Job<Integer> j1a = new Job<>("1", "job1", o1.getId(), 1, null, 10);
+        Job<Integer> j1b = new Job<>("2", "job1", o2.getId(), 1, null, 20);
         j1a.setNext(j1b);
 
         factory.prepare(j1a);

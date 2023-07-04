@@ -76,6 +76,11 @@ public class Op<T> {
         return new ArrayList<>(this.equips);
     }
 
+    /**
+     * Returns information for simulating.
+     *
+     * @return The information for simulating.
+     */
     public SimInfo getInfo() {
         return this.info;
     }
@@ -90,10 +95,20 @@ public class Op<T> {
 
     }
 
+    /**
+     * Returns the equipment selector.
+     *
+     * @return The equipment selector.
+     */
     public EquipSelector<T> getEquipSelector() {
         return this.equipSelector;
     }
 
+    /**
+     * Sets the equipment selector.
+     *
+     * @param equipSelector The equipment selector.
+     */
     public void setEquipSelector(EquipSelector<T> equipSelector) {
         this.equipSelector = equipSelector;
     }
@@ -113,6 +128,12 @@ public class Op<T> {
         }
     }
 
+    /**
+     * Forces all jobs to move to next operation.
+     *
+     * @param waitAfter Time after.
+     * @return False if no jobs in the queue.
+     */
     public synchronized boolean forceToNext(int waitAfter) {
         if (this.jobs.isEmpty()) {
             return false;
@@ -143,7 +164,7 @@ public class Op<T> {
     }
 
     /**
-     * Enqueues a box in this operation.
+     * Enqueues a job in this operation.
      *
      * @param job The job.
      * @param forceToPush Force to push to the equipment.
@@ -198,21 +219,21 @@ public class Op<T> {
                     job.getInfo()));
             return;
         }
-        // dispatched
-        this.factory.log(new JobEvent(
-                job.getId(),
-                job.getProductName(),
-                job.getDispatchedTime(),
-                JobEvent.DISPATCHED,
-                job.getQty(),
-                this.id,
-                null,
-                0,
-                job.getInfo()));
-
         Equip<T> eq = forceToPush ? push(job) : null;
         if (eq == null) {
             this.jobs.add(job);
+            // job
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    job.getDispatchedTime(),
+                    JobEvent.DISPATCHED,
+                    job.getQty(),
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()));
+            // operation
             this.factory.log(new OpEvent(
                     this.id,
                     now,
@@ -223,7 +244,42 @@ public class Op<T> {
                     null,
                     job.getInfo()));
         }
+        else if (eq instanceof Equip.Die) {
+            // job
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    job.getDispatchedTime(),
+                    JobEvent.DISPATCHED,
+                    job.getQty(),
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()).deny("DIE", "DIE"));
+            // operation
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    OpEvent.ENQUEUE,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
+                    "DIE",
+                    job.getInfo()).deny("DIE", "DIE"));
+        }
         else {
+            // job
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    job.getDispatchedTime(),
+                    JobEvent.DISPATCHED,
+                    job.getQty(),
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()));
+            // operation
             this.factory.log(new OpEvent(
                     this.id,
                     now,
@@ -237,7 +293,7 @@ public class Op<T> {
     }
 
     /**
-     * Enqueues a box in this operation.
+     * Enqueues a job in this operation.
      *
      * @param job The job.
      * @param forceToPush Force to push to the equipment.
@@ -290,6 +346,27 @@ public class Op<T> {
                     this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
                     null,
                     job.getInfo()));
+        }
+        else if (eq instanceof Equip.Die) {
+            this.factory.log(new OpEvent(
+                    this.id,
+                    now,
+                    OpEvent.ENQUEUE,
+                    job.getProductName(),
+                    this.jobs.size(),
+                    this.jobs.stream().mapToInt(j -> j.getQty()).sum(),
+                    null,
+                    job.getInfo()).deny("DIE", "ZERO loadable equipments"));
+            this.factory.log(new JobEvent(
+                    job.getId(),
+                    job.getProductName(),
+                    job.getDispatchedTime(),
+                    JobEvent.DISPATCHED,
+                    job.getQty(),
+                    this.id,
+                    null,
+                    0,
+                    job.getInfo()).deny("DIE", "ZERO loadable equipments"));
         }
         else {
             this.factory.log(new OpEvent(
@@ -361,7 +438,7 @@ public class Op<T> {
         while (i < this.jobs.size()) {
             Job<T> job = this.jobs.get(i);
             Equip<T> eq = push(job);
-            if (eq != null) {
+            if (eq != null && !(eq instanceof Equip.Die)) {
                 this.jobs.remove(job);
                 this.factory.log(new OpEvent(
                         this.id,
@@ -377,15 +454,6 @@ public class Op<T> {
                 i++;
             }
         }
-        //if (this.jobs.isEmpty()) {
-        //    this.factory.log(new OpEvent(
-        //            this.id,
-        //            this.factory.ticksNow(),
-        //            OpEvent.IDLE,
-        //            null,
-        //            this.jobs.size(),
-        //            null));
-        //}
     }
 
     private synchronized Equip<T> push(Job<T> job) {
@@ -393,7 +461,7 @@ public class Op<T> {
         int qty = this.jobs.stream().mapToInt(j -> j.getQty()).sum();
         try {
             List<Equip<T>> equips = this.equips.stream()
-                    .filter(e -> e.isEnabled() && e.isLoadable(job))
+                    .filter(e -> e.isEnabled())
                     .collect(Collectors.toList());
             CandidateInfo<T> ci = this.equipSelector.select(job, equips);
             for (Equip<T> equip : ci.getIgnore()) {
@@ -412,7 +480,10 @@ public class Op<T> {
                     return equip;
                 }
             }
-            return null;
+
+            return ci.getIgnore().size() != this.equips.size()
+                    ? null
+                    : new Equip.Die<>(this.factory);
         }
         catch (Exception ex) {
             this.factory.log(new OpEvent(

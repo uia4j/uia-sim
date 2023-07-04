@@ -38,7 +38,7 @@ public class JobSelectorTest implements JobSelector<Domain> {
         // build jobs
         Random r = new Random();
         for (int i = 0; i < 10; i++) {
-            factory.prepare(new Job<>("" + i, "job" + i, o1.getId(), 1, new Domain(r.nextInt(5), 20)));
+            factory.prepare(new Job<>("" + i, "job" + i, o1.getId(), 1, null, new Domain(r.nextInt(5), 20)));
         }
 
         factory.run(1000);

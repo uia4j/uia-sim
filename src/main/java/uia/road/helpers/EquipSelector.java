@@ -24,43 +24,51 @@ public interface EquipSelector<T> {
      */
     public CandidateInfo<T> select(Job<T> job, List<Equip<T>> equips);
 
+    /**
+     * A simple job selector.
+     *
+     * @author Kan
+     * @param <T> Reference data of the job.
+     */
     public static class Any<T> implements EquipSelector<T> {
 
         @Override
         public CandidateInfo<T> select(Job<T> job, List<Equip<T>> equips) {
-            if (equips.isEmpty()) {
-                return new CandidateInfo<>(null, equips, Collections.emptyList());
-            }
-            return new CandidateInfo<>(equips.get(0), equips, Collections.emptyList());
+            return new CandidateInfo<>(equips, Collections.emptyList());
         }
     }
 
+    /**
+     * The result of selection.
+     *
+     * @author Kan
+     * @param <T> Reference data of the job.
+     */
     public static class CandidateInfo<T> {
-
-        private Equip<T> selected;
 
         private final List<Equip<T>> passed;
 
         private final List<Equip<T>> ignore;
 
-        public CandidateInfo(Equip<T> selected, List<Equip<T>> passed, List<Equip<T>> ignore) {
-            this.selected = selected;
+        public CandidateInfo(List<Equip<T>> passed, List<Equip<T>> ignore) {
             this.passed = passed;
             this.ignore = ignore;
         }
 
-        public Equip<T> getSelected() {
-            return this.selected;
-        }
-
-        public void setSelected(Equip<T> selected) {
-            this.selected = selected;
-        }
-
+        /**
+         * Returns equipments which can are loadable.
+         *
+         * @return The equipments.
+         */
         public List<Equip<T>> getPassed() {
             return this.passed;
         }
 
+        /**
+         * Returns equipments which can are not loadable.
+         *
+         * @return The equipments.
+         */
         public List<Equip<T>> getIgnore() {
             return this.ignore;
         }

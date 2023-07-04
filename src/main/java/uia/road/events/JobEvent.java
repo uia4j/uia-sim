@@ -4,6 +4,12 @@ import java.util.Map;
 
 import uia.road.SimInfo;
 
+/**
+ * The event on the job.
+ *
+ * @author Kan
+ *
+ */
 public class JobEvent extends Event {
 
     public static final String MOVE_IN = "MOVE_IN";
