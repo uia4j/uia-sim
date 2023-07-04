@@ -111,20 +111,20 @@ public class Yield2WayTest {
 
 ```mermaid
 classDiagram
-    Generator~T, R~ --> Yield~T, R~
-    Consumer <-- Yield~T, R~
-    Consumer ..> Yield~T, R~
-    Yield~T, R~ <-- Yieldable~T, R~
+    Generator --> Yield
+    Consumer <-- Yield
+    Consumer ..> Yield
+    Yield --> Yieldable
 
-    Generator: +next() boolean
-    Generator: +next(R rValue) boolean
-    Generator: +getValue() T
-    Yield: +call(T tValue)
-    Yield: +send(R rValue)
-    Yield: +next(boolean stop) boolean
-    Yield: +getValue() T
-    Consumer: +accept(Yield~T, R~ y)
-    Yieldable: #run()
+    Generator: next() boolean
+    Generator: next(R) boolean
+    Generator: getValue() T
+    Yield: call(T)
+    Yield: send(R)
+    Yield: next(boolean stop) boolean
+    Yield: getValue() T
+    Consumer: accept(Yield)
+    Yieldable: run()
 ```
 
 ### Sequence Diagram
@@ -176,49 +176,43 @@ Some documents
 ### Core Concept
 
 1. Create a event stream
-
-    ```mermaid
-    flowchart LR;
-        id1[[*E00]]-->E20;
-        E20-->E50;
-        E50-->E90;
-    ```
+ ```mermaid
+ flowchart LR;
+     id1[[*E00]]-->E20;
+     E20-->E50;
+     E50-->E90;
+ ```
 
 2. Execute head event E00, and create a new event E55. The event stream becomes
-
-    ```mermaid
-    flowchart LR;
-        id1[[*E20]]-->E50;
-        E50-->id2([E55]);
-        id2([E55])-->E90;
-    ```
+ ```mermaid
+ flowchart LR;
+     id1[[*E20]]-->E50;
+     E50-->id2([E55]);
+     id2([E55])-->E90;
+ ```
 
 3. Execute head event E20, and create a new event E53. The event stream becomes
+ ```mermaid
+ flowchart LR;
+     id1[[*E50]]-->id2([E53]);
+     id2([E53])-->id3([E55]);
+     id3([E55])-->E90;
+ ```
 
-    ```mermaid
-    flowchart LR;
-        id1[[*E50]]-->id2([E53]);
-        id2([E53])-->id3([E55]);
-        id3([E55])-->E90;
-    ```
-
-2. Execute all events with ordering.
-
-    ```mermaid
-    flowchart LR;
-        id1[[*E53]]-->id2([E55]);
-        id2([E55])-->E90;
-    ```
-
-    ```mermaid
-    flowchart LR;
-        id1[[*E55]]-->E90;
-    ```
-    
-    ```mermaid
-    flowchart LR;
-        id1[[*E90]];
-    ```
+4. Execute all events with ordering.
+ ```mermaid
+ flowchart LR;
+     id1[[*E53]]-->id2([E55]);
+     id2([E55])-->E90;
+ ```
+ ```mermaid
+ flowchart LR;
+     id1[[*E55]]-->E90;
+ ```
+ ```mermaid
+ flowchart LR;
+     id1[[*E90]];
+ ```
 
 ## Test Case
 
