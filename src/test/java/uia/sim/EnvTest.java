@@ -17,6 +17,14 @@ public class EnvTest {
     }
 
     @Test
+    public void testHello2() {
+        Env env = new Env();
+        env.process(new Hello("Jack"));
+        env.process(new Hello("Rose", 15, 2));
+        env.run();
+    }
+
+    @Test
     public void testBye() {
         Env env = new Env();
         env.process("bye", new Bye(env));
@@ -147,16 +155,28 @@ public class EnvTest {
      */
     public class Hello extends Processable {
 
+        private int to1;
+
+        private int to2;
+
         public Hello(String name) {
             super(name);
+            this.to1 = 10;
+            this.to2 = 10;
+        }
+
+        public Hello(String name, int to1, int to2) {
+            super(name);
+            this.to1 = to1;
+            this.to2 = to2;
         }
 
         @Override
         public void run() {
-            yield(env().timeout(10));
-            System.out.println(this + " Hello");
-            yield().call(env().timeout(10));
-            System.out.println(this + " Hi");
+            yield(env().timeout(this.to1));
+            System.out.printf("%s> %s, Hello\n", this, this.env().getNow());
+            yield().call(env().timeout(this.to2));
+            System.out.printf("%s> %s, Hi\n", this, this.env().getNow());
         }
 
         @Override

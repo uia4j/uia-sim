@@ -214,6 +214,40 @@ Some documents
      id1[[*E90]];
  ```
 
+### Class Diagram
+
+```mermaid
+classDiagram
+
+    Env --* Job
+    Job --> Event
+    Event <-- Process
+    Event <|-- Process
+    Process -- Processable
+    Consumer~Event~ --> Process: resume()
+    Consumer~Event~ <--Event : callback()
+    Process --> Generator
+    Processable --> Yield
+    Env: PriorityBlockingQueue~Job~ jobs
+    Yield ..> Process
+    Yield ..> Generator
+
+    <<coroutine>> Yield
+    <<coroutine>> Generator
+    <<abstract>> Processable
+
+    Process: Consumer~Event~ resumeCallable
+    Process: +resume(Event)
+
+    Processable: #run()
+    Processable: #yield() Yield
+    Processable: #yield(Event)
+
+    Event: +callback()
+
+```
+
+
 ## Test Case
 
 Below is a Java test case compares with Python version.
