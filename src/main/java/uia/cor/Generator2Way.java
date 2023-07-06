@@ -51,6 +51,8 @@ public class Generator2Way<T, R> {
     /**
      * Checks if there is a next iteration or not.<br>
      *
+     * <p>The call will be blocked until getting next value.
+     *
      * @return True if there is a next iteration.
      */
     public synchronized boolean next() {
@@ -61,6 +63,8 @@ public class Generator2Way<T, R> {
      * Checks if there is a next iteration or not.<br>
      * The method calls 2 methods: send(value), next().
      *
+     * <p>The call will be blocked until getting next value.
+     *
      * @param callResult The result for previous call().
      * @return True if there is a next iteration.
      */
@@ -70,7 +74,9 @@ public class Generator2Way<T, R> {
     }
 
     /**
-     * Returns the last result and tests if there is a next iteration or not.
+     * Returns the last result and tests if there is a next iteration or not.<br>
+     *
+     * <p>The call will be blocked until getting next value.
      *
      * @param callResult The result sent back to the iteration.
      * @return The next information.

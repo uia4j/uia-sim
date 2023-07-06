@@ -42,13 +42,7 @@ public class Process extends Event {
     public Process(Env env, String eventId, Consumer<Yield2Way<Event, Object>> taskRunner) {
         super(env, eventId);
         this.taskGen = Yield2Way.accept(eventId, taskRunner);
-        this.resumeCallable = new Consumer<Event>() {
-
-            @Override
-            public void accept(Event event) {
-                Process.this.resume(event);
-            }
-        };
+        this.resumeCallable = this::resume;
         this.target = new Initialize(this);	// used to startup the resume()
     }
 
@@ -62,13 +56,7 @@ public class Process extends Event {
     public Process(Env env, String eventId, Yieldable2Way<Event, Object> taskRunner) {
         super(env, eventId);
         this.taskGen = Yield2Way.accept(eventId, taskRunner);
-        this.resumeCallable = new Consumer<Event>() {
-
-            @Override
-            public void accept(Event event) {
-                Process.this.resume(event);
-            }
-        };
+        this.resumeCallable = this::resume;
         this.target = new Initialize(this);	// used to startup the resume()
     }
 
@@ -147,9 +135,9 @@ public class Process extends Event {
     /**
      * Resumes to execute the next ONE event which the state is 'waiting'.<br>
      *
-     * This is the  most important part of this framework).
+     * This is the most important part of this framework).
      *
-     * @param by The event resumes the process.
+     * @param by The event which resumes the process.
      */
     public synchronized void resume(Event by) {
         if (this.taskGen.isClosed()) {
@@ -174,7 +162,7 @@ public class Process extends Event {
                 event.defused();
                 // this.env.raiseProcessFailed(this.env.getNow(), getId(), event);
 
-                // 回傳  exception 給前一次的 yield，並檢查是否有新的 yield。
+                // return an Exception to last yield called , and check if new value is available
                 if (event.getValue() == null) {
                     next = this.taskGen.errorNext(new SimEventException(this, this.id + " interrupted"));
                 }
@@ -189,17 +177,18 @@ public class Process extends Event {
             else {
                 // this.env.raiseProcessDone(this.env.getNow(), getId(), event);
 
-                // 回傳  event.value 給前一次的 yield，並檢查是否有新的 yield。
+                // return a result to last yield called , and check if new value is available
                 next = this.taskGen.next(event.getValue());
             }
             if (next) {
                 event = this.taskGen.getValue();
-                // 檢查 event 是否未處理
+                // check if event is processed or not.
                 if (!event.isProcessed()) {
-                    // 關鍵：將此 process 的 resume 流程掛載至 event 上。
+                    // key point: hook a callable pointer in the event.
                     event.addCallable(this.resumeCallable);
-                    // 中斷，等下一次 resume。
                     logger.debug(String.format("%4d> %s> resume(%s), %s, blocking", this.env.getNow(), getId(), tx, event));
+
+                    // next is still true here.
                     break;
                 }
                 else {

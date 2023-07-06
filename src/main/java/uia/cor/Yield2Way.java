@@ -140,7 +140,9 @@ public class Yield2Way<T, R> {
     }
 
     /**
-     * Checks if there is a next iteration.
+     * Checks if there is a next iteration.<br>
+     *
+     * <p>The call will be blocked until getting new result.
      *
      * @param stopIteration Forces to stop the iteration.
      * @return True if there is a next iteration.
@@ -164,7 +166,9 @@ public class Yield2Way<T, R> {
     }
 
     /**
-     * Submits a new value to the paired generator.
+     * Submits a new value to the paired generator.<br>
+     *
+     * <p>The call will be blocked until getting new result.
      *
      * @param value The new value.
      * @return The result sent back from the generator.
@@ -192,7 +196,9 @@ public class Yield2Way<T, R> {
     }
 
     /**
-     * Submits a new value to the paired generator.
+     * Submits a new value to the paired generator.<br>
+     *
+     * <p>The call will be blocked until getting new result.
      *
      * @param supplier The function to get the new value..
      * @return The result sent back from the generator.

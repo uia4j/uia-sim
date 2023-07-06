@@ -112,9 +112,10 @@ public class Yield2WayTest {
 ```mermaid
 classDiagram
     Generator --> Yield
-    Consumer <-- Yield
     Consumer ..> Yield
-    Yield --> Yieldable
+    Yield <-- Yieldable
+
+    <<Iterable>> Consumer
 
     Generator: next() boolean
     Generator: next(R) boolean
@@ -132,23 +133,24 @@ classDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    Controller --) Yieldable: new()
+    Controller --) Consumer: new()
     Controller ->> +Yield: accept()
     Yield -->> +Generator: new()
     Yield --) -Controller: generator
 
-    Yield ->> Yieldable: run()
-    loop
-        Yieldable ->> +Yield: call(T)
-        note right of Yieldable: send a value to the Controller
+    Yield --) Consumer: accept()
+    note over Yield: in a new Thread
+    loop thread-iterable
+        Consumer ->> +Yield: call(T)
+        note right of Consumer: send a value to the Controller
         Yield ->> Yield: notifyAll()
         note over Yield: notify Step-14 to get next value
         Yield --) Yield: wait()
-        Yield --) -Yieldable: 
+        Yield --) -Consumer: 
         note over Yield: wait Step-12 to notify
     end
 
-    loop
+    loop thread-main
         Controller ->> Generator: next()
         Generator ->> +Yield: next()
         Yield ->> Yield: notifyAll()
@@ -220,33 +222,73 @@ Some documents
 classDiagram
 
     Env --* Job
+    Initialize --|> Event
     Job --> Event
-    Event <-- Process
+    Event <.. Yield
+    Event -- * Callback 
+    Callback -- Process
     Event <|-- Process
-    Process -- Processable
-    Consumer~Event~ --> Process: resume()
-    Consumer~Event~ <--Event : callback()
-    Process --> Generator
-    Processable --> Yield
-    Env: PriorityBlockingQueue~Job~ jobs
-    Yield ..> Process
-    Yield ..> Generator
+    Event <.. Processable
+    Yield <-- Consumer
+    Yield <-- Generator
+    Consumer <|-- Processable
+    Processable --> Process  
+    Generator <-- Process
 
     <<coroutine>> Yield
     <<coroutine>> Generator
-    <<abstract>> Processable
+    <<coroutine>> Consumer
+    <<case>> Processable
 
-    Process: Consumer~Event~ resumeCallable
+    Env: PriorityBlockingQueue~Job~ jobs
+
     Process: +resume(Event)
 
-    Processable: #run()
-    Processable: #yield() Yield
-    Processable: #yield(Event)
+    Processable: +initial()
+    Processable: +run()
 
+    Event: List callables
     Event: +callback()
 
 ```
 
+### Sequence Diagram
+
+1. Work flow of events
+    ```mermaid
+    sequenceDiagram
+        autonumber
+        loop
+            Env ->> +Env: poll()
+            Env ->> Event: callback()
+            Event ->> Process: resume()
+            Process --) Processable: notify()
+            Processable ->> Env: schedule a new event if needed
+            Env ->> -Env: add a new event into the queue
+        end
+    ```
+
+2. Work flow of a process
+    ```mermaid
+    sequenceDiagram
+        autonumber
+        Env ->> Event["Initialize"]: callback()
+        Event["Initialize"] ->> +Process: resume(Event)
+
+            Process ->> Event["curr"]: getValue()
+            Process ->> +Generator: next(Object)
+            Generator ->> Yield: send(Object)
+            Generator ->> Yield: next(Boolean)
+            Yield --) Processable: notifyAll()
+            Processable ->> +Env: schedule a new event if needed
+            Env --) Event["next"]: new
+            Env ->> -Env: add a new event into the queue
+            Processable ->> Yield: call(Event)
+            Yield --) Generator: notifyAll()
+            Generator --) -Process: 
+            Process ->> Generator: getValue()
+            Process ->> -Event["next"]: addCallable(Process::resume)
+    ```
 
 ## Test Case
 
