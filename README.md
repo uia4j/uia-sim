@@ -261,33 +261,36 @@ classDiagram
         loop
             Env ->> +Env: poll()
             Env ->> Event: callback()
-            Event ->> Process: resume()
-            Process --) Processable: notify()
-            Processable ->> Env: schedule a new event if needed
-            Env ->> -Env: add a new event into the queue
+            Event ->> Process: resume(Event)
+            Process --) Processable: // notify
+            Processable ->> Env: // schedule a new event if needed
+            Env --) Event: // new
+            Env ->> -Env: // add a new event into the queue
+            Processable --) Process: // notify
+            Process ->> Event: addCallable()
         end
     ```
 
-2. Work flow of a process
+2. Startup of a process
     ```mermaid
     sequenceDiagram
         autonumber
         Env ->> Event["Initialize"]: callback()
         Event["Initialize"] ->> +Process: resume(Event)
 
-            Process ->> Event["curr"]: getValue()
+            Process ->> Event["Initialize"]: getValue()
             Process ->> +Generator: next(Object)
             Generator ->> Yield: send(Object)
             Generator ->> Yield: next(Boolean)
             Yield --) Processable: notifyAll()
-            Processable ->> +Env: schedule a new event if needed
-            Env --) Event["next"]: new
-            Env ->> -Env: add a new event into the queue
+            Processable ->> +Env: // schedule a new event if needed
+            Env --) Event: new
+            Env ->> -Env: // add a new event into the queue
             Processable ->> Yield: call(Event)
             Yield --) Generator: notifyAll()
             Generator --) -Process: 
             Process ->> Generator: getValue()
-            Process ->> -Event["next"]: addCallable(Process::resume)
+            Process ->> -Event: addCallable(Process::resume) // hook the Process and Event together
     ```
 
 ## Test Case
