@@ -315,10 +315,10 @@ public class Yield2Way<T, R> {
             this.iterable.accept(this);	// block until finishing iteration.
         }
         catch (Exception ex) {
-            logger.error(String.format("%s> ruuning() failed, %s", this.id, ex.getMessage()), ex);
+            logger.error(String.format("%s> running() failed, %s", this.id, ex.getMessage()), ex);
         }
         finally {
-            logger.debug(String.format("%s> ruuning() done", this.id));
+            logger.debug(String.format("%s> running() done", this.id));
             close();
         }
     }
