@@ -72,7 +72,7 @@ public class Yield2Way<T, R> {
             th.setPriority(Thread.MAX_PRIORITY);
             th.start();
             try {
-                yield.wait(1000);
+                yield.wait(500);
             }
             catch (Exception e) {
 

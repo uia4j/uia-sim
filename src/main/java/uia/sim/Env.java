@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -249,11 +248,34 @@ public class Env {
      * <b>Schedules</b> a new timeout event for processing by this environment.
      *
      * @param delay The delay time.
+     * @param priority The priority.
+     * @return A new scheduled timeout event.
+     */
+    public Timeout timeout(int delay, PriorityType priority) {
+        return new Timeout(this, "delay" + delay, delay, null, priority);
+    }
+
+    /**
+     * <b>Schedules</b> a new timeout event for processing by this environment.
+     *
+     * @param delay The delay time.
      * @param value The value of the event.
      * @return A new scheduled timeout event.
      */
     public Timeout timeout(int delay, Object value) {
         return new Timeout(this, "delay" + delay, delay, value);
+    }
+
+    /**
+     * <b>Schedules</b> a new timeout event for processing by this environment.
+     *
+     * @param delay The delay time.
+     * @param value The value of the event.
+     * @param priority The priority.
+     * @return A new scheduled timeout event.
+     */
+    public Timeout timeout(int delay, Object value, PriorityType priority) {
+        return new Timeout(this, "delay" + delay, delay, value, priority);
     }
 
     /**

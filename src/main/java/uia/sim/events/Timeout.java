@@ -20,7 +20,7 @@ public class Timeout extends Event {
      * @param delay The delay time.
      */
     public Timeout(Env env, int delay) {
-        this(env, "delay" + delay, delay, null);
+        this(env, "delay" + delay, delay, null, PriorityType.NORMAL);
     }
 
     /**
@@ -31,7 +31,7 @@ public class Timeout extends Event {
      * @param delay The delay time.
      */
     public Timeout(Env env, String id, int delay) {
-        this(env, id, delay, null);
+        this(env, id, delay, null, PriorityType.NORMAL);
     }
 
     /**
@@ -43,8 +43,21 @@ public class Timeout extends Event {
      * @param value The value of the event.
      */
     public Timeout(Env env, String id, int delay, Object value) {
+        this(env, id, delay, value, PriorityType.NORMAL);
+    }
+
+    /**
+     * The constructor <b>schedule</b> itself for processing by the environment automatically.
+     *
+     * @param env The environment.
+     * @param id The event id.
+     * @param delay The delay time.
+     * @param value The value of the event.
+     * @param priority The priority.
+     */
+    public Timeout(Env env, String id, int delay, Object value, PriorityType priority) {
         super(env, id, value);
-        env.schedule(this, PriorityType.NORMAL, delay);
+        env.schedule(this, priority, delay);
     }
 
     @Override
